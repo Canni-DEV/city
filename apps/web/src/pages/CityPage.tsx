@@ -352,6 +352,10 @@ export function CityPage() {
                 <strong>{store.durationMs?.toFixed(0)} ms</strong>
               </div>
               <div>
+                <span>Pedestrians</span>
+                <strong>{quality.agentCount}</strong>
+              </div>
+              <div>
                 <span>Lots</span>
                 <strong>{generatedCity.lots.length}</strong>
               </div>

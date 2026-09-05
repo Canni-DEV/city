@@ -1,6 +1,6 @@
 {
   "name": "@city/assets",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "exports": {
@@ -12,11 +12,15 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "generate": "node scripts/generate-catalog.mjs",
+    "generate-characters": "node scripts/generate-character-runtime.mjs",
     "prepare-runtime": "node scripts/prepare-runtime-assets.mjs",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "three": "0.185.1"
   }
 }

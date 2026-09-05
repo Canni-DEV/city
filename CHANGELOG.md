@@ -4,9 +4,11 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-05
+
 ### Added
 
-- Planning for M3.6 runtime agents (SIM-001–007, ADR-0012): seeded pedestrians on the occupied road graph, Kenney Animated Characters Protagonists 1.1 preserved under `assets/`, character GLBs to be generated outside `/assets` at implementation.
+- M3.6 runtime pedestrians: seeded NPCs walk the occupied road graph with A*, cell reservation, idle/run clips, and Kenney protagonist skins. Character GLBs are generated outside `/assets`.
 
 ## [0.5.0] - 2026-09-05
 

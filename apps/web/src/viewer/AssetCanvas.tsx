@@ -1,8 +1,8 @@
-import type { AssetCatalogEntry } from "@city/assets";
-import { runtimeAssetUrl } from "@city/assets";
+import { type AssetCatalogEntry, runtimeAssetUrl } from "@city/assets";
 import { OrbitControls, useGLTF } from "@react-three/drei";
 import { Canvas, type RootState } from "@react-three/fiber";
 import { Suspense, useCallback, useMemo } from "react";
+import { clone } from "three/addons/utils/SkeletonUtils.js";
 import {
   createCompatibleRenderer,
   detectRendererBackend,
@@ -12,10 +12,10 @@ import {
 
 function AssetModel({ entry }: { entry: AssetCatalogEntry }) {
   const { scene } = useGLTF(runtimeAssetUrl(entry.runtimePath, import.meta.env.BASE_URL));
-  const clone = useMemo(() => scene.clone(true), [scene]);
+  const cloned = useMemo(() => clone(scene), [scene]);
   const scale = 3 / Math.max(...entry.dimensions);
   return (
-    <primitive object={clone} position={[0, -entry.verticalOffset * scale, 0]} scale={scale} />
+    <primitive object={cloned} position={[0, -entry.verticalOffset * scale, 0]} scale={scale} />
   );
 }
 

@@ -84,6 +84,10 @@ importers:
       zod:
         specifier: 4.5.4
         version: 4.5.4
+    devDependencies:
+      three:
+        specifier: 0.185.1
+        version: 0.185.1
 
   packages/core:
     dependencies:

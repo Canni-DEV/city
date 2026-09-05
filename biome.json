@@ -5,6 +5,7 @@
       "**",
       "!!assets",
       "!!apps/web/public/runtime-assets",
+      "!!packages/assets/generated",
       "!!packages/assets/catalog/catalog.generated.json",
       "!!packages/core/schema",
       "!!**/dist"

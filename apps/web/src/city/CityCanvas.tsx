@@ -12,6 +12,7 @@ import {
   type RendererBackend,
   syncRendererLayout,
 } from "../rendering/renderer";
+import { AgentLayer } from "./AgentLayer";
 import { InstancedAssetBatch } from "./InstancedAssetBatch";
 import { LandOverlays, type OverlayOptions } from "./LandOverlays";
 
@@ -182,6 +183,8 @@ function CityScene({
       const entry = assetById.get(batch.assetId);
       if (entry) useGLTF.preload(runtimeAssetUrl(entry.runtimePath, import.meta.env.BASE_URL));
     }
+    const body = assetById.get("protagonists:character-medium");
+    if (body) useGLTF.preload(runtimeAssetUrl(body.runtimePath, import.meta.env.BASE_URL));
   }, [entityBatches.batches, roadBatches]);
 
   return (
@@ -226,12 +229,13 @@ function CityScene({
           />
         ))}
         <SelectionProxy document={document} entityId={selectedEntityId} />
+        <AgentLayer document={document} count={quality.agentCount} />
       </Suspense>
       <OrbitControls
         makeDefault
         target={[0, 0, 0]}
         minZoom={3}
-        maxZoom={28}
+        maxZoom={48}
         maxPolarAngle={Math.PI * 0.48}
       />
     </>
@@ -266,7 +270,7 @@ export function CityCanvas({
     <Canvas
       aria-label={
         document
-          ? `3D city with buildings and decoration for ${document.name}`
+          ? `3D city with buildings, streets, and pedestrians for ${document.name}`
           : "Empty city viewport"
       }
       orthographic

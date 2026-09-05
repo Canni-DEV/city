@@ -20,6 +20,7 @@ pnpm typecheck
 pnpm test
 pnpm build
 pnpm catalog
+pnpm --filter @city/assets generate-characters
 ```
 
 The road generator is available at `#/city/new`, and the development asset viewer at `#/dev/assets`. Add `?forceWebGL=1` before the hash to exercise the WebGL 2 fallback. Runtime-ready copies of GLB files and textures are generated into an ignored directory before development and production builds.

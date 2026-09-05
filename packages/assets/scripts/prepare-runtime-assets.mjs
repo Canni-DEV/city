@@ -26,20 +26,26 @@ for (const entry of catalog.entries) {
   await cp(path.join(repositoryRoot, entry.sourceFile), destination);
   copied.add(entry.runtimePath);
 
-  const packDirectory = entry.sourceFile.split("/")[1];
   for (const runtimeTexture of entry.texturePaths) {
     if (copied.has(runtimeTexture)) continue;
     const textureName = path.basename(runtimeTexture);
+    const packDirectory = entry.sourceFile.split("/")[1];
     const sourceTexture =
-      textureName === "colormap.png"
+      entry.pack === "protagonists"
         ? path.join(
             repositoryRoot,
-            "assets",
-            packDirectory,
-            "Models/GLB format/Textures",
+            "assets/kenney_animated-characters-protagonists/Skins",
             textureName,
           )
-        : path.join(repositoryRoot, "assets", packDirectory, "Models/Textures", textureName);
+        : textureName === "colormap.png"
+          ? path.join(
+              repositoryRoot,
+              "assets",
+              packDirectory,
+              "Models/GLB format/Textures",
+              textureName,
+            )
+          : path.join(repositoryRoot, "assets", packDirectory, "Models/Textures", textureName);
     const textureDestination = path.join(repositoryRoot, "apps/web/public", runtimeTexture);
     await mkdir(path.dirname(textureDestination), { recursive: true });
     await cp(sourceTexture, textureDestination);

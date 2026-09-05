@@ -161,14 +161,79 @@ for (const pack of packs) {
   }
 }
 
+const CITY_KIT_COUNT = 213;
+if (entries.length !== CITY_KIT_COUNT) {
+  throw new Error(`Expected ${CITY_KIT_COUNT} city-kit catalog entries, found ${entries.length}`);
+}
+
+const characterRoot = path.join(repositoryRoot, "packages/assets/generated/characters");
+const characterPreview = posix(
+  path.join("assets", "kenney_animated-characters-protagonists", "Preview.png"),
+);
+const characterSkins = ["skaterMaleA", "skaterFemaleA", "cyborgFemaleA", "criminalMaleA"].map(
+  (name) => `runtime-assets/protagonists/skins/${name}.png`,
+);
+const characters = [
+  { model: "character-medium", category: "character", subcategory: "protagonist-body" },
+  { model: "idle", category: "animation", subcategory: "protagonist-clip" },
+  { model: "run", category: "animation", subcategory: "protagonist-clip" },
+  { model: "jump", category: "animation", subcategory: "protagonist-clip" },
+];
+for (const character of characters) {
+  const filename = `${character.model}.glb`;
+  const sourcePath = path.join(characterRoot, filename);
+  const buffer = await readFile(sourcePath);
+  digest.update("protagonists").update(character.model).update(buffer);
+  const bounds = parseBounds(buffer);
+  const id = `protagonists:${character.model}`;
+  entries.push({
+    id,
+    pack: "protagonists",
+    model: character.model,
+    sourceFile: posix(path.relative(repositoryRoot, sourcePath)),
+    runtimePath: `runtime-assets/protagonists/${filename}`,
+    previewFile: characterPreview,
+    texturePaths: characterSkins,
+    category: character.category,
+    subcategory: character.subcategory,
+    dimensions: bounds.dimensions.map((value) => Math.max(value, 0.0001)),
+    footprint: {
+      width: Math.max(bounds.dimensions[0], 0.0001),
+      depth: Math.max(bounds.dimensions[2], 0.0001),
+    },
+    verticalOffset: Number((-bounds.minimum[1]).toFixed(4)),
+    front: character.category === "character" ? "south" : "not-applicable",
+    allowedRotations: [0, 90, 180, 270],
+    compatibleZones: [],
+    proceduralWeight: 0,
+    connectors: [],
+    instancing: false,
+    lodModelId: null,
+    decoration: false,
+    elevated: false,
+    availableInV1: true,
+    review: "heuristic",
+    ...(overrides[id] ?? {}),
+  });
+}
+
 entries.sort((left, right) => left.id.localeCompare(right.id));
-if (entries.length !== 213)
-  throw new Error(`Expected 213 catalog entries, found ${entries.length}`);
+const cityKitCount = entries.filter((entry) => entry.pack !== "protagonists").length;
+if (cityKitCount !== CITY_KIT_COUNT) {
+  throw new Error(`Expected ${CITY_KIT_COUNT} city-kit catalog entries, found ${cityKitCount}`);
+}
+const protagonistCount = entries.filter((entry) => entry.pack === "protagonists").length;
+if (protagonistCount !== characters.length) {
+  throw new Error(`Expected ${characters.length} protagonist entries, found ${protagonistCount}`);
+}
 const entryIds = new Set(entries.map((entry) => entry.id));
 if (entryIds.size !== entries.length) throw new Error("Catalog contains duplicate IDs");
 for (const entry of entries) {
   await access(path.join(repositoryRoot, entry.sourceFile));
   await access(path.join(repositoryRoot, entry.previewFile));
+  if (entry.sourceFile.endsWith(".fbx") || entry.runtimePath.endsWith(".fbx")) {
+    throw new Error(`AC-012 forbids catalog FBX paths: ${entry.id}`);
+  }
   if (entry.footprint.width <= 0 || entry.footprint.depth <= 0) {
     throw new Error(`Invalid footprint for ${entry.id}`);
   }

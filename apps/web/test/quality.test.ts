@@ -19,5 +19,8 @@ describe("REN-003/REN-008 quality profiles", () => {
     expect(high.useLod).toBe(false);
     expect(high.shadows).toBe(true);
     expect(low.fogFar).toBeLessThan(high.fogFar);
+    expect(low.agentCount).toBeLessThan(high.agentCount);
+    expect(high.agentCount).toBe(12);
+    expect(low.agentCount).toBe(6);
   });
 });

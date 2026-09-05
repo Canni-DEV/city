@@ -19,3 +19,11 @@ TST-008 covers graph construction, A*, reservation/wait/repath, seeded spawn, an
 ## Exclusions and stop
 
 No object editor, no user-controlled player, no leaving the road graph, no parks/lots as walkable, no vehicle traffic, no mesh physics, no thousands of NPCs, no generator-version bump unless city-kit output changes (it must not). Request review and stop before M4.
+
+## Completion evidence
+
+- Character GLBs and clips are generated into `packages/assets/generated/characters/` from untouched Kenney FBX; runtime copy is GLB/PNG only (AC-012).
+- Catalog keeps 213 city-kit GLBs and adds protagonist body, idle/run/jump clips, and four skins. Pedestrian height is baked to ~0.32 vs `commercial:building-a` (~1.293); city-kit scale is unchanged.
+- `@city/core` exposes a `WalkPolicy` plus mover: occupied-road graph, A*, cell reservation with wait-then-repath, and spawn RNG from document seed + agent index. Agents never enter `CityDocumentV1`.
+- The city canvas clones a `SkinnedMesh` per NPC (`AnimationMixer` idle/run), keeps default zoom 9, and raises OrbitControls `maxZoom` to 48. No player or jump clip.
+- TST-006/008, Biome check, typecheck, Vitest, and production build pass. Manual QA: Chrome (Cursor Chromium) WebGPU and `?forceWebGL=1` on 96×96 `green-crossroads` show 12 skinned NPCs on unique road cells, idle/run, `maxZoom` 48, credits pack list, and `#/dev/assets` `protagonists:character-medium`. Edge was not driven separately.

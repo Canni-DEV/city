@@ -22,7 +22,7 @@ For local/manual fallback QA, add `?forceWebGL=1` before the hash route (for exa
 
 Record device, browser, backend, quality, city size, entity count, frame-rate observation, generation duration, and screenshot in milestone PR evidence.
 
-- **Device / runtime:** Windows development host; Node generator tests; Vite production copy of 226 catalog GLB/PNG runtime files (no FBX, OBJ, or source HTML).
-- **AC-011 generation:** A 128×128 Balanced city completes in under five seconds in Node (automated). The 200-city preset/size batch including 64/96/128 maps finished with the rest of the core suite in approximately 8.2 seconds.
-- **AC-010 frame rate:** Manual Chrome/Edge 1920×1080 observations for WebGPU and forced WebGL 2, across Auto/Low/Medium/High, belong in the M3 review screenshots. Diagnostics expose FPS, entity count, and draw calls after generation.
-- **AC-012 bundle:** `apps/web/dist/runtime-assets` contains only catalog-referenced GLB models and PNG textures.
+- **Device / runtime:** Windows development host; Node generator tests; Vite production copy of catalog GLB/PNG runtime files including generated protagonist GLBs and skins (no FBX, OBJ, or source HTML).
+- **AC-011 generation:** A 128×128 Balanced city completes in under five seconds in Node (automated). The 200-city preset/size batch including 64/96/128 maps finished with the rest of the core suite (including TST-008) in approximately 15 seconds.
+- **AC-010 frame rate:** Diagnostics expose FPS, entity count, pedestrian count, and draw calls after generation. Cursor Chromium QA on this host (96×96 Balanced, seed `green-crossroads`): WebGPU Auto/high with 12 cloned `SkinnedMesh` agents on distinct road cells; `?forceWebGL=1` Auto/medium with the same 12/12 occupancy, `maxZoom` 48, and Kenney skins bound. Default orthographic zoom remains 9. Edge was not driven separately (same Blink family as the Chrome harness).
+- **AC-012 bundle:** `apps/web/dist/runtime-assets` contains only catalog-referenced GLB models and PNG textures (city kits plus generated protagonist GLBs and four skins; no FBX).
