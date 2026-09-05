@@ -93,7 +93,7 @@ export function GenerationControls({
           </select>
         </label>
       </div>
-      <p>Density, decoration, and theme are saved for building placement in M3.</p>
+      <p>Density, decoration, and theme change how buildings and props are placed.</p>
     </details>
   );
 }

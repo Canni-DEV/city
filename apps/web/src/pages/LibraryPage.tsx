@@ -28,11 +28,12 @@ export function LibraryPage() {
         <Panel className="status-card">
           <Sparkles size={24} aria-hidden="true" />
           <div>
-            <span className="status-pill">M0</span>
-            <h2>Foundation ready</h2>
+            <span className="status-pill">M3</span>
+            <h2>Placement and rendering</h2>
           </div>
           <p>
-            Application shell, typed city document, complete asset catalog and development viewer.
+            Buildings, parks, decoration, instanced rendering, quality profiles, and a one-time
+            WebGPU to WebGL 2 fallback.
           </p>
         </Panel>
       </section>

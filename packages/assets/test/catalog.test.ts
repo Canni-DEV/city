@@ -21,4 +21,13 @@ describe("asset catalog", () => {
     expect(lodReferences.length).toBeGreaterThan(0);
     expect(lodReferences.every((id) => ids.has(id))).toBe(true);
   });
+
+  it("AC-012 keeps runtime copies to catalog GLB models and PNG textures", () => {
+    expect(assetCatalog.entries.every((entry) => entry.runtimePath.endsWith(".glb"))).toBe(true);
+    expect(
+      assetCatalog.entries.every((entry) =>
+        entry.texturePaths.every((path) => path.endsWith(".png")),
+      ),
+    ).toBe(true);
+  });
 });

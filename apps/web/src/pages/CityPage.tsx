@@ -10,10 +10,11 @@ import {
 } from "@city/core";
 import { Button, Panel } from "@city/ui";
 import { CircleStop, Dices, RotateCcw, Route, Sparkles } from "lucide-react";
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { CityCanvas } from "../city/CityCanvas";
 import { GenerationControls } from "../city/GenerationControls";
-import { RoadCityCanvas } from "../city/RoadCityCanvas";
 import { suggestCityName } from "../city/suggest-city-name";
+import { QUALITY_PROFILES, resolveQuality } from "../rendering/quality";
 import { useCityStore } from "../state/city-store";
 
 const SIZE_OPTIONS: readonly MapSize[] = [64, 96, 128];
@@ -25,13 +26,35 @@ export function CityPage() {
   const [size, setSize] = useState<MapSize>(96);
   const [preset, setPreset] = useState<(typeof CITY_PRESETS)[number]>("balanced");
   const [parameters, setParameters] = useState<GenerationParameters>(PRESET_PARAMETERS.balanced);
-  const [overlays, setOverlays] = useState({ zones: true, lots: false, grid: false });
+  const [overlays, setOverlays] = useState({ zones: false, lots: false, grid: false });
   const [formError, setFormError] = useState<string | null>(null);
+  const [stats, setStats] = useState({ fps: 0, drawCalls: 0 });
   const workerRef = useRef<Worker | null>(null);
   const activeRequestRef = useRef<string | null>(null);
   const startedAtRef = useRef(0);
   const store = useCityStore();
   const generatedCity = store.document;
+  const quality = useMemo(
+    () =>
+      resolveQuality(
+        store.quality,
+        store.backend,
+        generatedCity?.map.size ?? 96,
+        typeof navigator === "undefined"
+          ? undefined
+          : (navigator as Navigator & { deviceMemory?: number }).deviceMemory,
+      ),
+    [generatedCity?.map.size, store.backend, store.quality],
+  );
+  const selectedEntity = generatedCity?.entities[store.selectedEntityId ?? ""] ?? null;
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") useCityStore.getState().selectEntity(null);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   useEffect(() => {
     const worker = new Worker(new URL("../workers/generation.worker.ts", import.meta.url), {
@@ -123,7 +146,7 @@ export function CityPage() {
         <div>
           <p className="eyebrow">City generator</p>
           <h1>Give your city a shape</h1>
-          <p>Connected streets, fronted lots, and five distinct kinds of neighborhood.</p>
+          <p>Connected streets, buildings, parks, and decoration from the Kenney catalog.</p>
         </div>
         <form onSubmit={generate}>
           <label>
@@ -279,51 +302,85 @@ export function CityPage() {
           </fieldset>
         )}
         {generatedCity && (
-          <Panel className="city-diagnostics">
-            <div>
-              <span>Blocks</span>
-              <strong>{generatedCity.blocks.length}</strong>
-            </div>
-            <div>
-              <span>Lots</span>
-              <strong>{generatedCity.lots.length}</strong>
-            </div>
-            <div>
-              <span>Backend</span>
-              <strong>{store.backend}</strong>
-            </div>
-            <div>
-              <span>Road cells</span>
-              <strong>{generatedCity.roadGraph.cells.length}</strong>
-            </div>
-            <div>
-              <span>Connections</span>
-              <strong>{generatedCity.roadGraph.edges.length}</strong>
-            </div>
-            <div>
-              <span>Gates</span>
-              <strong>
-                {generatedCity.roadGraph.nodes.filter((node) => node.kind === "gate").length}
-              </strong>
-            </div>
-            <div>
-              <span>Attempt</span>
-              <strong>{generatedCity.generator.attempt + 1}/3</strong>
-            </div>
-            <div>
-              <span>Generated</span>
-              <strong>{store.durationMs?.toFixed(0)} ms</strong>
-            </div>
-          </Panel>
+          <>
+            <label>
+              Graphics quality
+              <select
+                value={store.quality}
+                onChange={(event) =>
+                  store.setQuality(event.target.value as (typeof QUALITY_PROFILES)[number])
+                }
+              >
+                {QUALITY_PROFILES.map((profile) => (
+                  <option key={profile} value={profile}>
+                    {profile === "auto" ? `Auto (${quality.resolved})` : profile}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <p className="selection-status" aria-live="polite">
+              {selectedEntity
+                ? `Selected ${selectedEntity.assetId.replace(":", " ")}`
+                : "No object selected. Click a building or prop to highlight it."}
+            </p>
+            <Panel className="city-diagnostics">
+              <div>
+                <span>Entities</span>
+                <strong>{Object.keys(generatedCity.entities).length}</strong>
+              </div>
+              <div>
+                <span>Draw calls</span>
+                <strong>{stats.drawCalls || "—"}</strong>
+              </div>
+              <div>
+                <span>Backend</span>
+                <strong>{store.backend}</strong>
+              </div>
+              <div>
+                <span>Quality</span>
+                <strong>
+                  {store.quality}
+                  {store.quality === "auto" ? `/${quality.resolved}` : ""}
+                </strong>
+              </div>
+              <div>
+                <span>Frame rate</span>
+                <strong>{stats.fps ? `${stats.fps.toFixed(0)} fps` : "—"}</strong>
+              </div>
+              <div>
+                <span>Generated</span>
+                <strong>{store.durationMs?.toFixed(0)} ms</strong>
+              </div>
+              <div>
+                <span>Lots</span>
+                <strong>{generatedCity.lots.length}</strong>
+              </div>
+              <div>
+                <span>Road cells</span>
+                <strong>{generatedCity.roadGraph.cells.length}</strong>
+              </div>
+            </Panel>
+          </>
         )}
       </aside>
       <section className="city-viewport" aria-label="Generated city viewport">
-        <RoadCityCanvas document={generatedCity} onBackend={store.setBackend} overlays={overlays} />
+        <CityCanvas
+          document={generatedCity}
+          onBackend={store.setBackend}
+          overlays={overlays}
+          quality={quality}
+          selectedEntityId={store.selectedEntityId}
+          onSelect={store.selectEntity}
+          onStats={setStats}
+        />
         {!generatedCity && (
           <div className="viewport-empty">
             <RotateCcw size={42} aria-hidden="true" />
             <h2>A deterministic city is one click away.</h2>
-            <p>The same seed and parameters always resolve to the same streets, lots, and zones.</p>
+            <p>
+              The same seed and parameters always resolve to the same streets, buildings, and
+              decoration.
+            </p>
           </div>
         )}
       </section>

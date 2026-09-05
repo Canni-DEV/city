@@ -10,12 +10,15 @@ import {
   zoneAreaShares,
 } from "../src/index.js";
 
+import { TEST_ASSETS } from "./catalog-assets.js";
+
 const input = {
   id: "city-m2",
   name: "M2 test",
   seed: "frontage",
   timestamp: "2026-09-05T00:00:00.000Z",
   parameters: { ...PRESET_PARAMETERS.balanced, size: 64 as const },
+  assets: TEST_ASSETS,
 };
 
 describe("M2 blocks and zoning", () => {
@@ -139,8 +142,8 @@ describe("M2 blocks and zoning", () => {
     expect(hashGeneratedStructure(city)).not.toBe(before);
   });
 
-  it("FUN-016 cancels during each M2 stage without returning a partial city", async () => {
-    for (const stage of ["blocks", "lots", "zones"] as const) {
+  it("FUN-016 cancels during each M2 and M3 stage without returning a partial city", async () => {
+    for (const stage of ["blocks", "lots", "zones", "placement", "decoration"] as const) {
       let cancelled = false;
       await expect(
         generateRoadCity(input, {
@@ -167,6 +170,7 @@ describe("M2 blocks and zoning", () => {
       expect(city.blocks.every((block) => block.zone === "urban" || block.zone === "park")).toBe(
         true,
       );
+      expect(Object.keys(city.entities).length).toBeGreaterThan(0);
     }
   });
 });

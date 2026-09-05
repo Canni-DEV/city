@@ -1,5 +1,6 @@
 /// <reference lib="webworker" />
 
+import { assetCatalog } from "@city/assets";
 import {
   GenerationCancelledError,
   type GenerationWorkerEvent,
@@ -27,6 +28,7 @@ async function handleGenerate(request: Extract<GenerationWorkerRequest, { type: 
         seed: request.seed,
         parameters: request.parameters,
         timestamp: new Date().toISOString(),
+        assets: assetCatalog.entries,
       },
       {
         shouldCancel: () =>

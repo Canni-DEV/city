@@ -29,6 +29,8 @@ M1 implements GEN-001–005 using generator version `0.2.0`. Delaunay edges expr
 
 M2 implements GEN-006–008 using generator version `0.3.0`. Connected free cells are flood-filled, then bounded into compact patches so five-zone area quotas stay achievable. Rectangular lots occupy only road-fronted parcels inside those blocks; leftover interior cells remain in the block without becoming lots. Zone assignment scores centrality, road access, periphery, and block size, then fills remaining normalized area quotas.
 
+M3 implements GEN-009–011 using generator version `0.4.0`. Compatible catalog buildings occupy road-fronted lots via footprint cell spans and a spatial hash. Parks receive trees; leftover valid cells receive decoration scaled by the decoration control. District palettes come from the selected color theme (`colormap`, `variation-a`, `variation-b`). Validation then requires complete catalog references, unique entity IDs, in-mask occupancy, and no overlapping procedural cells.
+
 ## Invariants and recovery
 
 - **GEN-020:** All roads form one connected component. External gates count is 2, 3, and 4 for sizes 64, 96, and 128.

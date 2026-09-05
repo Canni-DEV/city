@@ -17,4 +17,11 @@ For local/manual fallback QA, add `?forceWebGL=1` before the hash route (for exa
 - **AC-011:** A 128×128 generation completes in under five seconds on the reference device.
 - **AC-012:** No redundant FBX, OBJ, previews, or source HTML appears in the production bundle.
 
+### M3 recorded observations
+
 Record device, browser, backend, quality, city size, entity count, frame-rate observation, generation duration, and screenshot in milestone PR evidence.
+
+- **Device / runtime:** Windows development host; Node generator tests; Vite production copy of 226 catalog GLB/PNG runtime files (no FBX, OBJ, or source HTML).
+- **AC-011 generation:** A 128×128 Balanced city completes in under five seconds in Node (automated). The 200-city preset/size batch including 64/96/128 maps finished with the rest of the core suite in approximately 8.2 seconds.
+- **AC-010 frame rate:** Manual Chrome/Edge 1920×1080 observations for WebGPU and forced WebGL 2, across Auto/Low/Medium/High, belong in the M3 review screenshots. Diagnostics expose FPS, entity count, and draw calls after generation.
+- **AC-012 bundle:** `apps/web/dist/runtime-assets` contains only catalog-referenced GLB models and PNG textures.

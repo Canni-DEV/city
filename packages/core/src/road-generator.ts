@@ -1,13 +1,21 @@
 import { Delaunay } from "d3-delaunay";
-import { xoroshiro128plus } from "pure-rand/generator/xoroshiro128plus";
 import type { CityDocumentV1, GenerationParameters, MapSize } from "./domain.js";
 import { CityDocumentSchema } from "./domain.js";
 import { deriveProceduralId } from "./ids.js";
 import { assignZones, createBlocks, createLots, validateLandCity } from "./land-generator.js";
+import type { PlacementAsset } from "./placement-assets.js";
+import {
+  applyDistrictThemes,
+  occupancyFromRoads,
+  placeBuildingsAndParks,
+  placeDecoration,
+  validatePlacedCity,
+} from "./placement-generator.js";
 import { normalizeGenerationParameters } from "./presets.js";
+import { hashText, SeededRandom } from "./rng.js";
 import type { GenerationStage } from "./worker-protocol.js";
 
-export const GENERATOR_VERSION = "0.3.0";
+export const GENERATOR_VERSION = "0.4.0";
 
 type Point = [number, number];
 type MutablePoint = Point;
@@ -36,6 +44,7 @@ export interface RoadGenerationInput {
   seed: string;
   parameters: GenerationParameters;
   timestamp: string;
+  assets: readonly PlacementAsset[];
 }
 
 export interface GenerationProgress {
@@ -68,22 +77,6 @@ export class RoadGenerationError extends Error {
   }
 }
 
-class SeededRandom {
-  readonly #generator;
-
-  constructor(seed: string) {
-    this.#generator = xoroshiro128plus(hashText(seed));
-  }
-
-  float(): number {
-    return (this.#generator.next() >>> 0) / 4_294_967_296;
-  }
-
-  integer(minimum: number, maximum: number): number {
-    return minimum + Math.floor(this.float() * (maximum - minimum + 1));
-  }
-}
-
 const DIRECTIONS: ReadonlyArray<{
   name: Direction;
   delta: Point;
@@ -93,15 +86,6 @@ const DIRECTIONS: ReadonlyArray<{
   { name: "south", delta: [0, 1] },
   { name: "west", delta: [-1, 0] },
 ];
-
-function hashText(value: string): number {
-  let hash = 0x811c9dc5;
-  for (const character of value) {
-    hash ^= character.codePointAt(0) ?? 0;
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return hash | 0;
-}
 
 function randomFor(seed: string, attempt: number, stage: string): SeededRandom {
   return new SeededRandom(`${GENERATOR_VERSION}:${seed}:${attempt}:${stage}`);
@@ -586,7 +570,11 @@ function createDocument(
   }
   const districts = nodes
     .filter((node) => node.kind === "district")
-    .map((node, index) => ({ id: node.id, center: node.position, theme: `district-${index + 1}` }));
+    .map((node) => ({
+      id: node.id,
+      center: node.position,
+      theme: "colormap",
+    }));
   const roadNodes = nodes.map((node) => ({
     id: node.id,
     position: node.position,
@@ -749,14 +737,37 @@ export async function generateRoadCity(
     document.lots = createLots(document);
     await checkpoint(hooks, "zones", 89, "Assigning zones within area quotas");
     assignZones(document);
-    await checkpoint(hooks, "validation", 94, "Validating roads, frontage, and zone areas");
+    await checkpoint(hooks, "placement", 91, "Placing buildings, parks, and trees");
+    const occupancy = occupancyFromRoads(document);
+    const placed = placeBuildingsAndParks(
+      document,
+      input.assets,
+      randomFor(attemptSeed, attempt, "placement"),
+      occupancy,
+    );
+    await checkpoint(hooks, "decoration", 95, "Adding decoration and district themes");
+    applyDistrictThemes(document);
+    const decorated = placeDecoration(
+      document,
+      input.assets,
+      randomFor(attemptSeed, attempt, "decoration"),
+      occupancy,
+      placed.length,
+    );
+    document.entities = Object.fromEntries(
+      [...placed, ...decorated]
+        .sort((left, right) => left.id.localeCompare(right.id))
+        .map((entity) => [entity.id, entity]),
+    );
+    await checkpoint(hooks, "validation", 98, "Validating placement, roads, and zone areas");
     finalIssues = [
       ...validateRoadCity(document),
       ...validateLandCity(document),
+      ...validatePlacedCity(document, input.assets),
       ...(hooks.validateAttempt?.(document) ?? []),
     ];
     if (finalIssues.length === 0) {
-      await checkpoint(hooks, "validation", 100, "City blocks and zones ready");
+      await checkpoint(hooks, "validation", 100, "City buildings and decoration ready");
       return document;
     }
   }
