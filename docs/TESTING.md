@@ -14,6 +14,8 @@ CI runs frozen install, Biome check, TypeScript typecheck, Vitest, and productio
 
 M1 evidence includes 200 generated documents: 50 seeds for each preset, with sizes distributed across 64, 96, and 128. The batch validates exact gate counts, references, a single connected road component, cardinal edge paths, one resolved tile per road cell, density/mask dimensions, and absence of internal dead ends. A fixed golden hash and forced retry test cover determinism and recovery.
 
+M2 evidence reuses that 200-city batch and adds land invariants: unique block/lot IDs, complete free-cell coverage, rectangular non-overlapping lots with full road frontage, district/block references, and zone area shares within ±5 percentage points of normalized targets. Golden hashes include blocks and lots.
+
 ## Manual QA per milestone
 
 Test current Chrome and Edge, WebGPU and forced WebGL 2, 1280×720 and 1920×1080, keyboard/focus/contrast/patterns, and capture implemented flows. From M3 onward record the rendering and generation budgets in `RENDERING_AND_PERFORMANCE.md`.

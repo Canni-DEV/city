@@ -43,7 +43,11 @@ export const useCityStore = create<CityState>()(
         state.document = document;
         state.durationMs = durationMs;
         state.status = "ready";
-        state.progress = { stage: "validation", percent: 100, message: "Road network ready" };
+        state.progress = {
+          stage: "validation",
+          percent: 100,
+          message: "City blocks and zones ready",
+        };
       }),
     failGeneration: (message) =>
       set((state) => {

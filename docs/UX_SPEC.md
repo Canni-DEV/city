@@ -25,3 +25,5 @@
 ## Layout
 
 The supported minimum is 1280×720. Panels may collapse as space narrows but the viewport, current mode, primary action, and cancellation path remain available. There is no onboarding; empty states teach the next action in one sentence.
+
+Zone, lot, and grid overlays are independently toggleable and do not mutate the document. Zone meaning uses a stable color, a repeating pattern, and a legend of actual versus target area shares.

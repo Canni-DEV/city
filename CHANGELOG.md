@@ -4,6 +4,15 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-04
+
+### Added
+
+- Deterministic M2 land generation: flood-filled blocks, rectangular road-fronted lots, normalized advanced zone controls, and five-zone assignment within ±5 area points.
+- Preset and advanced generator controls for zone mix, parks, districts, regularity, roundabouts, decoration, and theme.
+- Independent zone, lot, and grid overlays with color-plus-pattern legends of actual versus target zone shares.
+- Land invariant, golden-hash, cancellation, and 200-city preset/size batch tests covering frontage and quotas.
+
 ## [0.2.0] - 2026-09-04
 
 ### Added

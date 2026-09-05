@@ -7,6 +7,7 @@ import {
   hashGeneratedStructure,
   type MapSize,
   PRESET_PARAMETERS,
+  validateLandCity,
   validateRoadCity,
 } from "../src/index.js";
 
@@ -22,7 +23,7 @@ function inputFor(seed: string, preset: CityPreset = "balanced", size: MapSize =
   };
 }
 
-describe("M1 road generation", () => {
+describe("M1/M2 city generation", () => {
   it("TST-001 produces the same structural hash for equal inputs", async () => {
     const first = await generateRoadCity(inputFor("golden-grid"));
     const second = await generateRoadCity({
@@ -31,11 +32,11 @@ describe("M1 road generation", () => {
       timestamp: "2027-01-01T00:00:00.000Z",
     });
     expect(hashGeneratedStructure(first)).toBe(hashGeneratedStructure(second));
-    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"c015f4f3"`);
+    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"364c6d26"`);
   });
 
   it("TST-001 derives reproducible attempts and retries at most three times", async () => {
-    expect(deriveAttemptSeed("retry-city", 2)).toBe("retry-city::0.2.0::attempt-2");
+    expect(deriveAttemptSeed("retry-city", 2)).toBe("retry-city::0.3.0::attempt-2");
     const attempts: number[] = [];
     const city = await generateRoadCity(inputFor("retry-city"), {
       validateAttempt(document) {
@@ -59,6 +60,9 @@ describe("M1 road generation", () => {
           },
         );
         expect(validateRoadCity(city), label).toEqual([]);
+        expect(validateLandCity(city), label).toEqual([]);
+        expect(city.blocks.length, label).toBeGreaterThan(0);
+        expect(city.lots.length, label).toBeGreaterThan(0);
         expect(city.roadGraph.nodes.filter((node) => node.kind === "gate")).toHaveLength(
           size === 64 ? 2 : size === 96 ? 3 : 4,
         );

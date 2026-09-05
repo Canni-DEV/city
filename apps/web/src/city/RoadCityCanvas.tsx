@@ -5,6 +5,7 @@ import { Canvas } from "@react-three/fiber";
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three/webgpu";
 import { createCompatibleRenderer, type RendererBackend } from "../rendering/renderer";
+import { LandOverlays, type OverlayOptions } from "./LandOverlays";
 
 function UrbanGround({ document }: { document: CityDocumentV1 }) {
   const mesh = useRef<THREE.InstancedMesh>(null);
@@ -127,7 +128,7 @@ function DistrictMarker({ position, size }: { position: [number, number]; size: 
   );
 }
 
-function RoadScene({ document }: { document: CityDocumentV1 }) {
+function RoadScene({ document, overlays }: { document: CityDocumentV1; overlays: OverlayOptions }) {
   const size = document.map.size;
   return (
     <>
@@ -144,6 +145,7 @@ function RoadScene({ document }: { document: CityDocumentV1 }) {
         <meshBasicMaterial color="#17241f" />
       </mesh>
       <UrbanGround document={document} />
+      <LandOverlays city={document} overlays={overlays} />
       <RoadUnderlay document={document} />
       <RoadModels key={document.id} document={document} />
       {document.roadGraph.nodes
@@ -170,14 +172,18 @@ function RoadScene({ document }: { document: CityDocumentV1 }) {
 export function RoadCityCanvas({
   document,
   onBackend,
+  overlays,
 }: {
   document: CityDocumentV1 | null;
   onBackend: (backend: RendererBackend) => void;
+  overlays: OverlayOptions;
 }) {
   const size = document?.map.size ?? 64;
   return (
     <Canvas
-      aria-label={document ? `3D road network for ${document.name}` : "Empty city viewport"}
+      aria-label={
+        document ? `3D city streets, lots, and zones for ${document.name}` : "Empty city viewport"
+      }
       orthographic
       camera={{
         position: [size * 0.55, size * 0.7, size * 0.55],
@@ -190,7 +196,7 @@ export function RoadCityCanvas({
       shadows
     >
       {document ? (
-        <RoadScene document={document} />
+        <RoadScene key={document.id} document={document} overlays={overlays} />
       ) : (
         <color attach="background" args={["#0b1210"]} />
       )}

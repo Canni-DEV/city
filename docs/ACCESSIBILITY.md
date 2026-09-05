@@ -4,6 +4,8 @@
 - **ACC-002:** Focus is visible, logical, not trapped outside modal dialogs, and restored after dialogs close.
 - **ACC-003:** Text and controls target WCAG 2.2 AA contrast; status is never communicated by color alone.
 - **ACC-004:** Zone overlays pair stable colors with distinguishable patterns and a legend.
+
+M2 generator overlays already implement those color-plus-pattern fills and a textual legend of actual versus target zone shares. M6 still owns the full contrast, keyboard, and 1280×720 accessibility QA.
 - **ACC-005:** Errors identify the field or object, the constraint, and a recovery action; progress has a textual stage and percentage.
 - **ACC-006:** Motion respects `prefers-reduced-motion`; essential selection and validation feedback remains available without animation.
 - **ACC-007:** The 3D canvas has a meaningful label and adjacent textual selection/diagnostic state.

@@ -1,4 +1,23 @@
 import type { CityPreset, GenerationParameters } from "./domain.js";
+import { GenerationParametersSchema } from "./domain.js";
+
+/** FUN-015: park is a percentage; the other four inputs are relative weights. */
+export function normalizeGenerationParameters(input: GenerationParameters): GenerationParameters {
+  const parameters = GenerationParametersSchema.parse(input);
+  const { park, ...weights } = parameters.zoneMix;
+  const total = Object.values(weights).reduce((sum, value) => sum + value, 0);
+  if (total === 0) throw new Error("Zone mix: give at least one non-park zone a positive weight.");
+  return {
+    ...parameters,
+    zoneMix: {
+      suburban: (weights.suburban / total) * (100 - park),
+      urban: (weights.urban / total) * (100 - park),
+      commercial: (weights.commercial / total) * (100 - park),
+      industrial: (weights.industrial / total) * (100 - park),
+      park,
+    },
+  };
+}
 
 export const PRESET_PARAMETERS: Record<CityPreset, GenerationParameters> = {
   balanced: {
