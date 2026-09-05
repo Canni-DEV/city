@@ -2,7 +2,7 @@
 
 ```mermaid
 flowchart LR
-  M0["M0 Foundation"] --> M1["M1 Road slice"] --> M2["M2 Blocks and zoning"] --> M3["M3 Placement and rendering"] --> M35["M3.5 Urban morphology"] --> M4["M4 Editor"] --> M5["M5 Local library"] --> M6["M6 Hardening / 1.0"]
+  M0["M0 Foundation"] --> M1["M1 Road slice"] --> M2["M2 Blocks and zoning"] --> M3["M3 Placement and rendering"] --> M35["M3.5 Urban morphology"] --> M36["M3.6 Animated agents"] --> M4["M4 Editor"] --> M5["M5 Local library"] --> M6["M6 Hardening / 1.0"]
 ```
 
 | Milestone | Outcome | Review gate |
@@ -12,8 +12,9 @@ flowchart LR
 | M2 | Blocks, lots, five zones, presets, invariant validators | Batch seeds meet frontage and quota rules |
 | M3 | Buildings, parks, decoration, themes, worker, instancing, graphics quality | Both backends and performance evidence pass |
 | M3.5 | Closed manzanas, avenue/local tiles, connector-correct curves, ring lots | Morphology batch, connector tests, overlay screenshots |
+| M3.6 | Bounded runtime pedestrians on the road graph, idle/run, cell avoidance | TST-008, 8–16 agents, both backends |
 | M4 | Full object editor, commands, selection, placement, block regeneration | Exact undo/redo and input QA pass |
 | M5 | Dexie library, autosave, thumbnails, import/export, migrations | Persistence recovery and migration QA pass |
 | M6 | Accessibility, performance, final QA/docs/release | All requirements accepted; `1.0.0` may ship |
 
-Each milestone uses its brief in `docs/milestones`, a dedicated branch and PR, and stops for review before the next begins. M3.5 is an intermediate morphology patch inserted after M3; it does not replace M4.
+Each milestone uses its brief in `docs/milestones`, a dedicated branch and PR, and stops for review before the next begins. M3.5 (morphology) and M3.6 (runtime agents) are intermediate patches; they do not replace M4.

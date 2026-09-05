@@ -2,7 +2,7 @@
 
 ## IDs and inputs
 
-**Milestone:** M3.5. **Requirements:** GEN-003–007, GEN-020–022, FUN-014, DAT-002, TST-001–003. Inputs are the merged M3 generator (`0.4.0`), Kenney ground-level road tiles, and closed M1/M2/M3 contracts. This milestone does not start M4.
+**Milestone:** M3.5. **Requirements:** GEN-003–007, GEN-020–022, FUN-014, DAT-002, TST-001–003. Inputs are the merged M3 generator (`0.4.0`), Kenney ground-level road tiles, and closed M1/M2/M3 contracts. This milestone does not start M4 or the M3.6 agent runtime.
 
 ## Outputs and tasks
 
@@ -21,7 +21,7 @@ Prove determinism (`GENERATOR_VERSION` `0.5.0`), connector-accurate tiles, one 4
 
 ## Exclusions and stop
 
-No object editor, road editing, zoning editing, 2-cell-wide carriageways, elevated roads, or placement-weight retunes. Request review and stop before M4.
+No object editor, road editing, zoning editing, 2-cell-wide carriageways, elevated roads, placement-weight retunes, or M3.6 agent runtime. Request review and stop before M3.6 implementation.
 
 ## Completion evidence
 

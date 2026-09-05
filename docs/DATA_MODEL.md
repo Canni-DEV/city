@@ -7,6 +7,7 @@
 - **DAT-005:** Procedural IDs derive from generator version, seed, stage, and stable index. Manual IDs use `crypto.randomUUID()` and a `user:` prefix.
 - **DAT-006:** Stored timestamps are ISO-8601 UTC. Name max is 80 characters; seed max is 64.
 - **DAT-007:** JSON Schema is generated from the Zod source contract and committed for non-TypeScript consumers.
+- **DAT-008:** Runtime agents are not document fields. They are derived from seed and occupied road cells and must not appear in `CityEntity` collections or exports.
 
 ## Referential invariants
 

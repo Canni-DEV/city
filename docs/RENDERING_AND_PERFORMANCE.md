@@ -7,13 +7,14 @@
 - **REN-005:** Selection uses a non-instanced proxy for outline and gizmo rather than breaking instance batches.
 - **REN-006:** Shared visual profile includes fixed sun, ambient light, nearby shadows, soft fog, and selection with no heavy post-processing.
 - **REN-007:** Materials and node features must work on both backends; avoid incompatible `ShaderMaterial`, `EffectComposer`, and helpers.
-- **REN-008:** Quality adjusts shadows, distance, fog, decoration, and LOD without changing the document.
+- **REN-008:** Quality adjusts shadows, distance, fog, decoration, LOD, and agent count without changing the document.
+- **REN-009:** Runtime agents use per-instance `SkinnedMesh` and `AnimationMixer` (idle/run). City-kit buildings and roads stay instanced (REN-004). Agent source FBX is never shipped; only generated GLB and PNG enter the runtime copy.
 
 For local/manual fallback QA, add `?forceWebGL=1` before the hash route (for example, `/city/?forceWebGL=1#/dev/assets`).
 
 ## Budgets
 
-- **AC-010:** 60 FPS at 1920×1080 for a representative 96×96 city on a modern integrated-GPU laptop.
+- **AC-010:** 60 FPS at 1920×1080 for a representative 96×96 city on a modern integrated-GPU laptop, including the M3.6 budget of 8–16 skinned agents on Auto/high.
 - **AC-011:** A 128×128 generation completes in under five seconds on the reference device.
 - **AC-012:** No redundant FBX, OBJ, previews, or source HTML appears in the production bundle.
 

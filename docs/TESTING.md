@@ -7,8 +7,9 @@
 - **TST-003:** Invariant tests cover unique IDs/references, one connected road component of occupied cells, exact gate count, catalog-connector tile combinations, footprints, boundaries, frontage, street-bounded blocks, and zone quotas ±5 points.
 - **TST-004:** Every editor command proves exact apply/revert, ID preservation, drag consolidation, redo clearing, and 100-entry history.
 - **TST-005:** Persistence tests cover migrations, invalid input, size limit, future schema, ID collision, and snapshot round trips.
-- **TST-006:** Catalog tests require exactly 213 unique valid entries, existing runtime sources, positive footprints, and road connectors.
+- **TST-006:** Catalog tests require exactly 213 unique valid city-kit GLB entries, existing runtime sources, positive footprints, and complete road connectors. M3.6 implementation extends this suite to generated protagonist GLBs and skins without packing source FBX.
 - **TST-007:** Renderer integration tests prove forced fallback keeps the open document.
+- **TST-008:** Agent tests prove walk-graph construction from occupied road cells, A*, cell reservation with wait-then-repath, seeded spawn, idle/run clip selection, and that agent ticks do not mutate `CityDocumentV1`.
 
 CI runs frozen install, Biome check, TypeScript typecheck, Vitest, and production build on pushes and pull requests. There is no numeric coverage gate, Playwright suite, or automated Markdown/link validation.
 
@@ -19,6 +20,8 @@ M2 evidence reuses that 200-city batch and adds land invariants: unique block/lo
 M3 evidence extends the same 200-city batch with placement invariants: every procedural entity references a catalog asset, stays inside the valid mask, and occupies unique spatial-hash cells. Golden hashes include entities and district themes. Renderer unit tests prove a single WebGPU→WebGL 2 fallback keeps the open `CityDocumentV1` identity, and quality/LOD swaps do not mutate the document.
 
 M3.5 evidence regenerates that 200-city batch under generator `0.5.0`: occupied road cells form one 4-connected component, resolved tiles match rotated catalog connectors, typical enclosed blocks on 96/128 maps have multi-side frontage and manzana-scale bounds, lots keep full road frontage, and zone shares stay within ±5 points. Connector yaw unit tests cover `road-bend` and `road-curve`.
+
+M3.6 evidence is independent of document hashes: seeded agent spawn, road-cell A*, reservation/wait/repath, and unchanged `CityDocumentV1` identity after ticks (TST-008).
 
 ## Manual QA per milestone
 
