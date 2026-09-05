@@ -37,11 +37,11 @@ describe("M1–M3.5 city generation", () => {
       timestamp: "2027-01-01T00:00:00.000Z",
     });
     expect(hashGeneratedStructure(first)).toBe(hashGeneratedStructure(second));
-    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"fb1a30c1"`);
+    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"fe0315b2"`);
   });
 
   it("TST-001 derives reproducible attempts and retries at most three times", async () => {
-    expect(deriveAttemptSeed("retry-city", 2)).toBe("retry-city::0.6.3::attempt-2");
+    expect(deriveAttemptSeed("retry-city", 2)).toBe("retry-city::0.6.5::attempt-2");
     const attempts: number[] = [];
     const city = await generateRoadCity(inputFor("retry-city"), {
       validateAttempt(document) {

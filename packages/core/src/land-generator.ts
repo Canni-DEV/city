@@ -148,6 +148,23 @@ export function createLots(document: CityDocumentV1): Lot[] {
         }
       }
       if (!best) continue;
+      const lotMinX = Math.min(...best.map(([x]) => x));
+      const lotMaxX = Math.max(...best.map(([x]) => x));
+      const lotMinY = Math.min(...best.map(([, y]) => y));
+      const lotMaxY = Math.max(...best.map(([, y]) => y));
+      const front = best.filter(([x, y]) =>
+        frontage === "north"
+          ? y === lotMinY
+          : frontage === "south"
+            ? y === lotMaxY
+            : frontage === "east"
+              ? x === lotMaxX
+              : x === lotMinX,
+      );
+      if (!front.every(([x, y]) => sidewalks.has(key([x + direction.dx, y + direction.dy])))) {
+        available.delete(startKey);
+        continue;
+      }
       for (const point of best) available.delete(key(point));
       lots.push({
         id: deriveProceduralId(

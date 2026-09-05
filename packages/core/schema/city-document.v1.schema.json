@@ -371,6 +371,14 @@
               },
               "rotation": {
                 "type": "number"
+              },
+              "roadClass": {
+                "type": "string",
+                "enum": [
+                  "arterial",
+                  "collector",
+                  "local"
+                ]
               }
             },
             "required": [

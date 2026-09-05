@@ -71,7 +71,7 @@ function roundaboutApproaches(origin: Point): Point[] {
   ];
 }
 
-/** SIM-009: path junctions, avenue T/4-way, corner approaches, curves, and roundabout approaches. */
+/** SIM-009 / GEN-028: path junctions, real avenue T/4-way, corner approaches, curves, and roundabout approaches. */
 export function crossingCellSet(document: CityDocumentV1): Set<string> {
   const occupied = occupiedRoadSet(document.roadGraph.cells);
   const crossings = new Set<string>();

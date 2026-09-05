@@ -88,6 +88,16 @@ describe("M3.6.1 sidewalks", () => {
       ),
     ).toBe(false);
     expect(city.roadGraph.cells.some((cell) => cell.assetId === "roads:road-straight")).toBe(true);
+    const twins = city.roadGraph.cells.filter((cell) => {
+      if (cell.assetId !== "roads:road-straight") return false;
+      const [x, y] = cell.position;
+      return city.roadGraph.cells.some(
+        (other) =>
+          other.assetId === "roads:road-straight" &&
+          Math.abs(other.position[0] - x) + Math.abs(other.position[1] - y) === 1,
+      );
+    });
+    expect(twins.length).toBeGreaterThan(0);
   });
 
   it("SIM-002 walk policy uses sidewalks and corner crossings, not the avenue run", async () => {

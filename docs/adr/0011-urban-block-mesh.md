@@ -4,7 +4,9 @@
 
 ## Decision
 
-Generate a connected arterial/collector skeleton between gates and districts, then overlay a local one-cell street mesh whose spacing and orthogonality follow road regularity. Resolve modular Kenney tiles from catalog connectors; 2×2 curve assets occupy four unit cells and 3×3 roundabouts occupy nine, while remaining on the unit grid.
+Generate a connected arterial/collector skeleton between gates and districts, dilate those corridors to a two-cell carriageway, then overlay a local one-cell street mesh whose spacing and orthogonality follow road regularity. Resolve modular Kenney tiles from catalog connectors against **logical** neighbors (the twin cell is not a street); 2×2 curve assets occupy four unit cells and 3×3 roundabouts occupy nine when a 1-cell-wide footprint still fits, while remaining on the unit grid.
+
+**Amendment (M3.6.1 avenue junctions, 2026-09-05):** Dual L/T/4-way nudos are occupancy blocks, not leftover 1-cell gaps. A 1-cell-wide L may still use 2×2 `road-curve`; dual T/4-way cells with four openings use unit `road-crossroad`. Generator `0.6.5`.
 
 ## Consequences
 

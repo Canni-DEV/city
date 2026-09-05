@@ -21,6 +21,15 @@ export const DIRECTION_DELTA: Record<Cardinal, Point> = {
   west: [-1, 0],
 };
 
+export const OPPOSITE_CARDINAL: Record<Cardinal, Cardinal> = {
+  north: "south",
+  south: "north",
+  east: "west",
+  west: "east",
+};
+
+export type LaneMates = ReadonlyMap<string, string>;
+
 /**
  * Catalog connectors at yaw 0 for tiles used by GEN-005.
  * Kenney City Kit Roads are Y-up with +X east and +Z south: straights run along X
@@ -97,6 +106,141 @@ export function connectionNames(point: Point, occupied: ReadonlySet<string>): Ca
   return neighborKeys(point)
     .filter(({ key }) => occupied.has(key))
     .map(({ direction }) => direction);
+}
+
+export function isAvenueClass(roadClass: RoadClass | undefined): boolean {
+  return roadClass === "arterial" || roadClass === "collector";
+}
+
+/**
+ * GEN-028: lane-mate is not a street. A road beyond the pair counts (see-through)
+ * only when this cell already has a road on the opposite side — a true through-crossing.
+ */
+export function logicalConnections(
+  cell: Point,
+  occupied: ReadonlySet<string>,
+  mates: LaneMates = new Map(),
+): Cardinal[] {
+  const mateKey = mates.get(pointKey(cell));
+  const found: Cardinal[] = [];
+  for (const { direction, key: nextKey } of neighborKeys(cell)) {
+    if (mateKey === nextKey) {
+      const opposite = OPPOSITE_CARDINAL[direction];
+      const oppDelta = DIRECTION_DELTA[opposite];
+      const oppositeKey = pointKey([cell[0] + oppDelta[0], cell[1] + oppDelta[1]]);
+      const beyond = pointKey([
+        cell[0] + DIRECTION_DELTA[direction][0] * 2,
+        cell[1] + DIRECTION_DELTA[direction][1] * 2,
+      ]);
+      if (occupied.has(oppositeKey) && occupied.has(beyond)) found.push(direction);
+      else {
+        const others = connectionNames(cell, occupied).filter((name) => name !== direction);
+        if (others.length === 1) {
+          const only = others[0];
+          if (only && OPPOSITE_CARDINAL[only] !== direction) found.push(direction);
+        }
+      }
+      continue;
+    }
+    if (occupied.has(nextKey)) found.push(direction);
+  }
+  return found;
+}
+
+/** Outer curb of a live 2-cell pair: one logical connector, but the twin still continues. */
+export function isLiveCarriagewayShoulder(
+  point: Point,
+  occupied: ReadonlySet<string>,
+  mates: LaneMates = new Map(),
+): boolean {
+  const mateKey = mates.get(pointKey(point));
+  if (!mateKey) return false;
+  if (logicalConnections(point, occupied, mates).length > 1) return false;
+  return logicalConnections(parsePointKey(mateKey), occupied, mates).length > 1;
+}
+
+export function logicalNeighborKeys(
+  point: Point,
+  occupied: ReadonlySet<string>,
+  mates: LaneMates = new Map(),
+): Array<{ direction: Cardinal; key: string; point: Point }> {
+  const dirs = new Set(logicalConnections(point, occupied, mates));
+  return neighborKeys(point).filter(({ direction }) => dirs.has(direction));
+}
+
+function pairKeys(mates: Map<string, string>, left: string, right: string): void {
+  if (left === right || mates.has(left) || mates.has(right)) return;
+  mates.set(left, right);
+  mates.set(right, left);
+}
+
+/** Pair each 2-cell avenue run without treating a 4-way crossing as a twin. */
+export function pairLaneMates(classes: ReadonlyMap<string, RoadClass>): Map<string, string> {
+  const mates = new Map<string, string>();
+  const avenueKeys = [...classes.keys()].filter((key) => isAvenueClass(classes.get(key))).sort();
+  const avenueSet = new Set(avenueKeys);
+
+  const avenueDirs = (point: Point): Set<Cardinal> =>
+    new Set(
+      neighborKeys(point)
+        .filter(({ key }) => avenueSet.has(key))
+        .map(({ direction }) => direction),
+    );
+
+  for (const key of avenueKeys) {
+    if (mates.has(key)) continue;
+    const point = parsePointKey(key);
+    const dirs = avenueDirs(point);
+    const vertical = dirs.has("north") && dirs.has("south");
+    const horizontal = dirs.has("east") && dirs.has("west");
+    if (vertical && horizontal) continue;
+    const leftover: Cardinal[] = vertical
+      ? (["east", "west"] as const).filter((direction) => dirs.has(direction))
+      : horizontal
+        ? (["south", "north"] as const).filter((direction) => dirs.has(direction))
+        : [];
+    for (const direction of leftover) {
+      const next = neighborKeys(point).find((neighbor) => neighbor.direction === direction);
+      if (!next || !avenueSet.has(next.key) || mates.has(next.key)) continue;
+      const nextDirs = avenueDirs(next.point);
+      const sharesAlong = vertical
+        ? nextDirs.has("north") || nextDirs.has("south")
+        : nextDirs.has("east") || nextDirs.has("west");
+      const crossingStreet = vertical
+        ? nextDirs.has("east") && nextDirs.has("west")
+        : nextDirs.has("north") && nextDirs.has("south");
+      if (!sharesAlong || crossingStreet) continue;
+      pairKeys(mates, key, next.key);
+      break;
+    }
+  }
+
+  for (const key of avenueKeys) {
+    if (mates.has(key)) continue;
+    const point = parsePointKey(key);
+    const neighbors = neighborKeys(point).filter(({ key: next }) => avenueSet.has(next));
+    if (neighbors.length !== 2) continue;
+    const [first, second] = neighbors;
+    if (!first || !second) continue;
+    if (OPPOSITE_CARDINAL[first.direction] === second.direction) continue;
+    for (const candidate of neighbors) {
+      if (mates.has(candidate.key)) continue;
+      const along = neighbors.find((neighbor) => neighbor.key !== candidate.key);
+      if (!along) continue;
+      const candidateNeighbors = neighborKeys(candidate.point).filter(({ key: next }) =>
+        avenueSet.has(next),
+      );
+      if (candidateNeighbors.length !== 2) continue;
+      const sharesAlong = candidateNeighbors.some(
+        (neighbor) => neighbor.direction === along.direction,
+      );
+      if (!sharesAlong) continue;
+      pairKeys(mates, key, candidate.key);
+      break;
+    }
+  }
+
+  return mates;
 }
 
 /** Clockwise cardinal rotation matching stored yaw (renderer applies -Y). */
@@ -238,6 +382,7 @@ function externalConnectors(
   return found;
 }
 
+/** Kenney 2×2 curve for a 1-cell-wide elbow. Dual carriageways occupy the inner cell, so this stays undefined there. */
 export function tryArterialCurve(
   corner: Point,
   occupied: ReadonlySet<string>,
@@ -313,12 +458,103 @@ export function tryArterialRoundabout(
   return { origin };
 }
 
+function isOppositePair(arms: readonly Cardinal[]): boolean {
+  return sameConnectors(arms, ["north", "south"]) || sameConnectors(arms, ["east", "west"]);
+}
+
+function insideDual(origin: Point, point: Point): boolean {
+  return (
+    point[0] >= origin[0] &&
+    point[0] <= origin[0] + 1 &&
+    point[1] >= origin[1] &&
+    point[1] <= origin[1] + 1
+  );
+}
+
+function edgeIsAvenueOutside(
+  cell: Point,
+  direction: Cardinal,
+  origin: Point,
+  occupied: ReadonlySet<string>,
+): boolean {
+  const next: Point = [
+    cell[0] + DIRECTION_DELTA[direction][0],
+    cell[1] + DIRECTION_DELTA[direction][1],
+  ];
+  return occupied.has(pointKey(next)) && !insideDual(origin, next);
+}
+
+function isCorridorOverlap2x2(origin: Point, occupied: ReadonlySet<string>): boolean {
+  const rowHasHorizontal = (row: number): boolean =>
+    [0, 1].some((column) => {
+      const cell: Point = [origin[0] + column, origin[1] + row];
+      return (
+        edgeIsAvenueOutside(cell, "east", origin, occupied) ||
+        edgeIsAvenueOutside(cell, "west", origin, occupied)
+      );
+    });
+  const columnHasVertical = (column: number): boolean =>
+    [0, 1].some((row) => {
+      const cell: Point = [origin[0] + column, origin[1] + row];
+      return (
+        edgeIsAvenueOutside(cell, "north", origin, occupied) ||
+        edgeIsAvenueOutside(cell, "south", origin, occupied)
+      );
+    });
+  return rowHasHorizontal(0) && rowHasHorizontal(1) && columnHasVertical(0) && columnHasVertical(1);
+}
+
+function turningDualOrigins(
+  occupied: ReadonlySet<string>,
+  classes: ReadonlyMap<string, RoadClass>,
+  size: number,
+): Point[] {
+  const origins: Point[] = [];
+  for (let y = 0; y < size - 1; y += 1) {
+    for (let x = 0; x < size - 1; x += 1) {
+      const origin: Point = [x, y];
+      const cells = boxCells(origin, 2, 2);
+      if (cells.some((cell) => !isAvenueClass(classes.get(pointKey(cell))))) continue;
+      if (cells.some((cell) => !occupied.has(pointKey(cell)))) continue;
+      if (!isCorridorOverlap2x2(origin, occupied)) continue;
+      const arms = externalConnectors(origin, 2, 2, occupied);
+      if (arms.length < 2 || isOppositePair(arms)) continue;
+      origins.push(origin);
+    }
+  }
+  return origins;
+}
+
+function dualJunctionTiles(
+  origin: Point,
+  occupied: ReadonlySet<string>,
+  classes: ReadonlyMap<string, RoadClass>,
+): RoadTile[] {
+  const cells = boxCells(origin, 2, 2);
+  const arms = externalConnectors(origin, 2, 2, occupied);
+  const physicalTile = (position: Point): RoadTile => {
+    const roadClass = classes.get(pointKey(position)) ?? "arterial";
+    const connections = connectionNames(position, occupied);
+    if (arms.length >= 3 && connections.length >= 4) {
+      return { position, assetId: "roads:road-crossroad", rotation: 0 };
+    }
+    const unit = resolveUnitTile(connections, roadClass);
+    return { position, assetId: unit.assetId, rotation: unit.rotation };
+  };
+  const tiles = cells.map(physicalTile);
+  const isBend = (assetId: string) =>
+    assetId === "roads:road-bend" || assetId === "roads:road-bend-sidewalk";
+  if (arms.length === 2 && tiles.every((tile) => isBend(tile.assetId))) return tiles;
+  return tiles;
+}
+
 export function resolveRoadTiles(
   classes: ReadonlyMap<string, RoadClass>,
   size: number,
   seed: string,
   roundaboutFrequency: number,
   mask: readonly boolean[],
+  mates: LaneMates = pairLaneMates(classes),
 ): RoadTile[] {
   const occupied = new Set(classes.keys());
   const positions = [...occupied]
@@ -366,10 +602,21 @@ export function resolveRoadTiles(
     tiles.push(tile);
   }
 
+  for (const origin of turningDualOrigins(occupied, classes, size)) {
+    const pending = boxCells(origin, 2, 2).filter((cell) => !covered.has(pointKey(cell)));
+    if (pending.length === 0) continue;
+    for (const tile of dualJunctionTiles(origin, occupied, classes)) {
+      const key = pointKey(tile.position);
+      if (covered.has(key)) continue;
+      tiles.push(tile);
+      covered.add(key);
+    }
+  }
+
   for (const position of positions) {
     const key = pointKey(position);
     if (covered.has(key)) continue;
-    const connections = connectionNames(position, occupied);
+    const connections = logicalConnections(position, occupied, mates);
     const roadClass = classes.get(key) ?? "local";
     const tile = resolveUnitTile(connections, roadClass);
     tiles.push({ position, assetId: tile.assetId, rotation: tile.rotation });
@@ -384,14 +631,35 @@ export function resolveRoadTiles(
   );
 }
 
-export function tileMatchesNeighbors(tile: RoadTile, occupied: ReadonlySet<string>): boolean {
+export function tileMatchesNeighbors(
+  tile: RoadTile,
+  occupied: ReadonlySet<string>,
+  mates: LaneMates = new Map(),
+): boolean {
   const identity = ROAD_TILE_CONNECTORS[tile.assetId];
   if (!identity) return false;
   const rotated = rotateConnectors(identity, tile.rotation);
   const { width, depth } = roadFootprint(tile.assetId);
   const needed =
     width === 1 && depth === 1
-      ? connectionNames(tile.position, occupied)
+      ? inTurningDualBlock(tile.position, occupied)
+        ? connectionNames(tile.position, occupied)
+        : logicalConnections(tile.position, occupied, mates)
       : externalConnectors(tile.position, width, depth, occupied);
   return sameConnectors(rotated, needed);
+}
+
+function inTurningDualBlock(point: Point, occupied: ReadonlySet<string>): boolean {
+  for (const originX of [point[0], point[0] - 1]) {
+    for (const originY of [point[1], point[1] - 1]) {
+      if (originX < 0 || originY < 0) continue;
+      const origin: Point = [originX, originY];
+      const cells = boxCells(origin, 2, 2);
+      if (cells.some((cell) => !occupied.has(pointKey(cell)))) continue;
+      if (!isCorridorOverlap2x2(origin, occupied)) continue;
+      const arms = externalConnectors(origin, 2, 2, occupied);
+      if (arms.length >= 2 && !isOppositePair(arms)) return true;
+    }
+  }
+  return false;
 }

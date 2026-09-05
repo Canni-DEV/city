@@ -77,6 +77,7 @@ const RoadCellSchema = z.object({
   position: Vector2Schema,
   assetId: z.string().min(1),
   rotation: z.number(),
+  roadClass: z.enum(["arterial", "collector", "local"]).optional(),
 });
 
 const SidewalkCellSchema = z.object({

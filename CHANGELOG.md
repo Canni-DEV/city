@@ -1,8 +1,13 @@
 # Changelog
 
-All notable changes use Semantic Versioning. The project remains in `0.x` until M0–M6, intermediate M3.5/M3.6/M3.6.1, and every 1.0 acceptance criterion are complete.
+All notable changes use Semantic Versioning. The project remains in `0.x` until M0–M6, intermediate M3.5/M3.6/M3.6.1 (including the avenue hotfix), and every 1.0 acceptance criterion are complete.
 
 ## [Unreleased]
+
+### Changed
+
+- Generator `0.6.5`: dual avenue L/T/4-way nudos stitch 1-cell gaps into occupancy blocks; dual T/4-way 2×2 cells with four openings use `road-crossroad`; a dual elbow counts the lane-mate as the other leg of the turn. Old `0.6.4` cities load without silent regeneration.
+- Generator `0.6.4`: arterial and collector corridors occupy two adjacent cells. Parallel 1-cell axes that already touch collapse into that pair instead of a 3-cell slab; remaining runs dilate only when that does not merge corridors. Tile topology ignores the lane-mate so `road-intersection` / `road-crossroad` appear only at real crossings. Local streets stay one cell. Resolved road cells may record `roadClass`. Old `0.6.3` cities load without silent regeneration.
 
 ## [0.7.0] - 2026-09-05
 
