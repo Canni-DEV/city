@@ -8,7 +8,7 @@
 - **REN-006:** Shared visual profile includes fixed sun, ambient light, nearby shadows, soft fog, and selection with no heavy post-processing.
 - **REN-007:** Materials and node features must work on both backends; avoid incompatible `ShaderMaterial`, `EffectComposer`, and helpers.
 - **REN-008:** Quality adjusts shadows, distance, fog, decoration, LOD, and agent count without changing the document.
-- **REN-009:** Runtime agents use per-instance `SkinnedMesh` and `AnimationMixer` (idle/run). City-kit buildings and roads stay instanced (REN-004). Agent source FBX is never shipped; only generated GLB and PNG enter the runtime copy.
+- **REN-009:** Runtime agents use per-instance `SkinnedMesh` and `AnimationMixer` (idle/run). Each mixer clones its clips so interpolants are not shared across agents. Generated character GLBs store Kenney Idle/Run, not the FBX `0.Targeting Pose`. Agent materials are `MeshStandardNodeMaterial` with a per-skin map so WebGPU and the WebGL 2 fallback can deform the skeleton. City-kit buildings and roads stay instanced (REN-004). Agent source FBX is never shipped; only generated GLB and PNG enter the runtime copy.
 
 For local/manual fallback QA, add `?forceWebGL=1` before the hash route (for example, `/city/?forceWebGL=1#/dev/assets`).
 
@@ -22,7 +22,7 @@ For local/manual fallback QA, add `?forceWebGL=1` before the hash route (for exa
 
 Record device, browser, backend, quality, city size, entity count, frame-rate observation, generation duration, and screenshot in milestone PR evidence.
 
-- **Device / runtime:** Windows development host; Node generator tests; Vite production copy of 226 catalog GLB/PNG runtime files (no FBX, OBJ, or source HTML).
-- **AC-011 generation:** A 128×128 Balanced city completes in under five seconds in Node (automated). The 200-city preset/size batch including 64/96/128 maps finished with the rest of the core suite in approximately 8.2 seconds.
-- **AC-010 frame rate:** Manual Chrome/Edge 1920×1080 observations for WebGPU and forced WebGL 2, across Auto/Low/Medium/High, belong in the M3 review screenshots. Diagnostics expose FPS, entity count, and draw calls after generation.
-- **AC-012 bundle:** `apps/web/dist/runtime-assets` contains only catalog-referenced GLB models and PNG textures.
+- **Device / runtime:** Windows development host; Node generator tests; Vite production copy of catalog GLB/PNG runtime files including generated protagonist GLBs and skins (no FBX, OBJ, or source HTML).
+- **AC-011 generation:** A 128×128 Balanced city completes in under five seconds in Node (automated). The 200-city preset/size batch including 64/96/128 maps finished with the rest of the core suite (including TST-008) in approximately 15 seconds.
+- **AC-010 frame rate:** Diagnostics expose FPS, entity count, pedestrian count, and draw calls after generation. Cursor Chromium QA on this host (96×96 Balanced, seed `green-crossroads`): WebGPU Auto/high with 12 cloned `SkinnedMesh` agents on distinct road cells; `?forceWebGL=1` Auto/medium with the same 12/12 occupancy, `maxZoom` 48, and Kenney skins bound. Default orthographic zoom remains 9. Edge was not driven separately (same Blink family as the Chrome harness).
+- **AC-012 bundle:** `apps/web/dist/runtime-assets` contains only catalog-referenced GLB models and PNG textures (city kits plus generated protagonist GLBs and four skins; no FBX).

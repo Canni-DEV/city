@@ -1,6 +1,6 @@
 import { assetById, runtimeAssetUrl } from "@city/assets";
 import type { CityDocumentV1 } from "@city/core";
-import { OrbitControls, useGLTF } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera, useGLTF } from "@react-three/drei";
 import { Canvas, type RootState, useFrame, useThree } from "@react-three/fiber";
 import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three/webgpu";
@@ -12,6 +12,8 @@ import {
   type RendererBackend,
   syncRendererLayout,
 } from "../rendering/renderer";
+import { AgentLayer } from "./AgentLayer";
+import { FreeFlightControls } from "./FreeFlightControls";
 import { InstancedAssetBatch } from "./InstancedAssetBatch";
 import { LandOverlays, type OverlayOptions } from "./LandOverlays";
 
@@ -155,6 +157,7 @@ function CityScene({
   overlays,
   quality,
   selectedEntityId,
+  freeCamera,
   onSelect,
   onStats,
 }: {
@@ -162,6 +165,7 @@ function CityScene({
   overlays: OverlayOptions;
   quality: ResolvedQuality;
   selectedEntityId: string | null;
+  freeCamera: boolean;
   onSelect: (id: string | null) => void;
   onStats: (stats: { fps: number; drawCalls: number }) => void;
 }) {
@@ -182,11 +186,26 @@ function CityScene({
       const entry = assetById.get(batch.assetId);
       if (entry) useGLTF.preload(runtimeAssetUrl(entry.runtimePath, import.meta.env.BASE_URL));
     }
+    const body = assetById.get("protagonists:character-medium");
+    if (body) useGLTF.preload(runtimeAssetUrl(body.runtimePath, import.meta.env.BASE_URL));
   }, [entityBatches.batches, roadBatches]);
 
   return (
     <>
-      <CityCamera size={size} />
+      {freeCamera ? (
+        <>
+          <PerspectiveCamera
+            makeDefault
+            fov={62}
+            near={0.05}
+            far={size * 16}
+            position={[size * 0.55, size * 0.7, size * 0.55]}
+          />
+          <FreeFlightControls />
+        </>
+      ) : (
+        <CityCamera size={size} />
+      )}
       <color attach="background" args={["#0b1210"]} />
       <fog attach="fog" args={["#0b1210", quality.fogNear, quality.fogFar]} />
       <ambientLight intensity={1.15} />
@@ -226,14 +245,17 @@ function CityScene({
           />
         ))}
         <SelectionProxy document={document} entityId={selectedEntityId} />
+        <AgentLayer document={document} count={quality.agentCount} />
       </Suspense>
-      <OrbitControls
-        makeDefault
-        target={[0, 0, 0]}
-        minZoom={3}
-        maxZoom={28}
-        maxPolarAngle={Math.PI * 0.48}
-      />
+      {freeCamera ? null : (
+        <OrbitControls
+          makeDefault
+          target={[0, 0, 0]}
+          minZoom={3}
+          maxZoom={48}
+          maxPolarAngle={Math.PI * 0.48}
+        />
+      )}
     </>
   );
 }
@@ -244,6 +266,7 @@ export function CityCanvas({
   overlays,
   quality,
   selectedEntityId,
+  freeCamera,
   onSelect,
   onStats,
 }: {
@@ -252,6 +275,7 @@ export function CityCanvas({
   overlays: OverlayOptions;
   quality: ResolvedQuality;
   selectedEntityId: string | null;
+  freeCamera: boolean;
   onSelect: (id: string | null) => void;
   onStats: (stats: { fps: number; drawCalls: number }) => void;
 }) {
@@ -266,7 +290,7 @@ export function CityCanvas({
     <Canvas
       aria-label={
         document
-          ? `3D city with buildings and decoration for ${document.name}`
+          ? `3D city with buildings, streets, and pedestrians for ${document.name}`
           : "Empty city viewport"
       }
       orthographic
@@ -285,6 +309,7 @@ export function CityCanvas({
           overlays={overlays}
           quality={quality}
           selectedEntityId={selectedEntityId}
+          freeCamera={freeCamera}
           onSelect={onSelect}
           onStats={onStats}
         />

@@ -4,9 +4,18 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-05
+
 ### Added
 
-- Planning for M3.6 runtime agents (SIM-001–007, ADR-0012): seeded pedestrians on the occupied road graph, Kenney Animated Characters Protagonists 1.1 preserved under `assets/`, character GLBs to be generated outside `/assets` at implementation.
+- M3.6 runtime pedestrians: seeded NPCs walk the occupied road graph with A*, cell reservation, idle/run clips, and Kenney protagonist skins. Character GLBs are generated outside `/assets`.
+- Optional free camera (**F**) for unrestricted city inspection; the default orbital city view is unchanged.
+
+### Fixed
+
+- Character GLB export picks Kenney `Root|Idle` / `Root|Run` instead of the first FBX clip (`Root|0.Targeting Pose`), which left walking NPCs in a T-pose.
+- Agent mixers keep their clip bindings across React remounts so the city canvas does not crash when pedestrians start idle/run.
+- Pedestrian travel speed is about one-third of a cell per second so the Kenney run cycle reads as a walk.
 
 ## [0.5.0] - 2026-09-05
 

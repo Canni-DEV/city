@@ -1,3 +1,5 @@
+import { agentCountFor, type MapSize } from "@city/core";
+
 export const QUALITY_PROFILES = ["auto", "low", "medium", "high"] as const;
 export type QualityProfile = (typeof QUALITY_PROFILES)[number];
 export type ResolvedQualityLevel = "low" | "medium" | "high";
@@ -12,6 +14,7 @@ export interface ResolvedQuality {
   showDecoration: boolean;
   useLod: boolean;
   pixelRatioCap: number;
+  agentCount: number;
 }
 
 export function resolveQualityLevel(
@@ -33,6 +36,8 @@ export function resolveQuality(
   deviceMemory?: number,
 ): ResolvedQuality {
   const resolved = resolveQualityLevel(profile, backend, deviceMemory);
+  const map: MapSize = mapSize === 64 || mapSize === 128 ? mapSize : 96;
+  const agentCount = agentCountFor(map, resolved);
   if (resolved === "low") {
     return {
       resolved,
@@ -44,6 +49,7 @@ export function resolveQuality(
       showDecoration: false,
       useLod: true,
       pixelRatioCap: 1,
+      agentCount,
     };
   }
   if (resolved === "medium") {
@@ -57,6 +63,7 @@ export function resolveQuality(
       showDecoration: true,
       useLod: true,
       pixelRatioCap: 1.5,
+      agentCount,
     };
   }
   return {
@@ -69,5 +76,6 @@ export function resolveQuality(
     showDecoration: true,
     useLod: false,
     pixelRatioCap: 2,
+    agentCount,
   };
 }

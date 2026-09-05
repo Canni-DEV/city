@@ -13,6 +13,7 @@ import { CircleStop, Dices, RotateCcw, Route, Sparkles } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { CityCanvas } from "../city/CityCanvas";
 import { GenerationControls } from "../city/GenerationControls";
+import { isEditableTarget } from "../city/keyboard";
 import { suggestCityName } from "../city/suggest-city-name";
 import { QUALITY_PROFILES, resolveQuality } from "../rendering/quality";
 import { useCityStore } from "../state/city-store";
@@ -27,6 +28,7 @@ export function CityPage() {
   const [preset, setPreset] = useState<(typeof CITY_PRESETS)[number]>("balanced");
   const [parameters, setParameters] = useState<GenerationParameters>(PRESET_PARAMETERS.balanced);
   const [overlays, setOverlays] = useState({ zones: false, lots: false, grid: false });
+  const [freeCamera, setFreeCamera] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [stats, setStats] = useState({ fps: 0, drawCalls: 0 });
   const workerRef = useRef<Worker | null>(null);
@@ -50,11 +52,25 @@ export function CityPage() {
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") useCityStore.getState().selectEntity(null);
+      if (isEditableTarget(event.target)) return;
+      if (event.key === "Escape") {
+        if (freeCamera) {
+          setFreeCamera(false);
+          return;
+        }
+        useCityStore.getState().selectEntity(null);
+        return;
+      }
+      if (event.key === "f" || event.key === "F") {
+        if (event.ctrlKey || event.metaKey || event.altKey) return;
+        if (!useCityStore.getState().document) return;
+        event.preventDefault();
+        setFreeCamera((enabled) => !enabled);
+      }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [freeCamera]);
 
   useEffect(() => {
     const worker = new Worker(new URL("../workers/generation.worker.ts", import.meta.url), {
@@ -323,6 +339,25 @@ export function CityPage() {
                 ? `Selected ${selectedEntity.assetId.replace(":", " ")}`
                 : "No object selected. Click a building or prop to highlight it."}
             </p>
+            <button
+              type="button"
+              className="city-button"
+              aria-pressed={freeCamera}
+              aria-label={
+                freeCamera
+                  ? "Return to city camera. Shortcut F."
+                  : "Enable free camera. Shortcut F."
+              }
+              onClick={() => setFreeCamera((enabled) => !enabled)}
+            >
+              {freeCamera ? "City camera (F)" : "Free camera (F)"}
+            </button>
+            {freeCamera ? (
+              <p className="selection-status" role="status">
+                Free camera: WASD moves, right-drag looks, wheel flies along view, Space/E up, C/Q
+                down, Shift faster. F or Escape returns to the city view.
+              </p>
+            ) : null}
             <Panel className="city-diagnostics">
               <div>
                 <span>Entities</span>
@@ -352,6 +387,10 @@ export function CityPage() {
                 <strong>{store.durationMs?.toFixed(0)} ms</strong>
               </div>
               <div>
+                <span>Pedestrians</span>
+                <strong>{quality.agentCount}</strong>
+              </div>
+              <div>
                 <span>Lots</span>
                 <strong>{generatedCity.lots.length}</strong>
               </div>
@@ -370,9 +409,15 @@ export function CityPage() {
           overlays={overlays}
           quality={quality}
           selectedEntityId={store.selectedEntityId}
+          freeCamera={freeCamera}
           onSelect={store.selectEntity}
           onStats={setStats}
         />
+        {generatedCity && freeCamera ? (
+          <p className="free-camera-hint" role="status">
+            Free camera. WASD to move, right-drag to look. F or Escape for city view.
+          </p>
+        ) : null}
         {!generatedCity && (
           <div className="viewport-empty">
             <RotateCcw size={42} aria-hidden="true" />

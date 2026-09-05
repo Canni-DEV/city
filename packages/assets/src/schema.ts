@@ -3,7 +3,8 @@ import { z } from "zod";
 // Kept structurally identical to the public core contract while this package remains build-isolated.
 const CompatibleZoneSchema = z.enum(["suburban", "urban", "commercial", "industrial", "park"]);
 
-export const AssetPackSchema = z.enum(["commercial", "industrial", "roads", "suburban"]);
+export const CITY_KIT_PACKS = ["commercial", "industrial", "roads", "suburban"] as const;
+export const AssetPackSchema = z.enum([...CITY_KIT_PACKS, "protagonists"]);
 export const AssetCategorySchema = z.enum([
   "building",
   "lod",
@@ -14,6 +15,8 @@ export const AssetCategorySchema = z.enum([
   "decoration",
   "infrastructure",
   "terrain",
+  "character",
+  "animation",
 ]);
 export const DirectionSchema = z.enum(["north", "east", "south", "west"]);
 export const FrontSchema = z.enum([
@@ -49,13 +52,16 @@ export const AssetCatalogEntrySchema = z.object({
   elevated: z.boolean(),
   availableInV1: z.boolean(),
   review: z.enum(["heuristic", "override"]),
+  uniformScale: z.number().positive().optional(),
 });
+
+export const CITY_KIT_ENTRY_COUNT = 213;
 
 export const AssetCatalogSchema = z.object({
   schemaVersion: z.literal(1),
   generatedAt: z.iso.datetime(),
   sourceDigest: z.string().min(1),
-  entries: z.array(AssetCatalogEntrySchema).length(213),
+  entries: z.array(AssetCatalogEntrySchema).min(CITY_KIT_ENTRY_COUNT),
 });
 
 export type AssetCatalogEntry = z.infer<typeof AssetCatalogEntrySchema>;

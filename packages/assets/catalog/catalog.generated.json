@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "generatedAt": "2026-09-04T00:00:00.000Z",
-  "sourceDigest": "9616cb40cfeb8c540abd01c4795259be7e472aa9dd5b568422658eb56911b549",
+  "sourceDigest": "22837d2ecf6147f48201784a32b1957ebb77d2751e0a44986f8d33a820b25e05",
   "entries": [
     {
       "id": "commercial:building-a",
@@ -3384,6 +3384,174 @@
       "proceduralWeight": 1,
       "connectors": [],
       "instancing": true,
+      "lodModelId": null,
+      "decoration": false,
+      "elevated": false,
+      "availableInV1": true,
+      "review": "override"
+    },
+    {
+      "id": "protagonists:character-medium",
+      "pack": "protagonists",
+      "model": "character-medium",
+      "sourceFile": "packages/assets/generated/characters/character-medium.glb",
+      "runtimePath": "runtime-assets/protagonists/character-medium.glb",
+      "previewFile": "assets/kenney_animated-characters-protagonists/Preview.png",
+      "texturePaths": [
+        "runtime-assets/protagonists/skins/skaterMaleA.png",
+        "runtime-assets/protagonists/skins/skaterFemaleA.png",
+        "runtime-assets/protagonists/skins/cyborgFemaleA.png",
+        "runtime-assets/protagonists/skins/criminalMaleA.png"
+      ],
+      "category": "character",
+      "subcategory": "protagonist-body",
+      "dimensions": [
+        0.3076,
+        0.32,
+        0.0891
+      ],
+      "footprint": {
+        "width": 0.3076,
+        "depth": 0.0891
+      },
+      "verticalOffset": 0,
+      "front": "south",
+      "allowedRotations": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "compatibleZones": [],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": false,
+      "lodModelId": null,
+      "decoration": false,
+      "elevated": false,
+      "availableInV1": true,
+      "review": "override"
+    },
+    {
+      "id": "protagonists:idle",
+      "pack": "protagonists",
+      "model": "idle",
+      "sourceFile": "packages/assets/generated/characters/idle.glb",
+      "runtimePath": "runtime-assets/protagonists/idle.glb",
+      "previewFile": "assets/kenney_animated-characters-protagonists/Preview.png",
+      "texturePaths": [
+        "runtime-assets/protagonists/skins/skaterMaleA.png",
+        "runtime-assets/protagonists/skins/skaterFemaleA.png",
+        "runtime-assets/protagonists/skins/cyborgFemaleA.png",
+        "runtime-assets/protagonists/skins/criminalMaleA.png"
+      ],
+      "category": "animation",
+      "subcategory": "protagonist-clip",
+      "dimensions": [
+        0.3076,
+        0.32,
+        0.0891
+      ],
+      "footprint": {
+        "width": 0.3076,
+        "depth": 0.0891
+      },
+      "verticalOffset": 0,
+      "front": "not-applicable",
+      "allowedRotations": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "compatibleZones": [],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": false,
+      "lodModelId": null,
+      "decoration": false,
+      "elevated": false,
+      "availableInV1": true,
+      "review": "override"
+    },
+    {
+      "id": "protagonists:jump",
+      "pack": "protagonists",
+      "model": "jump",
+      "sourceFile": "packages/assets/generated/characters/jump.glb",
+      "runtimePath": "runtime-assets/protagonists/jump.glb",
+      "previewFile": "assets/kenney_animated-characters-protagonists/Preview.png",
+      "texturePaths": [
+        "runtime-assets/protagonists/skins/skaterMaleA.png",
+        "runtime-assets/protagonists/skins/skaterFemaleA.png",
+        "runtime-assets/protagonists/skins/cyborgFemaleA.png",
+        "runtime-assets/protagonists/skins/criminalMaleA.png"
+      ],
+      "category": "animation",
+      "subcategory": "protagonist-clip",
+      "dimensions": [
+        0.3076,
+        0.32,
+        0.0891
+      ],
+      "footprint": {
+        "width": 0.3076,
+        "depth": 0.0891
+      },
+      "verticalOffset": 0,
+      "front": "not-applicable",
+      "allowedRotations": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "compatibleZones": [],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": false,
+      "lodModelId": null,
+      "decoration": false,
+      "elevated": false,
+      "availableInV1": true,
+      "review": "override"
+    },
+    {
+      "id": "protagonists:run",
+      "pack": "protagonists",
+      "model": "run",
+      "sourceFile": "packages/assets/generated/characters/run.glb",
+      "runtimePath": "runtime-assets/protagonists/run.glb",
+      "previewFile": "assets/kenney_animated-characters-protagonists/Preview.png",
+      "texturePaths": [
+        "runtime-assets/protagonists/skins/skaterMaleA.png",
+        "runtime-assets/protagonists/skins/skaterFemaleA.png",
+        "runtime-assets/protagonists/skins/cyborgFemaleA.png",
+        "runtime-assets/protagonists/skins/criminalMaleA.png"
+      ],
+      "category": "animation",
+      "subcategory": "protagonist-clip",
+      "dimensions": [
+        0.3076,
+        0.32,
+        0.0891
+      ],
+      "footprint": {
+        "width": 0.3076,
+        "depth": 0.0891
+      },
+      "verticalOffset": 0,
+      "front": "not-applicable",
+      "allowedRotations": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "compatibleZones": [],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": false,
       "lodModelId": null,
       "decoration": false,
       "elevated": false,
