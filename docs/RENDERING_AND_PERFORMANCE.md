@@ -1,6 +1,6 @@
 # Rendering and performance
 
-- **REN-001:** React Three Fiber initializes `WebGPURenderer` asynchronously. On WebGPU failure it recreates the renderer once with forced WebGL 2 and displays a notice.
+- **REN-001:** React Three Fiber initializes `WebGPURenderer` asynchronously. On WebGPU failure it recreates the renderer once with forced WebGL 2 and displays a notice. The city workspace is a definite CSS grid (`minmax(0, 1fr)` row and viewport column); the canvas wrapper fills that cell. After `init()`, drawing-buffer size is taken from that layout. Concurrent `gl` factories share one renderer per canvas. Backend is reported from the initialized renderer, not from inside the factory.
 - **REN-002:** The open `CityDocument` survives renderer recreation because rendering owns no authoritative domain state.
 - **REN-003:** The diagnostic shows active backend and Auto/Low/Medium/High quality.
 - **REN-004:** Entities group by asset and texture variant in `InstancedMesh`; a stable bidirectional map links `instanceId` and entity ID.

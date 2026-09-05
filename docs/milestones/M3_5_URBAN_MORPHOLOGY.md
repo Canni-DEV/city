@@ -12,6 +12,7 @@ Reopen road-graph construction, tile resolution, and lot subdivision so generate
 - Route arterial/collector links with long cardinal runs and 90° elbows; overlay a local 1-cell street mesh that closes manzanas (~8–12 free cells on 96/128, ~6–8 on 64).
 - Resolve Kenney tiles from neighbor topology, road class, and catalog connectors; yaw must match the renderer Y-negation convention.
 - Place `roads:road-curve` (2×2) on arterial/collector elbows when the footprint fits; local streets keep 1×1 bends.
+- Place `roads:road-roundabout` (3×3) on arterial 4-ways when four approach cells and free corners fit; otherwise keep a 1×1 cross.
 - Flood-fill blocks without 4×4 zoning patches; pack a frontage ring of lots (depth 3–4) and leave a courtyard; zone whole manzanas.
 
 ## Verification and evidence
@@ -25,5 +26,7 @@ No object editor, road editing, zoning editing, 2-cell-wide carriageways, elevat
 ## Completion evidence
 
 - Implemented generator version `0.5.0` with hierarchical arterial/local mesh, connector-resolved tiles, multi-cell road occupancy, street-bounded blocks, and ring lots.
+- Kenney `road-bend` / `road-curve` identity is west+south; arterial 4-ways may place a 3×3 `road-roundabout` when the footprint and approach cells fit.
+- The city canvas fills a definite viewport grid track so the first generated city is visible without a window resize (REN-001).
 - Automated suites pass a new structural hash, reproducible retries, morphology invariants, and the 200-city batch.
 - Monorepo Biome check, typecheck, Vitest suites, and production build pass.

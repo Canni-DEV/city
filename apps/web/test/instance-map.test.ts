@@ -119,11 +119,19 @@ describe("REN-004 instance mapping", () => {
         assetId: "roads:road-straight",
         rotation: 90,
       },
+      {
+        id: "roundabout",
+        position: [0, 8],
+        assetId: "roads:road-roundabout",
+        rotation: 0,
+      },
     ];
     const batches = buildRoadBatches(document);
     const curve = batches.find((batch) => batch.assetId === "roads:road-curve")?.items[0];
     const straight = batches.find((batch) => batch.assetId === "roads:road-straight")?.items[0];
+    const roundabout = batches.find((batch) => batch.assetId === "roads:road-roundabout")?.items[0];
     expect(curve?.position).toEqual([11, 0.015, 21]);
     expect(straight?.position).toEqual([3.5, 0.015, 4.5]);
+    expect(roundabout?.position).toEqual([1.5, 0.015, 9.5]);
   });
 });

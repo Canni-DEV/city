@@ -1,14 +1,26 @@
 import { assetById, runtimeAssetUrl } from "@city/assets";
 import type { CityDocumentV1 } from "@city/core";
 import { OrbitControls, useGLTF } from "@react-three/drei";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { Canvas, type RootState, useFrame, useThree } from "@react-three/fiber";
+import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three/webgpu";
 import { buildEntityBatches, buildRoadBatches } from "../rendering/instance-map";
 import type { ResolvedQuality } from "../rendering/quality";
-import { createCompatibleRenderer, type RendererBackend } from "../rendering/renderer";
+import {
+  createCompatibleRenderer,
+  detectRendererBackend,
+  type RendererBackend,
+  syncRendererLayout,
+} from "../rendering/renderer";
 import { InstancedAssetBatch } from "./InstancedAssetBatch";
 import { LandOverlays, type OverlayOptions } from "./LandOverlays";
+
+const EMPTY_CITY_CAMERA = {
+  position: [52.8, 67.2, 52.8] as [number, number, number],
+  zoom: 9,
+  near: 0.1,
+  far: 640,
+};
 
 function UrbanGround({ document }: { document: CityDocumentV1 }) {
   const mesh = useRef<THREE.InstancedMesh>(null);
@@ -39,12 +51,15 @@ function UrbanGround({ document }: { document: CityDocumentV1 }) {
   );
 }
 
-function QualityEffects({ quality }: { quality: ResolvedQuality }) {
-  const gl = useThree((state) => state.gl);
-  useEffect(() => {
-    gl.setPixelRatio(Math.min(window.devicePixelRatio, quality.pixelRatioCap));
-    gl.shadowMap.enabled = quality.shadows;
-  }, [gl, quality]);
+function CityCamera({ size }: { size: number }) {
+  const camera = useThree((state) => state.camera);
+  useLayoutEffect(() => {
+    camera.position.set(size * 0.55, size * 0.7, size * 0.55);
+    camera.near = 0.1;
+    camera.far = size * 5;
+    camera.lookAt(0, 0, 0);
+    camera.updateProjectionMatrix();
+  }, [camera, size]);
   return null;
 }
 
@@ -171,6 +186,7 @@ function CityScene({
 
   return (
     <>
+      <CityCamera size={size} />
       <color attach="background" args={["#0b1210"]} />
       <fog attach="fog" args={["#0b1210", quality.fogNear, quality.fogFar]} />
       <ambientLight intensity={1.15} />
@@ -187,7 +203,6 @@ function CityScene({
         shadow-camera-top={quality.shadowSpan}
         shadow-camera-bottom={-quality.shadowSpan}
       />
-      <QualityEffects quality={quality} />
       <FrameStats onStats={onStats} />
       <mesh position={[0, -0.22, 0]} receiveShadow>
         <boxGeometry args={[size + 4, 0.24, size + 4]} />
@@ -240,7 +255,13 @@ export function CityCanvas({
   onSelect: (id: string | null) => void;
   onStats: (stats: { fps: number; drawCalls: number }) => void;
 }) {
-  const size = document?.map.size ?? 64;
+  const onCreated = useCallback(
+    (state: RootState) => {
+      syncRendererLayout(state.gl.domElement, state.setSize);
+      onBackend(detectRendererBackend(state.gl));
+    },
+    [onBackend],
+  );
   return (
     <Canvas
       aria-label={
@@ -249,14 +270,11 @@ export function CityCanvas({
           : "Empty city viewport"
       }
       orthographic
-      camera={{
-        position: [size * 0.55, size * 0.7, size * 0.55],
-        zoom: 9,
-        near: 0.1,
-        far: size * 5,
-      }}
-      gl={(parameters) => createCompatibleRenderer(parameters, onBackend)}
-      onCreated={({ camera }) => camera.lookAt(0, 0, 0)}
+      camera={EMPTY_CITY_CAMERA}
+      dpr={[1, quality.pixelRatioCap]}
+      style={{ position: "absolute", inset: 0 }}
+      gl={createCompatibleRenderer}
+      onCreated={onCreated}
       onPointerMissed={() => onSelect(null)}
       shadows={quality.shadows}
     >

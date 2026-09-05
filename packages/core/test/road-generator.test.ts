@@ -36,7 +36,7 @@ describe("M1–M3.5 city generation", () => {
       timestamp: "2027-01-01T00:00:00.000Z",
     });
     expect(hashGeneratedStructure(first)).toBe(hashGeneratedStructure(second));
-    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"3f581fd0"`);
+    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"87023de6"`);
   });
 
   it("TST-001 derives reproducible attempts and retries at most three times", async () => {

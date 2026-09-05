@@ -4,7 +4,7 @@
 
 ## Decision
 
-Generate a connected arterial/collector skeleton between gates and districts, then overlay a local one-cell street mesh whose spacing and orthogonality follow road regularity. Resolve modular Kenney tiles from catalog connectors; 2×2 curve assets occupy four unit cells while remaining on the unit grid.
+Generate a connected arterial/collector skeleton between gates and districts, then overlay a local one-cell street mesh whose spacing and orthogonality follow road regularity. Resolve modular Kenney tiles from catalog connectors; 2×2 curve assets occupy four unit cells and 3×3 roundabouts occupy nine, while remaining on the unit grid.
 
 ## Consequences
 

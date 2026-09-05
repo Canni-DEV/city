@@ -1,6 +1,10 @@
 import { createEmptyCityDocument, PRESET_PARAMETERS } from "@city/core";
 import { describe, expect, it, vi } from "vitest";
-import { initializeWithFallback } from "../src/rendering/renderer";
+import {
+  detectRendererBackend,
+  initializeWithFallback,
+  readCanvasLayoutSize,
+} from "../src/rendering/renderer";
 import { useCityStore } from "../src/state/city-store";
 
 function sampleDocument() {
@@ -67,5 +71,29 @@ describe("TST-007 renderer fallback", () => {
     useCityStore.getState().setBackend("webgl2");
     useCityStore.getState().setQuality("low");
     expect(useCityStore.getState().document).toBe(document);
+  });
+
+  it("REN-001 reads layout size from the container, not the canvas default", () => {
+    const parent = {
+      clientWidth: 10,
+      clientHeight: 10,
+      getBoundingClientRect: () => ({ width: 1280, height: 720, top: 70, left: 370 }),
+    } as HTMLElement;
+    const canvas = {
+      clientWidth: 300,
+      clientHeight: 150,
+      parentElement: parent,
+    } as HTMLCanvasElement;
+    expect(readCanvasLayoutSize(canvas)).toEqual({
+      width: 1280,
+      height: 720,
+      top: 70,
+      left: 370,
+    });
+  });
+
+  it("REN-001 reports WebGL 2 from the active Three.js backend", () => {
+    expect(detectRendererBackend({ backend: { isWebGLBackend: true } })).toBe("webgl2");
+    expect(detectRendererBackend({ backend: {} })).toBe("webgpu");
   });
 });

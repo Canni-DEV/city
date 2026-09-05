@@ -1,7 +1,7 @@
 # Data model
 
 - **DAT-001:** `CityDocumentV1` is a complete schema-versioned snapshot with ID, name, UTC timestamps, generator version, seed, deterministic attempt, preset parameters, map size, one-unit cells, irregular boundary mask, and normalized per-cell density field.
-- **DAT-002:** It contains districts, road graph nodes/edges/resolved cells, blocks, lots, zones, and an entity registry. Resolved road cells are renderable tiles; occupied ground cells are the tile origin plus the catalog footprint (so a 2×2 curve occupies four unit cells). Graph nodes may be gates, district centers, or junctions. Edges record `arterial`, `collector`, or `local` class.
+- **DAT-002:** It contains districts, road graph nodes/edges/resolved cells, blocks, lots, zones, and an entity registry. Resolved road cells are renderable tiles; occupied ground cells are the tile origin plus the catalog footprint (so a 2×2 curve occupies four unit cells and a 3×3 roundabout occupies nine). Graph nodes may be gates, district centers, or junctions. Edges record `arterial`, `collector`, or `local` class.
 - **DAT-003:** Every entity records asset ID, transform, footprint, origin (`procedural` or `user`), edit state, optional district/block/lot/zone, and compatibility warning.
 - **DAT-004:** Each block has enough identity and regeneration index to reproduce replacement generation.
 - **DAT-005:** Procedural IDs derive from generator version, seed, stage, and stable index. Manual IDs use `crypto.randomUUID()` and a `user:` prefix.

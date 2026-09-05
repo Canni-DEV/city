@@ -4352,7 +4352,7 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "east",
+        "west",
         "south"
       ],
       "instancing": true,
@@ -4395,7 +4395,7 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "east",
+        "west",
         "south"
       ],
       "instancing": true,
@@ -4438,7 +4438,7 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "east",
+        "west",
         "south"
       ],
       "instancing": true,
@@ -4481,7 +4481,7 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "east",
+        "west",
         "south"
       ],
       "instancing": true,
@@ -4524,7 +4524,7 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "east",
+        "west",
         "south"
       ],
       "instancing": true,
@@ -4833,7 +4833,7 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "east",
+        "west",
         "south"
       ],
       "instancing": true,
@@ -4876,7 +4876,7 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "east",
+        "west",
         "south"
       ],
       "instancing": true,
@@ -5007,7 +5007,7 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "east",
+        "west",
         "south"
       ],
       "instancing": true,
@@ -6328,7 +6328,7 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "east",
+        "west",
         "south"
       ],
       "instancing": true,
@@ -6371,7 +6371,7 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "east",
+        "west",
         "south"
       ],
       "instancing": true,
@@ -6457,7 +6457,7 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "east",
+        "west",
         "south"
       ],
       "instancing": true,

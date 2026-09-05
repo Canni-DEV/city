@@ -24,15 +24,16 @@ export const DIRECTION_DELTA: Record<Cardinal, Point> = {
 /**
  * Catalog connectors at yaw 0 for tiles used by GEN-005.
  * Kenney City Kit Roads are Y-up with +X east and +Z south: straights run along X
- * (east–west) with sidewalks on ±Z, ends open to +X, and T-junctions close the north side.
+ * (east–west) with sidewalks on ±Z, ends open to +X, T-junctions close the north side,
+ * and 90° bends/curves open west+south (outer curb on the north-east).
  */
 export const ROAD_TILE_CONNECTORS: Readonly<Record<string, readonly Cardinal[]>> = {
   "roads:road-end": ["east"],
   "roads:road-straight": ["east", "west"],
   "roads:road-square": ["east", "west"],
-  "roads:road-bend": ["east", "south"],
-  "roads:road-bend-sidewalk": ["east", "south"],
-  "roads:road-curve": ["east", "south"],
+  "roads:road-bend": ["west", "south"],
+  "roads:road-bend-sidewalk": ["west", "south"],
+  "roads:road-curve": ["west", "south"],
   "roads:road-intersection": ["east", "south", "west"],
   "roads:road-intersection-line": ["east", "south", "west"],
   "roads:road-crossroad": ["north", "east", "south", "west"],
@@ -123,18 +124,14 @@ export function topologyFromConnections(connections: readonly Cardinal[]): RoadT
   return opposite ? "straight" : "bend";
 }
 
-export function tileAssetFor(
-  roadClass: RoadClass,
-  topology: RoadTopology,
-  roundabout: boolean,
-): string {
-  if (topology === "cross" && roundabout) return "roads:road-roundabout";
+export function tileAssetFor(roadClass: RoadClass, topology: RoadTopology): string {
   const palette = roadClass === "local" ? LOCAL_TILES : AVENUE_TILES;
   return palette[topology];
 }
 
 export function roadFootprint(assetId: string): { width: number; depth: number } {
   if (assetId === "roads:road-curve") return { width: 2, depth: 2 };
+  if (assetId === "roads:road-roundabout") return { width: 3, depth: 3 };
   return { width: 1, depth: 1 };
 }
 
@@ -163,13 +160,20 @@ export function occupiedRoadSet(tiles: readonly RoadTile[]): Set<string> {
 export function resolveUnitTile(
   connections: readonly Cardinal[],
   roadClass: RoadClass,
-  roundabout: boolean,
 ): { assetId: string; rotation: number } {
   const topology = topologyFromConnections(connections);
-  const assetId = tileAssetFor(roadClass, topology, roundabout);
+  const assetId = tileAssetFor(roadClass, topology);
   const identity = ROAD_TILE_CONNECTORS[assetId] ?? connections;
   const rotation = yawForConnectors(identity, connections) ?? 0;
   return { assetId, rotation };
+}
+
+function inBounds(size: number, [x, y]: Point): boolean {
+  return x >= 0 && y >= 0 && x < size && y < size;
+}
+
+function maskIndex(size: number, [x, y]: Point): number {
+  return y * size + x;
 }
 
 function degree(point: Point, occupied: ReadonlySet<string>): number {
@@ -249,11 +253,56 @@ export function tryArterialCurve(
   return { origin, rotation };
 }
 
+const ARM_DELTAS: readonly Point[] = [
+  [0, -1],
+  [1, 0],
+  [0, 1],
+  [-1, 0],
+];
+const CORNER_DELTAS: readonly Point[] = [
+  [-1, -1],
+  [1, -1],
+  [1, 1],
+  [-1, 1],
+];
+
+/** Kenney roundabout is a 3×3 mesh centered on an arterial 4-way. */
+export function tryArterialRoundabout(
+  center: Point,
+  occupied: ReadonlySet<string>,
+  size: number,
+  covered: ReadonlySet<string>,
+  mask: readonly boolean[],
+): { origin: Point } | undefined {
+  if (connectionNames(center, occupied).length !== 4) return undefined;
+  const origin: Point = [center[0] - 1, center[1] - 1];
+  if (!inBounds(size, origin) || !inBounds(size, [origin[0] + 2, origin[1] + 2])) return undefined;
+  const cells = boxCells(origin, 3, 3);
+  if (cells.some((cell) => !mask[maskIndex(size, cell)] || covered.has(pointKey(cell)))) {
+    return undefined;
+  }
+  for (const [dx, dy] of ARM_DELTAS) {
+    const arm: Point = [center[0] + dx, center[1] + dy];
+    const approach: Point = [center[0] + dx * 2, center[1] + dy * 2];
+    if (!occupied.has(pointKey(arm))) return undefined;
+    if (!inBounds(size, approach) || !occupied.has(pointKey(approach))) return undefined;
+  }
+  for (const [dx, dy] of CORNER_DELTAS) {
+    if (occupied.has(pointKey([center[0] + dx, center[1] + dy]))) return undefined;
+  }
+  const expanded = new Set(occupied);
+  for (const cell of cells) expanded.add(pointKey(cell));
+  const needed = externalConnectors(origin, 3, 3, expanded);
+  if (!sameConnectors(needed, ["north", "east", "south", "west"])) return undefined;
+  return { origin };
+}
+
 export function resolveRoadTiles(
   classes: ReadonlyMap<string, RoadClass>,
   size: number,
   seed: string,
   roundaboutFrequency: number,
+  mask: readonly boolean[],
 ): RoadTile[] {
   const occupied = new Set(classes.keys());
   const positions = [...occupied]
@@ -281,15 +330,32 @@ export function resolveRoadTiles(
     tiles.push(tile);
   }
 
+  for (const center of positions) {
+    const key = pointKey(center);
+    if (covered.has(key)) continue;
+    if ((classes.get(key) ?? "local") !== "arterial") continue;
+    const roll = (hashText(`${seed}:roundabout:${key}`) >>> 0) % 100;
+    if (roll >= roundaboutFrequency) continue;
+    const placed = tryArterialRoundabout(center, occupied, size, covered, mask);
+    if (!placed) continue;
+    const tile: RoadTile = {
+      position: placed.origin,
+      assetId: "roads:road-roundabout",
+      rotation: 0,
+    };
+    for (const cell of occupiedCellsForRoadTile(tile)) {
+      covered.add(pointKey(cell));
+      occupied.add(pointKey(cell));
+    }
+    tiles.push(tile);
+  }
+
   for (const position of positions) {
     const key = pointKey(position);
     if (covered.has(key)) continue;
     const connections = connectionNames(position, occupied);
     const roadClass = classes.get(key) ?? "local";
-    const roll = (hashText(`${seed}:roundabout:${key}`) >>> 0) % 100;
-    const roundabout =
-      connections.length === 4 && roll < roundaboutFrequency && roadClass !== "local";
-    const tile = resolveUnitTile(connections, roadClass, roundabout);
+    const tile = resolveUnitTile(connections, roadClass);
     tiles.push({ position, assetId: tile.assetId, rotation: tile.rotation });
     covered.add(key);
   }

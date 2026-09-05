@@ -458,6 +458,7 @@ function createDocument(
     input.parameters.size,
     deriveAttemptSeed(input.seed, attempt),
     input.parameters.roundaboutFrequency,
+    mask,
   );
   for (const tile of tiles) {
     for (const [x, y] of occupiedCellsForRoadTile(tile)) {

@@ -89,7 +89,7 @@ function roadConnectors(model) {
   // Kenney City Kit Roads: Y-up, +X east, +Z south. Straights run along +X with sidewalks on ±Z.
   if (/roundabout|crossroad/.test(model)) return ["north", "east", "south", "west"];
   if (/intersection|split/.test(model)) return ["east", "south", "west"];
-  if (/curve|bend/.test(model)) return ["east", "south"];
+  if (/curve|bend/.test(model)) return ["west", "south"];
   if (/road-end/.test(model)) return ["east"];
   return ["east", "west"];
 }

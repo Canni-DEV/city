@@ -1,9 +1,14 @@
 import type { AssetCatalogEntry } from "@city/assets";
 import { runtimeAssetUrl } from "@city/assets";
 import { OrbitControls, useGLTF } from "@react-three/drei";
-import { Canvas } from "@react-three/fiber";
-import { Suspense, useMemo } from "react";
-import { createCompatibleRenderer, type RendererBackend } from "../rendering/renderer";
+import { Canvas, type RootState } from "@react-three/fiber";
+import { Suspense, useCallback, useMemo } from "react";
+import {
+  createCompatibleRenderer,
+  detectRendererBackend,
+  type RendererBackend,
+  syncRendererLayout,
+} from "../rendering/renderer";
 
 function AssetModel({ entry }: { entry: AssetCatalogEntry }) {
   const { scene } = useGLTF(runtimeAssetUrl(entry.runtimePath, import.meta.env.BASE_URL));
@@ -21,10 +26,19 @@ export function AssetCanvas({
   entry: AssetCatalogEntry;
   onBackend: (backend: RendererBackend) => void;
 }) {
+  const onCreated = useCallback(
+    (state: RootState) => {
+      syncRendererLayout(state.gl.domElement, state.setSize);
+      onBackend(detectRendererBackend(state.gl));
+    },
+    [onBackend],
+  );
   return (
     <Canvas
       camera={{ position: [5, 4, 5], fov: 38 }}
-      gl={(parameters) => createCompatibleRenderer(parameters, onBackend)}
+      style={{ position: "absolute", inset: 0 }}
+      gl={createCompatibleRenderer}
+      onCreated={onCreated}
       shadows
     >
       <color attach="background" args={["#111a18"]} />
