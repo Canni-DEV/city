@@ -4,6 +4,20 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-05
+
+### Fixed
+
+- The first generated city is visible without resizing the window: the workspace gives the viewport a definite grid track, the canvas fills that cell, WebGPU init sizes from that layout instead of the HTML 300×150 default, and the factory does not report backend mid-init.
+
+### Changed
+
+- Generator `0.5.0` (M3.5): hierarchical arterial plus local block mesh, regularity as organic→grid orthogonality, connector-correct Kenney tiles, 2×2 avenue curves, street-bounded manzanas, and ring lots with courtyards.
+- Road tile yaw follows Kenney identity (straights east–west, ends open east, T-junctions closed north, 90° bends and 2×2 curves open west+south) so sidewalks run along the street instead of across tile joints.
+- Arterial through-segments use `road-straight` instead of `road-square`, which Kenney models as a four-sided curb plaza.
+- Kenney roundabouts occupy a 3×3 footprint at arterial 4-way junctions so the circular mesh does not overlap neighboring 1×1 streets.
+- Road occupancy and rendering expand catalog footprints so multi-cell tiles do not overlap lots or sit on the wrong pivot.
+
 ## [0.4.0] - 2026-09-04
 
 ### Added

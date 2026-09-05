@@ -10,7 +10,7 @@
 
 Each stable entry contains pack, source/runtime/preview paths, textures, category/subcategory, measured dimensions, footprint, vertical offset, front, rotations, compatible zones, procedural weight, road connectors, instancing, LOD relation, decoration/elevated/v1 flags, and review source.
 
-- **AST-010:** Automatic GLB-bound and filename heuristics merge with `catalog/overrides.json`; overrides win.
+- **AST-010:** Automatic GLB-bound and filename heuristics merge with `catalog/overrides.json`; overrides win. Road-tile connector heuristics follow Kenney Y-up (+X east, +Z south): straights east–west, ends east, T-junctions closed north, bends and curves west+south.
 - **AST-011:** Validation rejects duplicate IDs, absent paths, invalid footprints, missing texture references, unresolved LOD IDs, and incomplete road connectors.
 - **AST-012:** Elevated models remain visible in the catalog but have `availableInV1: false`.
 - **AST-013:** `#/dev/assets` shows the selected model, pivot, axes, footprint metadata, front, rotations, connectors, zones, variants, flags, and active backend.

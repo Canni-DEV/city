@@ -8,11 +8,11 @@
     "review": "override"
   },
   "roads:road-curve": {
-    "connectors": ["east", "south"],
+    "connectors": ["west", "south"],
     "review": "override"
   },
   "roads:road-bend": {
-    "connectors": ["east", "south"],
+    "connectors": ["west", "south"],
     "review": "override"
   },
   "industrial:windmill": {

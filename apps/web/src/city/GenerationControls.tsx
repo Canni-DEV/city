@@ -65,7 +65,7 @@ export function GenerationControls({
         </label>
         {(
           [
-            ["roadRegularity", "Road regularity"],
+            ["roadRegularity", "Road regularity (organic → grid)"],
             ["roundaboutFrequency", "Roundabouts"],
             ["decorationDensity", "Decoration"],
           ] as const

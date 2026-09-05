@@ -26,6 +26,6 @@ M3 implements that diagnostic in the city laboratory, including a quality select
 
 ## Layout
 
-The supported minimum is 1280×720. Panels may collapse as space narrows but the viewport, current mode, primary action, and cancellation path remain available. There is no onboarding; empty states teach the next action in one sentence.
+The supported minimum is 1280×720. Panels may collapse as space narrows but the viewport, current mode, primary action, and cancellation path remain available. The city workspace is a two-column grid whose viewport track is a definite `minmax(0, 1fr)` cell so the 3D canvas has a containing block on first paint. There is no onboarding; empty states teach the next action in one sentence.
 
 Zone, lot, and grid overlays are independently toggleable and do not mutate the document. Zone meaning uses a stable color, a repeating pattern, and a legend of actual versus target area shares.
