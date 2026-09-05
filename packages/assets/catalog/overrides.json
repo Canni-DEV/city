@@ -1,0 +1,26 @@
+{
+  "roads:road-roundabout": {
+    "connectors": ["north", "east", "south", "west"],
+    "review": "override"
+  },
+  "roads:road-split": {
+    "connectors": ["north", "east", "south"],
+    "review": "override"
+  },
+  "roads:road-curve": {
+    "connectors": ["east", "south"],
+    "review": "override"
+  },
+  "roads:road-bend": {
+    "connectors": ["east", "south"],
+    "review": "override"
+  },
+  "industrial:windmill": {
+    "front": "omnidirectional",
+    "review": "override"
+  },
+  "industrial:windmill-low": {
+    "front": "omnidirectional",
+    "review": "override"
+  }
+}

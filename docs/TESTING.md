@@ -1,0 +1,17 @@
+# Testing strategy
+
+## Automated suites
+
+- **TST-001:** Unit tests prove same-input document hashes and deterministic retry derivation.
+- **TST-002:** Generator batch tests run 50 seeds per preset distributed across all three sizes.
+- **TST-003:** Invariant tests cover unique IDs/references, one connected road component, exact gate count, valid road combinations, footprints, boundaries, frontage, and zone quotas ±5 points.
+- **TST-004:** Every editor command proves exact apply/revert, ID preservation, drag consolidation, redo clearing, and 100-entry history.
+- **TST-005:** Persistence tests cover migrations, invalid input, size limit, future schema, ID collision, and snapshot round trips.
+- **TST-006:** Catalog tests require exactly 213 unique valid entries, existing runtime sources, positive footprints, and road connectors.
+- **TST-007:** Renderer integration tests prove forced fallback keeps the open document.
+
+CI runs frozen install, Biome check, TypeScript typecheck, Vitest, and production build on pushes and pull requests. There is no numeric coverage gate, Playwright suite, or automated Markdown/link validation.
+
+## Manual QA per milestone
+
+Test current Chrome and Edge, WebGPU and forced WebGL 2, 1280×720 and 1920×1080, keyboard/focus/contrast/patterns, and capture implemented flows. From M3 onward record the rendering and generation budgets in `RENDERING_AND_PERFORMANCE.md`.

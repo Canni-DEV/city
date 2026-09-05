@@ -1,0 +1,30 @@
+{
+  "name": "@city/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "schema"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "generate-schema": "node dist/export-schema.js",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "d3-delaunay": "6.0.4",
+    "pure-rand": "8.4.2",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@types/d3-delaunay": "6.0.4"
+  }
+}
