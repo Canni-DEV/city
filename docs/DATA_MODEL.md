@@ -1,6 +1,6 @@
 # Data model
 
-- **DAT-001:** `CityDocumentV1` is a complete schema-versioned snapshot with ID, name, UTC timestamps, generator version, seed, deterministic attempt, preset parameters, map size, one-unit cells, and irregular boundary mask.
+- **DAT-001:** `CityDocumentV1` is a complete schema-versioned snapshot with ID, name, UTC timestamps, generator version, seed, deterministic attempt, preset parameters, map size, one-unit cells, irregular boundary mask, and normalized per-cell density field.
 - **DAT-002:** It contains districts, road graph nodes/edges/resolved cells, blocks, lots, zones, and an entity registry.
 - **DAT-003:** Every entity records asset ID, transform, footprint, origin (`procedural` or `user`), edit state, optional district/block/lot/zone, and compatibility warning.
 - **DAT-004:** Each block has enough identity and regeneration index to reproduce replacement generation.
@@ -10,7 +10,7 @@
 
 ## Referential invariants
 
-Road edges reference existing nodes; road cells and entities reference existing catalog assets; lots reference blocks; blocks reference districts; optional entity ownership references exist when present. IDs are unique within their collection. The boundary mask length equals `size²`.
+Road edges reference existing nodes; road cells and entities reference existing catalog assets; lots reference blocks; blocks reference districts; optional entity ownership references exist when present. IDs are unique within their collection. Boundary mask and density field lengths equal `size²`; density is zero outside the mask and remains between zero and one.
 
 ## Worker messages
 

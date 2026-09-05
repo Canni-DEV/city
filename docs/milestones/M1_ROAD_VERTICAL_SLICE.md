@@ -15,3 +15,13 @@ Prove same-input hashes, reproducible retries, exact gate counts, one road compo
 ## Exclusions and stop
 
 No blocks, lots, zones, buildings, decoration, object editor, or persistence. Request review and stop before M2.
+
+## Completion evidence
+
+- Implemented generator version `0.2.0` and the six worker stages: mask, districts, graph, routing, tiles, and validation.
+- Automated suites pass with a fixed structural hash, reproducible retry derivation, and 200 generated cities across all presets and sizes.
+- The 64×64 reference city generated in approximately 24 ms during local UI QA; the automated 200-city batch completed in approximately 3.6 seconds.
+- The road laboratory was manually exercised using WebGPU and forced WebGL 2. It exposes the active backend, road-cell/connection/gate counts, attempt, duration, progress, and cancellation control.
+- Monorepo Biome check, typecheck, Vitest suites, and production build pass.
+
+Review evidence should include screenshots from supported 1280×720 or 1920×1080 Chrome and Edge windows before accepting the milestone. M2 remains intentionally unstarted.

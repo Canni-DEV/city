@@ -132,6 +132,7 @@ export const CityDocumentSchema = z.object({
     size: MapSizeSchema,
     cellSize: z.literal(1),
     boundaryMask: z.array(z.boolean()),
+    densityField: z.array(z.number().min(0).max(1)),
   }),
   districts: z.array(DistrictSchema),
   roadGraph: z.object({
@@ -169,6 +170,7 @@ export function createEmptyCityDocument(input: {
       size: input.parameters.size,
       cellSize: 1,
       boundaryMask: Array.from({ length: input.parameters.size ** 2 }, () => false),
+      densityField: Array.from({ length: input.parameters.size ** 2 }, () => 0),
     },
     districts: [],
     roadGraph: { nodes: [], edges: [], cells: [] },

@@ -25,6 +25,8 @@ Values are suburban/urban/commercial/industrial/park, then density, districts, r
 10. **GEN-010:** Add decoration and district themes.
 11. **GEN-011:** Validate connectivity, overlaps, quotas, references, gates, and road combinations.
 
+M1 implements GEN-001–005 using generator version `0.2.0`. Delaunay edges express organic straight-line intent; deterministic cardinal A* rasterizes that intent onto the v1 ground-level Kenney road set. Consequently, diagonal intent is represented by alternating cardinal segments and curves rather than unsupported 45-degree asset rotations.
+
 ## Invariants and recovery
 
 - **GEN-020:** All roads form one connected component. External gates count is 2, 3, and 4 for sizes 64, 96, and 128.
@@ -33,3 +35,5 @@ Values are suburban/urban/commercial/industrial/park, then density, districts, r
 - **GEN-023:** Actual zone area stays within ±5 percentage points of normalized targets.
 - **GEN-024:** Failed validation retries at most twice after the initial attempt, deriving each attempt deterministically.
 - **GEN-025:** Same version, input, and attempt produce byte-equivalent canonical content and hash.
+
+The M1 structural hash excludes library identity, display name, and timestamps. It covers generator inputs plus the generated map, districts, graph, and resolved road cells, making it suitable for golden determinism tests.

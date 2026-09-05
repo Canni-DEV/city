@@ -2,7 +2,7 @@
 
 City is a browser-based procedural city sandbox and editor. It generates deterministic low-poly cities from the Kenney City Kit asset family and exposes the resolved city as an editable, versioned document.
 
-Milestone M0 establishes the repository, contracts, asset catalog, internal asset viewer, and implementation specifications. Product generation begins in M1.
+Milestone M1 adds the first playable vertical slice: deterministic road generation in a worker, validated city gates and connections, modular Kenney road tiles, and a navigable 3D scene. Blocks and zoning follow in M2.
 
 ## Requirements
 
@@ -22,7 +22,7 @@ pnpm build
 pnpm catalog
 ```
 
-The development asset viewer is available at `#/dev/assets`. Runtime-ready copies of GLB files and textures are generated into an ignored directory before development and production builds.
+The road generator is available at `#/city/new`, and the development asset viewer at `#/dev/assets`. Add `?forceWebGL=1` before the hash to exercise the WebGL 2 fallback. Runtime-ready copies of GLB files and textures are generated into an ignored directory before development and production builds.
 
 ## Workspace
 

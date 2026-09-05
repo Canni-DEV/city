@@ -12,6 +12,8 @@
 
 CI runs frozen install, Biome check, TypeScript typecheck, Vitest, and production build on pushes and pull requests. There is no numeric coverage gate, Playwright suite, or automated Markdown/link validation.
 
+M1 evidence includes 200 generated documents: 50 seeds for each preset, with sizes distributed across 64, 96, and 128. The batch validates exact gate counts, references, a single connected road component, cardinal edge paths, one resolved tile per road cell, density/mask dimensions, and absence of internal dead ends. A fixed golden hash and forced retry test cover determinism and recovery.
+
 ## Manual QA per milestone
 
 Test current Chrome and Edge, WebGPU and forced WebGL 2, 1280×720 and 1920×1080, keyboard/focus/contrast/patterns, and capture implemented flows. From M3 onward record the rendering and generation budgets in `RENDERING_AND_PERFORMANCE.md`.
