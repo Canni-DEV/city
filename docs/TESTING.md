@@ -4,7 +4,7 @@
 
 - **TST-001:** Unit tests prove same-input document hashes and deterministic retry derivation.
 - **TST-002:** Generator batch tests run 50 seeds per preset distributed across all three sizes.
-- **TST-003:** Invariant tests cover unique IDs/references, one connected road component, exact gate count, valid road combinations, footprints, boundaries, frontage, and zone quotas ±5 points.
+- **TST-003:** Invariant tests cover unique IDs/references, one connected road component of occupied cells, exact gate count, catalog-connector tile combinations, footprints, boundaries, frontage, street-bounded blocks, and zone quotas ±5 points.
 - **TST-004:** Every editor command proves exact apply/revert, ID preservation, drag consolidation, redo clearing, and 100-entry history.
 - **TST-005:** Persistence tests cover migrations, invalid input, size limit, future schema, ID collision, and snapshot round trips.
 - **TST-006:** Catalog tests require exactly 213 unique valid entries, existing runtime sources, positive footprints, and road connectors.
@@ -17,6 +17,8 @@ M1 evidence includes 200 generated documents: 50 seeds for each preset, with siz
 M2 evidence reuses that 200-city batch and adds land invariants: unique block/lot IDs, complete free-cell coverage, rectangular non-overlapping lots with full road frontage, district/block references, and zone area shares within ±5 percentage points of normalized targets. Golden hashes include blocks and lots.
 
 M3 evidence extends the same 200-city batch with placement invariants: every procedural entity references a catalog asset, stays inside the valid mask, and occupies unique spatial-hash cells. Golden hashes include entities and district themes. Renderer unit tests prove a single WebGPU→WebGL 2 fallback keeps the open `CityDocumentV1` identity, and quality/LOD swaps do not mutate the document.
+
+M3.5 evidence regenerates that 200-city batch under generator `0.5.0`: occupied road cells form one 4-connected component, resolved tiles match rotated catalog connectors, typical enclosed blocks on 96/128 maps have multi-side frontage and manzana-scale bounds, lots keep full road frontage, and zone shares stay within ±5 points. Connector yaw unit tests cover `road-bend` and `road-curve`.
 
 ## Manual QA per milestone
 

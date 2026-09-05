@@ -6,6 +6,7 @@ import {
   generateRoadCity,
   hashGeneratedStructure,
   type MapSize,
+  occupiedRoadSet,
   PRESET_PARAMETERS,
   validateLandCity,
   validatePlacedCity,
@@ -26,7 +27,7 @@ function inputFor(seed: string, preset: CityPreset = "balanced", size: MapSize =
   };
 }
 
-describe("M1–M3 city generation", () => {
+describe("M1–M3.5 city generation", () => {
   it("TST-001 produces the same structural hash for equal inputs", async () => {
     const first = await generateRoadCity(inputFor("golden-grid"));
     const second = await generateRoadCity({
@@ -35,11 +36,11 @@ describe("M1–M3 city generation", () => {
       timestamp: "2027-01-01T00:00:00.000Z",
     });
     expect(hashGeneratedStructure(first)).toBe(hashGeneratedStructure(second));
-    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"7e2c1420"`);
+    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"3f581fd0"`);
   });
 
   it("TST-001 derives reproducible attempts and retries at most three times", async () => {
-    expect(deriveAttemptSeed("retry-city", 2)).toBe("retry-city::0.4.0::attempt-2");
+    expect(deriveAttemptSeed("retry-city", 2)).toBe("retry-city::0.5.0::attempt-2");
     const attempts: number[] = [];
     const city = await generateRoadCity(inputFor("retry-city"), {
       validateAttempt(document) {
@@ -71,7 +72,26 @@ describe("M1–M3 city generation", () => {
         expect(city.roadGraph.nodes.filter((node) => node.kind === "gate")).toHaveLength(
           size === 64 ? 2 : size === 96 ? 3 : 4,
         );
+        const roads = occupiedRoadSet(city.roadGraph.cells);
+        const manzanas = city.blocks.filter((block) => {
+          const sides = new Set<string>();
+          for (const [x, y] of block.cells) {
+            if (roads.has(`${x},${y - 1}`)) sides.add("north");
+            if (roads.has(`${x + 1},${y}`)) sides.add("east");
+            if (roads.has(`${x},${y + 1}`)) sides.add("south");
+            if (roads.has(`${x - 1},${y}`)) sides.add("west");
+          }
+          if (sides.size < 3) return false;
+          const xs = block.cells.map(([x]) => x);
+          const ys = block.cells.map(([, y]) => y);
+          const width = Math.max(...xs) - Math.min(...xs) + 1;
+          const height = Math.max(...ys) - Math.min(...ys) + 1;
+          return Math.min(width, height) >= 6 && Math.max(width, height) <= 18;
+        });
+        if (size >= 96) {
+          expect(manzanas.length, label).toBeGreaterThan(0);
+        }
       }
     }
-  }, 90_000);
+  }, 120_000);
 });

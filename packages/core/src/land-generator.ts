@@ -1,16 +1,15 @@
 import { type CityDocumentV1, ZONE_TYPES, type ZoneType } from "./domain.js";
 import { deriveProceduralId } from "./ids.js";
+import { CARDINALS, DIRECTION_DELTA, occupiedRoadSet, type Point, pointKey } from "./road-tiles.js";
 
-type Point = [number, number];
 type Block = CityDocumentV1["blocks"][number];
 type Lot = CityDocumentV1["lots"][number];
-const DIRECTIONS = [
-  { name: "north", dx: 0, dy: -1 },
-  { name: "east", dx: 1, dy: 0 },
-  { name: "south", dx: 0, dy: 1 },
-  { name: "west", dx: -1, dy: 0 },
-] as const;
-const key = ([x, y]: Point) => `${x},${y}`;
+const DIRECTIONS = CARDINALS.map((name) => ({
+  name,
+  dx: DIRECTION_DELTA[name][0],
+  dy: DIRECTION_DELTA[name][1],
+}));
+const key = pointKey;
 const ordered = (a: Point, b: Point) => a[1] - b[1] || a[0] - b[0];
 
 /** GEN-006: cardinal components, with stable row-major traversal. */
@@ -38,88 +37,116 @@ function components(points: Point[]): Point[][] {
 
 export function createBlocks(document: CityDocumentV1): Block[] {
   const size = document.map.size;
-  const roads = new Set(document.roadGraph.cells.map((cell) => key(cell.position)));
+  const roads = occupiedRoadSet(document.roadGraph.cells);
   const free = document.map.boundaryMask.flatMap((valid, index): Point[] => {
     const point: Point = [index % size, Math.floor(index / size)];
     return valid && !roads.has(key(point)) ? [point] : [];
   });
   const blocks: Block[] = [];
-  for (const region of components(free)) {
-    // Bounded zoning blocks keep area quotas achievable even in large open regions.
-    const patches = new Map<string, Point[]>();
-    for (const point of region) {
-      const patchKey = `${Math.floor(point[0] / 4)},${Math.floor(point[1] / 4)}`;
-      const patch = patches.get(patchKey) ?? [];
-      patch.push(point);
-      patches.set(patchKey, patch);
-    }
-    for (const patch of patches.values()) {
-      for (const cells of components(patch)) {
-        const center = cells.reduce<Point>((sum, p) => [sum[0] + p[0], sum[1] + p[1]], [0, 0]);
-        const district = [...document.districts].sort((a, b) => {
-          const distance = (p: Point) =>
-            (p[0] - center[0] / cells.length) ** 2 + (p[1] - center[1] / cells.length) ** 2;
-          return distance(a.center) - distance(b.center) || a.id.localeCompare(b.id);
-        })[0];
-        if (!district) throw new Error("GEN-006: blocks require a district.");
-        blocks.push({
-          id: deriveProceduralId(
-            document.generator.version,
-            document.generator.seed,
-            document.generator.attempt,
-            "block",
-            blocks.length,
-          ),
-          districtId: district.id,
-          zone: "suburban",
-          cells,
-          regenerationIndex: 0,
-        });
-      }
-    }
+  for (const cells of components(free)) {
+    const center = cells.reduce<Point>((sum, p) => [sum[0] + p[0], sum[1] + p[1]], [0, 0]);
+    const district = [...document.districts].sort((a, b) => {
+      const distance = (p: Point) =>
+        (p[0] - center[0] / cells.length) ** 2 + (p[1] - center[1] / cells.length) ** 2;
+      return distance(a.center) - distance(b.center) || a.id.localeCompare(b.id);
+    })[0];
+    if (!district) throw new Error("GEN-006: blocks require a district.");
+    blocks.push({
+      id: deriveProceduralId(
+        document.generator.version,
+        document.generator.seed,
+        document.generator.attempt,
+        "block",
+        blocks.length,
+      ),
+      districtId: district.id,
+      zone: "suburban",
+      cells,
+      regenerationIndex: 0,
+    });
   }
   return blocks;
 }
 
-/** GEN-007/GEN-022: greedily pack rectangles with a fully road-facing side. */
+const MAX_LOT_DEPTH = 4;
+const MAX_LOT_WIDTH = 4;
+
+function assignedFrontage(
+  cell: Point,
+  roads: ReadonlySet<string>,
+  blockCells: ReadonlySet<string>,
+): Lot["frontage"] | undefined {
+  let best: { direction: Lot["frontage"]; depth: number } | undefined;
+  for (const direction of DIRECTIONS) {
+    let depth: number | undefined;
+    for (let step = 1; step <= MAX_LOT_DEPTH; step += 1) {
+      const next: Point = [cell[0] + direction.dx * step, cell[1] + direction.dy * step];
+      if (roads.has(key(next))) {
+        depth = step;
+        break;
+      }
+      if (!blockCells.has(key(next))) break;
+    }
+    if (depth === undefined) continue;
+    if (!best || depth < best.depth) best = { direction: direction.name, depth };
+  }
+  return best?.direction;
+}
+
+/** GEN-007/GEN-022: pack a frontage ring; interior cells remain a courtyard. */
 export function createLots(document: CityDocumentV1): Lot[] {
-  const roads = new Set(document.roadGraph.cells.map((cell) => key(cell.position)));
+  const roads = occupiedRoadSet(document.roadGraph.cells);
   const lots: Lot[] = [];
   for (const block of document.blocks) {
-    const available = new Set(block.cells.map(key));
+    const blockCells = new Set(block.cells.map(key));
+    const assignment = new Map<string, Lot["frontage"]>();
+    for (const cell of block.cells) {
+      const frontage = assignedFrontage(cell, roads, blockCells);
+      if (frontage) assignment.set(key(cell), frontage);
+    }
+    const available = new Set(assignment.keys());
     for (const start of block.cells) {
-      if (!available.has(key(start))) continue;
-      let best: { cells: Point[]; frontage: Lot["frontage"] } | undefined;
-      for (const direction of DIRECTIONS) {
-        if (!roads.has(key([start[0] + direction.dx, start[1] + direction.dy]))) continue;
-        const tangent: Point = direction.dx === 0 ? [1, 0] : [0, 1];
-        for (let width = 1; width <= 4; width += 1) {
-          if (
-            !roads.has(
-              key([
-                start[0] + tangent[0] * (width - 1) + direction.dx,
-                start[1] + tangent[1] * (width - 1) + direction.dy,
-              ]),
-            )
+      const startKey = key(start);
+      if (!available.has(startKey)) continue;
+      const frontage = assignment.get(startKey);
+      if (!frontage) continue;
+      const direction = DIRECTIONS.find((entry) => entry.name === frontage);
+      if (!direction) continue;
+      if (!roads.has(key([start[0] + direction.dx, start[1] + direction.dy]))) continue;
+      let best: Point[] | undefined;
+      const tangent: Point = direction.dx === 0 ? [1, 0] : [0, 1];
+      for (let width = MAX_LOT_WIDTH; width >= 1; width -= 1) {
+        if (
+          !roads.has(
+            key([
+              start[0] + tangent[0] * (width - 1) + direction.dx,
+              start[1] + tangent[1] * (width - 1) + direction.dy,
+            ]),
           )
-            break;
-          for (let depth = 1; depth <= 4; depth += 1) {
-            const cells: Point[] = [];
-            for (let w = 0; w < width; w += 1) {
-              for (let d = 0; d < depth; d += 1)
-                cells.push([
-                  start[0] + tangent[0] * w - direction.dx * d,
-                  start[1] + tangent[1] * w - direction.dy * d,
-                ]);
+        )
+          continue;
+        for (let depth = MAX_LOT_DEPTH; depth >= 1; depth -= 1) {
+          const cells: Point[] = [];
+          let valid = true;
+          for (let w = 0; w < width && valid; w += 1) {
+            for (let d = 0; d < depth; d += 1) {
+              const point: Point = [
+                start[0] + tangent[0] * w - direction.dx * d,
+                start[1] + tangent[1] * w - direction.dy * d,
+              ];
+              if (assignment.get(key(point)) !== frontage || !available.has(key(point))) {
+                valid = false;
+                break;
+              }
+              cells.push(point);
             }
-            if (!cells.every((point) => available.has(key(point)))) break;
-            if (!best || cells.length > best.cells.length)
-              best = { cells, frontage: direction.name };
           }
+          if (!valid) continue;
+          if (!best || cells.length > best.length) best = cells;
         }
       }
       if (!best) continue;
-      for (const point of best.cells) available.delete(key(point));
+      for (const point of best) available.delete(key(point));
       lots.push({
         id: deriveProceduralId(
           document.generator.version,
@@ -129,8 +156,8 @@ export function createLots(document: CityDocumentV1): Lot[] {
           lots.length,
         ),
         blockId: block.id,
-        cells: best.cells.sort(ordered),
-        frontage: best.frontage,
+        cells: best.sort(ordered),
+        frontage,
       });
     }
   }
@@ -144,7 +171,7 @@ export function assignZones(document: CityDocumentV1): void {
   const remaining = Object.fromEntries(
     ZONE_TYPES.map((zone) => [zone, (total * mix[zone]) / 100]),
   ) as Record<ZoneType, number>;
-  const roads = new Set(document.roadGraph.cells.map((cell) => key(cell.position)));
+  const roads = occupiedRoadSet(document.roadGraph.cells);
   for (const block of [...document.blocks].sort(
     (a, b) =>
       b.cells.length - a.cells.length || ordered(a.cells[0] ?? [0, 0], b.cells[0] ?? [0, 0]),
@@ -163,7 +190,7 @@ export function assignZones(document: CityDocumentV1): void {
       suburban: periphery + access * 0.3,
       urban: centrality * 2 + access,
       commercial: centrality + access * 2,
-      industrial: periphery + access + block.cells.length / 16,
+      industrial: periphery + access + Math.min(1, block.cells.length / 120),
       park: periphery + (1 - access) * 1.2,
     };
     const positive = ZONE_TYPES.filter((zone) => mix[zone] > 0);
@@ -201,7 +228,7 @@ export function zoneAreaShares(document: CityDocumentV1): Record<ZoneType, numbe
 export function validateLandCity(document: CityDocumentV1): string[] {
   const issues: string[] = [];
   const size = document.map.size;
-  const roads = new Set(document.roadGraph.cells.map((cell) => key(cell.position)));
+  const roads = occupiedRoadSet(document.roadGraph.cells);
   const districts = new Set(document.districts.map((district) => district.id));
   const blocks = new Map(document.blocks.map((block) => [block.id, new Set(block.cells.map(key))]));
   const covered = new Set<string>();

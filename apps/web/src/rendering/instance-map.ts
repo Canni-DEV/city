@@ -104,10 +104,16 @@ export function buildRoadBatches(document: CityDocumentV1): RenderBatch[] {
   for (const cell of [...document.roadGraph.cells].sort((left, right) =>
     left.id.localeCompare(right.id),
   )) {
+    const entry = assetById.get(cell.assetId);
+    const width = entry?.footprint.width ?? 1;
+    const depth = entry?.footprint.depth ?? 1;
+    const swap = cell.rotation === 90 || cell.rotation === 270;
+    const alongX = swap ? depth : width;
+    const alongZ = swap ? width : depth;
     const items = groups.get(cell.assetId) ?? [];
     items.push({
       id: cell.id,
-      position: [cell.position[0] + 0.5, 0.015, cell.position[1] + 0.5],
+      position: [cell.position[0] + alongX / 2, 0.015, cell.position[1] + alongZ / 2],
       rotation: [0, cell.rotation, 0],
       scale: [1, 1, 1],
     });

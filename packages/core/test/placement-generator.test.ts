@@ -5,6 +5,7 @@ import {
   generateRoadCity,
   hashGeneratedStructure,
   occupiedCellsFor,
+  occupiedRoadSet,
   PRESET_PARAMETERS,
   validatePlacedCity,
 } from "../src/index.js";
@@ -22,7 +23,7 @@ const input = {
 describe("M3 placement", () => {
   it("GEN-009/GEN-022 never overlaps procedural occupancy or leaves the mask", async () => {
     const city = await generateRoadCity(input);
-    const roads = new Set(city.roadGraph.cells.map((cell) => cell.position.join(",")));
+    const roads = occupiedRoadSet(city.roadGraph.cells);
     const occupied = new Set<string>();
     expect(Object.keys(city.entities).length).toBeGreaterThan(0);
     for (const entity of Object.values(city.entities)) {

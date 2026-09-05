@@ -2,7 +2,8 @@ import type { CityDocumentV1, CityEntity, DensityLevel, ZoneType } from "./domai
 import { deriveProceduralId } from "./ids.js";
 import { assetFitsZone, type PlacementAsset, usablePlacementAssets } from "./placement-assets.js";
 import type { SeededRandom } from "./rng.js";
-import { cellKey, type GridPoint, SpatialHash } from "./spatial-hash.js";
+import { pointKey as cellKey, occupiedCellsForRoadTile, occupiedRoadSet } from "./road-tiles.js";
+import { type GridPoint, SpatialHash } from "./spatial-hash.js";
 
 type Point = [number, number];
 type Lot = CityDocumentV1["lots"][number];
@@ -51,7 +52,9 @@ export function occupiedCellsFor(entity: CityEntity): Point[] {
 
 export function occupancyFromRoads(document: CityDocumentV1): SpatialHash {
   const hash = new SpatialHash();
-  for (const cell of document.roadGraph.cells) hash.occupy([cell.position], `road:${cell.id}`);
+  for (const cell of document.roadGraph.cells) {
+    hash.occupy(occupiedCellsForRoadTile(cell), `road:${cell.id}`);
+  }
   return hash;
 }
 
@@ -345,7 +348,7 @@ export function placeDecoration(
   const industrial = usable.filter((asset) => asset.pack === "industrial");
   const suburban = usable.filter((asset) => asset.pack === "suburban" && asset.decoration);
   const commercial = usable.filter((asset) => asset.pack === "commercial" && asset.decoration);
-  const roads = new Set(document.roadGraph.cells.map((cell) => cellKey(cell.position)));
+  const roads = occupiedRoadSet(document.roadGraph.cells);
   const blockOf = new Map<string, Block>();
   for (const block of document.blocks) {
     for (const cell of block.cells) blockOf.set(cellKey(cell), block);
@@ -419,7 +422,7 @@ export function validatePlacedCity(
   const districts = new Set(document.districts.map((district) => district.id));
   const blocks = new Set(document.blocks.map((block) => block.id));
   const lots = new Set(document.lots.map((lot) => lot.id));
-  const roads = new Set(document.roadGraph.cells.map((cell) => cellKey(cell.position)));
+  const roads = occupiedRoadSet(document.roadGraph.cells);
   const hash = occupancyFromRoads(document);
   const seen = new Set<string>();
 

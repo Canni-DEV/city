@@ -4,6 +4,7 @@ import {
   generateRoadCity,
   hashGeneratedStructure,
   normalizeGenerationParameters,
+  occupiedRoadSet,
   PRESET_PARAMETERS,
   validateLandCity,
   ZONE_TYPES,
@@ -51,7 +52,7 @@ describe("M2 blocks and zoning", () => {
 
   it("GEN-022/GEN-023 independently proves coverage, rectangular non-overlapping lots and frontage", async () => {
     const city = await generateRoadCity(input);
-    const roads = new Set(city.roadGraph.cells.map((cell) => cell.position.join(",")));
+    const roads = occupiedRoadSet(city.roadGraph.cells);
     const free = new Set(
       city.map.boundaryMask.flatMap((valid, index) =>
         valid && !roads.has(`${index % 64},${Math.floor(index / 64)}`)

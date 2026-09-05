@@ -7,5 +7,7 @@ export * from "./placement-generator.js";
 export * from "./presets.js";
 export * from "./rng.js";
 export * from "./road-generator.js";
+export * from "./road-mesh.js";
+export * from "./road-tiles.js";
 export * from "./spatial-hash.js";
 export * from "./worker-protocol.js";

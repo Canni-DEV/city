@@ -13,12 +13,32 @@ import {
 } from "./placement-generator.js";
 import { normalizeGenerationParameters } from "./presets.js";
 import { hashText, SeededRandom } from "./rng.js";
+import {
+  connectLocalComponents,
+  paintClass,
+  paintLocalMesh,
+  pruneInternalDeadEnds,
+  rebuildRoadGraph,
+  routeCardinalCorridor,
+  subdivideLargeVoids,
+} from "./road-mesh.js";
+import {
+  CARDINALS,
+  connectionNames,
+  DIRECTION_DELTA,
+  neighborKeys,
+  occupiedCellsForRoadTile,
+  occupiedRoadSet,
+  type Point,
+  pointKey,
+  type RoadClass,
+  resolveRoadTiles,
+  tileMatchesNeighbors,
+} from "./road-tiles.js";
 import type { GenerationStage } from "./worker-protocol.js";
 
-export const GENERATOR_VERSION = "0.4.0";
+export const GENERATOR_VERSION = "0.5.0";
 
-type Point = [number, number];
-type MutablePoint = Point;
 type Direction = "north" | "east" | "south" | "west";
 
 interface GraphNode {
@@ -34,8 +54,8 @@ interface CandidateEdge {
 }
 
 interface RoutedEdge extends CandidateEdge {
-  path: MutablePoint[];
-  roadClass: "arterial" | "collector";
+  path: Point[];
+  roadClass: RoadClass;
 }
 
 export interface RoadGenerationInput {
@@ -77,26 +97,12 @@ export class RoadGenerationError extends Error {
   }
 }
 
-const DIRECTIONS: ReadonlyArray<{
-  name: Direction;
-  delta: Point;
-}> = [
-  { name: "north", delta: [0, -1] },
-  { name: "east", delta: [1, 0] },
-  { name: "south", delta: [0, 1] },
-  { name: "west", delta: [-1, 0] },
-];
-
 function randomFor(seed: string, attempt: number, stage: string): SeededRandom {
   return new SeededRandom(`${GENERATOR_VERSION}:${seed}:${attempt}:${stage}`);
 }
 
 export function deriveAttemptSeed(seed: string, attempt: number): string {
   return `${seed}::${GENERATOR_VERSION}::attempt-${attempt}`;
-}
-
-function pointKey([x, y]: Point): string {
-  return `${x},${y}`;
 }
 
 function indexOf(size: number, x: number, y: number): number {
@@ -161,9 +167,9 @@ function placeDistricts(
   densityField: readonly number[],
   random: SeededRandom,
 ): GraphNode[] {
-  const points: MutablePoint[] = [];
+  const points: Point[] = [];
   const minimumDistance = size / (Math.sqrt(count) + 2.3);
-  const candidates: Array<{ point: MutablePoint; score: number }> = [];
+  const candidates: Array<{ point: Point; score: number }> = [];
   for (let y = 3; y < size - 3; y += 1) {
     for (let x = 3; x < size - 3; x += 1) {
       const index = indexOf(size, x, y);
@@ -172,7 +178,7 @@ function placeDistricts(
   }
 
   while (points.length < count) {
-    let best: MutablePoint | undefined;
+    let best: Point | undefined;
     let bestScore = Number.NEGATIVE_INFINITY;
     for (let sample = 0; sample < Math.min(320, candidates.length); sample += 1) {
       const candidate = candidates[random.integer(0, candidates.length - 1)];
@@ -215,7 +221,7 @@ function createGates(size: MapSize, seed: string, attempt: number): GraphNode[] 
   return Array.from({ length: gateCountFor(size) }, (_, index) => {
     const side = sides[(offset + index) % sides.length] ?? "north";
     const coordinate = Math.round(size * (0.28 + random.float() * 0.44));
-    const position: MutablePoint =
+    const position: Point =
       side === "north"
         ? [coordinate, 0]
         : side === "east"
@@ -260,13 +266,14 @@ function buildGraph(nodes: readonly GraphNode[], regularity: number): CandidateE
     .filter(({ node }) => node.kind === "district");
   for (const { node, index } of nodes.map((node, index) => ({ node, index }))) {
     if (node.kind !== "gate") continue;
-    const nearest = districts
+    const nearestList = districts
       .map((district) => ({
         ...district,
         distance: distanceSquared(node.position, district.node.position),
       }))
-      .sort((left, right) => left.distance - right.distance || left.index - right.index)[0];
-    if (nearest) {
+      .sort((left, right) => left.distance - right.distance || left.index - right.index);
+    const links = regularity >= 35 ? nearestList.slice(0, 2) : nearestList.slice(0, 1);
+    for (const nearest of links) {
       const edge = canonicalEdge(index, nearest.index, nodes);
       candidateMap.set(`${edge.from}:${edge.to}`, edge);
     }
@@ -293,7 +300,7 @@ function buildGraph(nodes: readonly GraphNode[], regularity: number): CandidateE
   }
   const extraCount = Math.min(
     extras.length,
-    Math.max(1, Math.round(extras.length * (0.12 + regularity / 250))),
+    Math.max(extras.length > 0 ? 1 : 0, Math.round(extras.length * (0.4 + regularity / 180))),
   );
   const selected = [...tree, ...extras.slice(0, extraCount)];
   const selectedKeys = new Set(selected.map((edge) => `${edge.from}:${edge.to}`));
@@ -319,129 +326,12 @@ function buildGraph(nodes: readonly GraphNode[], regularity: number): CandidateE
   return selected;
 }
 
-interface FrontierState {
-  point: MutablePoint;
-  cost: number;
-  score: number;
-  order: number;
-}
-
-function routeAStar(
-  start: Point,
-  goal: Point,
-  size: MapSize,
-  mask: readonly boolean[],
-  occupied: ReadonlySet<string>,
-  blocked: ReadonlySet<string>,
-  directionOffset: number,
-): MutablePoint[] {
-  const startKey = pointKey(start);
-  const goalKey = pointKey(goal);
-  const frontier: FrontierState[] = [{ point: [...start], cost: 0, score: 0, order: 0 }];
-  const costs = new Map([[startKey, 0]]);
-  const cameFrom = new Map<string, string>();
-  const points = new Map<string, MutablePoint>([[startKey, [...start]]]);
-  let order = 1;
-
-  while (frontier.length > 0) {
-    frontier.sort((left, right) => left.score - right.score || left.order - right.order);
-    const current = frontier.shift();
-    if (!current) break;
-    const currentKey = pointKey(current.point);
-    if (currentKey === goalKey) break;
-    for (let index = 0; index < DIRECTIONS.length; index += 1) {
-      const direction = DIRECTIONS[(index + directionOffset) % DIRECTIONS.length];
-      if (!direction) continue;
-      const next: MutablePoint = [
-        current.point[0] + direction.delta[0],
-        current.point[1] + direction.delta[1],
-      ];
-      if (next[0] < 0 || next[1] < 0 || next[0] >= size || next[1] >= size) continue;
-      const nextKey = pointKey(next);
-      if (blocked.has(nextKey)) continue;
-      const insideCost = mask[indexOf(size, next[0], next[1])] ? 1 : 4.5;
-      const reuseCost = occupied.has(nextKey) ? 0.22 : insideCost;
-      const newCost = current.cost + reuseCost;
-      if (newCost >= (costs.get(nextKey) ?? Number.POSITIVE_INFINITY)) continue;
-      costs.set(nextKey, newCost);
-      cameFrom.set(nextKey, currentKey);
-      points.set(nextKey, next);
-      const heuristic = Math.abs(goal[0] - next[0]) + Math.abs(goal[1] - next[1]);
-      frontier.push({ point: next, cost: newCost, score: newCost + heuristic, order });
-      order += 1;
-    }
-  }
-
-  if (!costs.has(goalKey)) throw new Error(`No route from ${startKey} to ${goalKey}`);
-  const path: MutablePoint[] = [];
-  let cursor = goalKey;
-  while (true) {
-    const point = points.get(cursor);
-    if (!point) throw new Error(`Broken A* parent chain at ${cursor}`);
-    path.push(point);
-    if (cursor === startKey) break;
-    const parent = cameFrom.get(cursor);
-    if (!parent) throw new Error(`Broken A* parent link at ${cursor}`);
-    cursor = parent;
-  }
-  return path.reverse();
-}
-
-function routeGraph(
-  graph: readonly CandidateEdge[],
-  nodes: readonly GraphNode[],
-  size: MapSize,
-  mask: readonly boolean[],
-  seed: string,
-  attempt: number,
-): RoutedEdge[] {
-  const occupied = new Set<string>();
-  const blocked = new Set(nodes.map((node) => pointKey(node.position)));
-  const endpointDirections = assignEndpointDirections(graph, nodes, size);
-  return graph.map((edge, index) => {
-    const from = nodes[edge.from];
-    const to = nodes[edge.to];
-    if (!from || !to) throw new Error("Graph edge references an absent node.");
-    const fromDirection = endpointDirections.get(`${index}:${edge.from}`) ?? DIRECTIONS[0];
-    const toDirection = endpointDirections.get(`${index}:${edge.to}`) ?? DIRECTIONS[2];
-    if (!fromDirection || !toDirection)
-      throw new Error("Unable to assign road endpoint directions.");
-    const fromStep: MutablePoint = [
-      from.position[0] + fromDirection.delta[0],
-      from.position[1] + fromDirection.delta[1],
-    ];
-    const toStep: MutablePoint = [
-      to.position[0] + toDirection.delta[0],
-      to.position[1] + toDirection.delta[1],
-    ];
-    const middle = routeAStar(
-      fromStep,
-      toStep,
-      size,
-      mask,
-      occupied,
-      blocked,
-      hashText(`${seed}:${attempt}:${index}`) & 3,
-    );
-    const path = [from.position, ...middle, to.position].filter(
-      (point, pointIndex, values) =>
-        pointIndex === 0 || pointKey(point) !== pointKey(values[pointIndex - 1] ?? point),
-    ) as MutablePoint[];
-    for (const point of path) occupied.add(pointKey(point));
-    return {
-      ...edge,
-      path,
-      roadClass: from.kind === "gate" || to.kind === "gate" ? "arterial" : "collector",
-    };
-  });
-}
-
 function assignEndpointDirections(
   graph: readonly CandidateEdge[],
   nodes: readonly GraphNode[],
   size: MapSize,
-): Map<string, (typeof DIRECTIONS)[number]> {
-  const result = new Map<string, (typeof DIRECTIONS)[number]>();
+): Map<string, (typeof CARDINALS)[number]> {
+  const result = new Map<string, (typeof CARDINALS)[number]>();
   for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex += 1) {
     const node = nodes[nodeIndex];
     if (!node) continue;
@@ -449,112 +339,106 @@ function assignEndpointDirections(
       .map((edge, edgeIndex) => ({ edge, edgeIndex }))
       .filter(({ edge }) => edge.from === nodeIndex || edge.to === nodeIndex)
       .sort((left, right) => left.edgeIndex - right.edgeIndex);
-    const used = new Set<Direction>();
+    const used = new Set<(typeof CARDINALS)[number]>();
     for (const { edge, edgeIndex } of incident) {
       const otherIndex = edge.from === nodeIndex ? edge.to : edge.from;
       const other = nodes[otherIndex];
       if (!other) continue;
-      let ordered = [...DIRECTIONS].sort((left, right) => {
+      let ordered = [...CARDINALS].sort((left, right) => {
         const vectorX = other.position[0] - node.position[0];
         const vectorY = other.position[1] - node.position[1];
-        const leftScore = left.delta[0] * vectorX + left.delta[1] * vectorY;
-        const rightScore = right.delta[0] * vectorX + right.delta[1] * vectorY;
+        const leftDelta = DIRECTION_DELTA[left];
+        const rightDelta = DIRECTION_DELTA[right];
+        const leftScore = leftDelta[0] * vectorX + leftDelta[1] * vectorY;
+        const rightScore = rightDelta[0] * vectorX + rightDelta[1] * vectorY;
         return rightScore - leftScore;
       });
       if (node.kind === "gate") {
-        ordered = [
+        const inward =
           node.position[0] === 0
-            ? DIRECTIONS[1]
+            ? "east"
             : node.position[0] === size - 1
-              ? DIRECTIONS[3]
+              ? "west"
               : node.position[1] === 0
-                ? DIRECTIONS[2]
-                : DIRECTIONS[0],
-        ].filter((direction): direction is (typeof DIRECTIONS)[number] => direction !== undefined);
+                ? "south"
+                : "north";
+        ordered = [inward, ...ordered.filter((direction) => direction !== inward)];
       }
-      const direction = ordered.find((candidate) => !used.has(candidate.name)) ?? ordered[0];
+      const direction = ordered.find((candidate) => !used.has(candidate)) ?? ordered[0];
       if (!direction) throw new Error("Unable to choose a road endpoint direction.");
-      used.add(direction.name);
+      used.add(direction);
       result.set(`${edgeIndex}:${nodeIndex}`, direction);
     }
   }
   return result;
 }
 
-function connectionNames(point: Point, roadKeys: ReadonlySet<string>): Direction[] {
-  const connections: Direction[] = [];
-  for (const direction of DIRECTIONS) {
-    if (roadKeys.has(pointKey([point[0] + direction.delta[0], point[1] + direction.delta[1]]))) {
-      connections.push(direction.name);
-    }
-  }
-  return connections;
+function stepFrom(point: Point, direction: (typeof CARDINALS)[number], size: MapSize): Point {
+  const delta = DIRECTION_DELTA[direction];
+  const next: Point = [point[0] + delta[0], point[1] + delta[1]];
+  if (next[0] < 0 || next[1] < 0 || next[0] >= size || next[1] >= size) return point;
+  return next;
 }
 
-function rotationForSingle(direction: Direction): number {
-  return { north: 0, east: 90, south: 180, west: 270 }[direction];
+function routeGraph(
+  graph: readonly CandidateEdge[],
+  nodes: readonly GraphNode[],
+  size: MapSize,
+  mask: readonly boolean[],
+): RoutedEdge[] {
+  const occupied = new Set<string>();
+  const blocked = new Set<string>();
+  const exits = assignEndpointDirections(graph, nodes, size);
+  return graph.map((edge, index) => {
+    const from = nodes[edge.from];
+    const to = nodes[edge.to];
+    if (!from || !to) throw new Error("Graph edge references an absent node.");
+    const fromDir = exits.get(`${index}:${edge.from}`) ?? "east";
+    const toDir = exits.get(`${index}:${edge.to}`) ?? "west";
+    const fromStep = stepFrom(from.position, fromDir, size);
+    const toStep = stepFrom(to.position, toDir, size);
+    const middle = routeCardinalCorridor(fromStep, toStep, size, mask, occupied, blocked);
+    const path = [from.position, ...middle, to.position].filter(
+      (point, pointIndex, values) =>
+        pointIndex === 0 || pointKey(point) !== pointKey(values[pointIndex - 1] ?? point),
+    );
+    for (const point of path) occupied.add(pointKey(point));
+    const length =
+      Math.abs(from.position[0] - to.position[0]) + Math.abs(from.position[1] - to.position[1]);
+    return {
+      ...edge,
+      path,
+      roadClass:
+        from.kind === "gate" || to.kind === "gate" || length >= size * 0.45
+          ? "arterial"
+          : "collector",
+    };
+  });
 }
 
-function resolveTile(
-  connections: readonly Direction[],
-  seed: string,
-  roundaboutFrequency: number,
-  point: Point,
-): { assetId: string; rotation: number } {
-  if (connections.length <= 1) {
-    return { assetId: "roads:road-end", rotation: rotationForSingle(connections[0] ?? "north") };
+function rasterizeNetwork(
+  routed: readonly RoutedEdge[],
+  nodes: readonly GraphNode[],
+  size: MapSize,
+  mask: readonly boolean[],
+  regularity: number,
+  random: SeededRandom,
+): Map<string, RoadClass> {
+  const classes = new Map<string, RoadClass>();
+  for (const node of nodes) {
+    paintClass(classes, node.position, node.kind === "gate" ? "arterial" : "collector");
   }
-  if (connections.length === 2) {
-    const set = new Set(connections);
-    if ((set.has("north") && set.has("south")) || (set.has("east") && set.has("west"))) {
-      return { assetId: "roads:road-straight", rotation: set.has("east") ? 90 : 0 };
-    }
-    const rotation =
-      set.has("north") && set.has("east")
-        ? 0
-        : set.has("east") && set.has("south")
-          ? 90
-          : set.has("south") && set.has("west")
-            ? 180
-            : 270;
-    return { assetId: "roads:road-bend", rotation };
+  for (const edge of routed) {
+    for (const point of edge.path) paintClass(classes, point, edge.roadClass);
   }
-  if (connections.length === 3) {
-    const missing =
-      DIRECTIONS.find((direction) => !connections.includes(direction.name))?.name ?? "south";
-    return { assetId: "roads:road-intersection", rotation: rotationForSingle(missing) };
-  }
-  const roll = (hashText(`${seed}:roundabout:${pointKey(point)}`) >>> 0) % 100;
-  return roll < roundaboutFrequency
-    ? { assetId: "roads:road-roundabout", rotation: 0 }
-    : { assetId: "roads:road-crossroad", rotation: 0 };
-}
-
-function resolveRoadCells(
-  routedEdges: readonly RoutedEdge[],
-  seed: string,
-  roundaboutFrequency: number,
-) {
-  const pointMap = new Map<string, MutablePoint>();
-  for (const edge of routedEdges)
-    for (const point of edge.path) pointMap.set(pointKey(point), point);
-  const roadKeys = new Set(pointMap.keys());
-  return [...pointMap.values()]
-    .sort((left, right) => left[1] - right[1] || left[0] - right[0])
-    .map((position, index) => {
-      const tile = resolveTile(
-        connectionNames(position, roadKeys),
-        seed,
-        roundaboutFrequency,
-        position,
-      );
-      return {
-        id: deriveProceduralId(seed, "road-cell", index),
-        position,
-        assetId: tile.assetId,
-        rotation: tile.rotation,
-      };
-    });
+  paintLocalMesh(size, mask, classes, regularity, random);
+  connectLocalComponents(size, mask, classes);
+  subdivideLargeVoids(size, mask, classes);
+  const gateKeys = new Set(
+    nodes.filter((node) => node.kind === "gate").map((node) => pointKey(node.position)),
+  );
+  pruneInternalDeadEnds(classes, gateKeys);
+  return classes;
 }
 
 function createDocument(
@@ -562,31 +446,33 @@ function createDocument(
   attempt: number,
   mask: boolean[],
   densityField: number[],
-  nodes: readonly GraphNode[],
-  routedEdges: readonly RoutedEdge[],
+  seeds: readonly GraphNode[],
+  classes: Map<string, RoadClass>,
 ): CityDocumentV1 {
-  for (const edge of routedEdges) {
-    for (const [x, y] of edge.path) mask[indexOf(input.parameters.size, x, y)] = true;
+  const rebuilt = rebuildRoadGraph(
+    classes,
+    seeds.map((node) => ({ ...node, position: [...node.position] as Point })),
+  );
+  const tiles = resolveRoadTiles(
+    classes,
+    input.parameters.size,
+    deriveAttemptSeed(input.seed, attempt),
+    input.parameters.roundaboutFrequency,
+  );
+  for (const tile of tiles) {
+    for (const [x, y] of occupiedCellsForRoadTile(tile)) {
+      if (x >= 0 && y >= 0 && x < input.parameters.size && y < input.parameters.size) {
+        mask[indexOf(input.parameters.size, x, y)] = true;
+      }
+    }
   }
-  const districts = nodes
+  const districts = seeds
     .filter((node) => node.kind === "district")
     .map((node) => ({
       id: node.id,
       center: node.position,
       theme: "colormap",
     }));
-  const roadNodes = nodes.map((node) => ({
-    id: node.id,
-    position: node.position,
-    kind: node.kind,
-  }));
-  const roadEdges = routedEdges.map((edge, index) => ({
-    id: deriveProceduralId(input.seed, attempt, "road-edge", index),
-    from: nodes[edge.from]?.id ?? "",
-    to: nodes[edge.to]?.id ?? "",
-    cells: edge.path,
-    roadClass: edge.roadClass,
-  }));
   const document: CityDocumentV1 = {
     schemaVersion: 1,
     id: input.id,
@@ -602,24 +488,26 @@ function createDocument(
     map: { size: input.parameters.size, cellSize: 1, boundaryMask: mask, densityField },
     districts,
     roadGraph: {
-      nodes: roadNodes,
-      edges: roadEdges,
-      cells: resolveRoadCells(
-        routedEdges,
-        deriveAttemptSeed(input.seed, attempt),
-        input.parameters.roundaboutFrequency,
-      ),
+      nodes: rebuilt.nodes,
+      edges: rebuilt.edges.map((edge, index) => ({
+        id: deriveProceduralId(input.seed, attempt, "road-edge", index),
+        from: edge.from,
+        to: edge.to,
+        cells: edge.cells,
+        roadClass: edge.roadClass,
+      })),
+      cells: tiles.map((tile, index) => ({
+        id: deriveProceduralId(input.seed, attempt, "road-cell", index),
+        position: tile.position,
+        assetId: tile.assetId,
+        rotation: tile.rotation,
+      })),
     },
     blocks: [],
     lots: [],
     entities: {},
   };
   return CityDocumentSchema.parse(document);
-}
-
-function roadConnections(document: CityDocumentV1, position: Point): Direction[] {
-  const roadKeys = new Set(document.roadGraph.cells.map((cell) => pointKey(cell.position)));
-  return connectionNames(position, roadKeys);
 }
 
 export function validateRoadCity(document: CityDocumentV1): string[] {
@@ -660,23 +548,44 @@ export function validateRoadCity(document: CityDocumentV1): string[] {
     }
     if (visited.size !== nodes.size) issues.push("road graph is disconnected");
   }
-  const cellIds = new Set<string>();
+  const occupied = occupiedRoadSet(document.roadGraph.cells);
   const gatePositions = new Set(gates.map((gate) => pointKey(gate.position)));
+  const cellIds = new Set<string>();
+  const covered = new Set<string>();
   for (const cell of document.roadGraph.cells) {
     if (cellIds.has(cell.id)) issues.push(`duplicate road cell ID ${cell.id}`);
     cellIds.add(cell.id);
-    const connections = roadConnections(document, cell.position);
-    if (connections.length === 1 && !gatePositions.has(pointKey(cell.position))) {
-      issues.push(`internal dead end at ${pointKey(cell.position)}`);
-    }
-    const expected = resolveTile(
-      connections,
-      deriveAttemptSeed(document.generator.seed, document.generator.attempt),
-      document.generator.parameters.roundaboutFrequency,
-      cell.position,
-    );
-    if (cell.assetId !== expected.assetId || cell.rotation !== expected.rotation) {
+    if (!tileMatchesNeighbors(cell, occupied))
       issues.push(`invalid road tile at ${pointKey(cell.position)}`);
+    for (const point of occupiedCellsForRoadTile(cell)) {
+      const key = pointKey(point);
+      if (covered.has(key)) issues.push(`overlapping road occupancy at ${key}`);
+      covered.add(key);
+    }
+  }
+  if (covered.size !== occupied.size) issues.push("road occupancy does not match resolved tiles");
+  const occupiedList = [...occupied];
+  if (occupiedList[0]) {
+    const seen = new Set([occupiedList[0]]);
+    const queue = [occupiedList[0]];
+    for (let index = 0; index < queue.length; index += 1) {
+      const current = queue[index];
+      if (!current) continue;
+      const [x, y] = current.split(",").map(Number);
+      for (const { key } of neighborKeys([x ?? 0, y ?? 0])) {
+        if (occupied.has(key) && !seen.has(key)) {
+          seen.add(key);
+          queue.push(key);
+        }
+      }
+    }
+    if (seen.size !== occupied.size) issues.push("road cells are disconnected");
+  }
+  for (const key of occupied) {
+    const [x, y] = key.split(",").map(Number);
+    const point: Point = [x ?? 0, y ?? 0];
+    if (connectionNames(point, occupied).length <= 1 && !gatePositions.has(key)) {
+      issues.push(`internal dead end at ${key}`);
     }
   }
   if (document.map.boundaryMask.length !== document.map.size ** 2) issues.push("invalid mask size");
@@ -727,10 +636,18 @@ export async function generateRoadCity(
     const nodes = [...createGates(input.parameters.size, attemptSeed, attempt), ...districts];
     await checkpoint(hooks, "graph", 38, "Connecting the district graph");
     const graph = buildGraph(nodes, input.parameters.roadRegularity);
-    await checkpoint(hooks, "routing", 52, "Routing modular streets");
-    const routed = routeGraph(graph, nodes, input.parameters.size, mask, attemptSeed, attempt);
+    await checkpoint(hooks, "routing", 52, "Routing avenues and the local street mesh");
+    const routed = routeGraph(graph, nodes, input.parameters.size, mask);
+    const classes = rasterizeNetwork(
+      routed,
+      nodes,
+      input.parameters.size,
+      mask,
+      input.parameters.roadRegularity,
+      randomFor(attemptSeed, attempt, "mesh"),
+    );
     await checkpoint(hooks, "tiles", 70, "Resolving curves, junctions, and roundabouts");
-    const document = createDocument(input, attempt, [...mask], densityField, nodes, routed);
+    const document = createDocument(input, attempt, [...mask], densityField, nodes, classes);
     await checkpoint(hooks, "blocks", 76, "Finding free regions and creating blocks");
     document.blocks = createBlocks(document);
     await checkpoint(hooks, "lots", 83, "Subdividing lots with road frontage");

@@ -1,6 +1,10 @@
 import { createEmptyCityDocument, PRESET_PARAMETERS } from "@city/core";
 import { describe, expect, it } from "vitest";
-import { buildEntityBatches, textureVariantFor } from "../src/rendering/instance-map";
+import {
+  buildEntityBatches,
+  buildRoadBatches,
+  textureVariantFor,
+} from "../src/rendering/instance-map";
 
 describe("REN-004 instance mapping", () => {
   it("groups by asset and variant with a stable bidirectional instance map", () => {
@@ -92,5 +96,34 @@ describe("REN-004 instance mapping", () => {
     expect(low.batches[0]?.assetId).toBe("commercial:low-detail-building-a");
     expect(document.entities.tree?.assetId).toBe("suburban:tree-small");
     expect(document.entities.building?.assetId).toBe("commercial:building-a");
+  });
+
+  it("centers multi-cell road tiles on their catalog footprint", () => {
+    const document = createEmptyCityDocument({
+      id: "city-roads",
+      name: "Roads",
+      seed: "roads",
+      parameters: PRESET_PARAMETERS.balanced,
+      timestamp: "2026-09-05T00:00:00.000Z",
+    });
+    document.roadGraph.cells = [
+      {
+        id: "curve",
+        position: [10, 20],
+        assetId: "roads:road-curve",
+        rotation: 0,
+      },
+      {
+        id: "straight",
+        position: [3, 4],
+        assetId: "roads:road-straight",
+        rotation: 90,
+      },
+    ];
+    const batches = buildRoadBatches(document);
+    const curve = batches.find((batch) => batch.assetId === "roads:road-curve")?.items[0];
+    const straight = batches.find((batch) => batch.assetId === "roads:road-straight")?.items[0];
+    expect(curve?.position).toEqual([11, 0.015, 21]);
+    expect(straight?.position).toEqual([3.5, 0.015, 4.5]);
   });
 });

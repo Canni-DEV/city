@@ -4,6 +4,15 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-05
+
+### Changed
+
+- Generator `0.5.0` (M3.5): hierarchical arterial plus local block mesh, regularity as organic→grid orthogonality, connector-correct Kenney tiles, 2×2 avenue curves, street-bounded manzanas, and ring lots with courtyards.
+- Road tile yaw follows Kenney identity (straights east–west, ends open east, T-junctions closed north) so sidewalks run along the street instead of across tile joints.
+- Arterial through-segments use `road-straight` instead of `road-square`, which Kenney models as a four-sided curb plaza.
+- Road occupancy and rendering expand catalog footprints so multi-cell tiles do not overlap lots or sit on the wrong pivot.
+
 ## [0.4.0] - 2026-09-04
 
 ### Added

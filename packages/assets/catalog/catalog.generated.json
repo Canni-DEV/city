@@ -4567,8 +4567,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -4610,8 +4610,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -4919,9 +4919,9 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
         "east",
-        "south"
+        "south",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -4963,9 +4963,9 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
         "east",
-        "south"
+        "south",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -5050,8 +5050,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -5093,8 +5093,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -5136,8 +5136,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -5179,8 +5179,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -5222,7 +5222,7 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north"
+        "east"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -5264,7 +5264,7 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north"
+        "east"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -5306,7 +5306,7 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north"
+        "east"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -5348,7 +5348,7 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north"
+        "east"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -5390,9 +5390,9 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
         "east",
-        "south"
+        "south",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -5434,9 +5434,9 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
         "east",
-        "south"
+        "south",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -5478,9 +5478,9 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
         "east",
-        "south"
+        "south",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -5522,9 +5522,9 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
         "east",
-        "south"
+        "south",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -5656,8 +5656,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -5699,8 +5699,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -5742,8 +5742,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -5785,8 +5785,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -5828,8 +5828,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -5871,8 +5871,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -6242,8 +6242,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -6285,8 +6285,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -6414,8 +6414,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -6500,8 +6500,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -6543,8 +6543,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -6586,8 +6586,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -6673,9 +6673,9 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
         "east",
-        "south"
+        "south",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -6717,8 +6717,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -6760,8 +6760,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -6803,8 +6803,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -6846,8 +6846,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -6889,8 +6889,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -6932,8 +6932,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
@@ -6975,8 +6975,8 @@
       "compatibleZones": [],
       "proceduralWeight": 1,
       "connectors": [
-        "north",
-        "south"
+        "east",
+        "west"
       ],
       "instancing": true,
       "lodModelId": null,
