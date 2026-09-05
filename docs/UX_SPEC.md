@@ -22,6 +22,8 @@
 - **UX-023:** Destructive library and block-regeneration actions require explicit confirmation.
 - **UX-024:** The technical diagnostic exposes Auto/Low/Medium/High quality and active WebGPU or WebGL 2 backend.
 
+M3 implements that diagnostic in the city laboratory, including a quality selector, backend notice, frame-rate/draw-call readouts, and a textual selection status. Object editing remains M4.
+
 ## Layout
 
 The supported minimum is 1280×720. Panels may collapse as space narrows but the viewport, current mode, primary action, and cancellation path remain available. There is no onboarding; empty states teach the next action in one sentence.

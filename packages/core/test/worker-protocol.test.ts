@@ -6,7 +6,7 @@ import {
 } from "../src/index.js";
 
 describe("M2 generation worker protocol", () => {
-  it("FUN-016 accepts land stages, progress, and cancellation messages", () => {
+  it("FUN-016 accepts land and placement stages, progress, and cancellation messages", () => {
     expect(GENERATION_STAGES).toEqual([
       "mask",
       "districts",
@@ -16,6 +16,8 @@ describe("M2 generation worker protocol", () => {
       "blocks",
       "lots",
       "zones",
+      "placement",
+      "decoration",
       "validation",
     ]);
     expect(GenerationWorkerRequestSchema.parse({ type: "cancel", requestId: "req-1" }).type).toBe(

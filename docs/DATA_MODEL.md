@@ -14,4 +14,4 @@ Road edges reference existing nodes; road cells and entities reference existing 
 
 ## Worker messages
 
-Requests are `generate` and `cancel`. Responses are `progress`, `complete`, `cancelled`, and `error`. Every message carries `requestId`; progress additionally carries a named stage, 0–100 percent, and human-readable status. The UI ignores stale responses. M2 stages are `blocks`, `lots`, and `zones` after the M1 road stages and before `validation`.
+Requests are `generate` and `cancel`. Responses are `progress`, `complete`, `cancelled`, and `error`. Every message carries `requestId`; progress additionally carries a named stage, 0–100 percent, and human-readable status. The UI ignores stale responses. M3 stages are `placement` and `decoration` after the M2 land stages and before `validation`.

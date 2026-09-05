@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   base: "/city/",
@@ -24,6 +24,10 @@ export default defineConfig({
         replacement: fileURLToPath(new URL("../../packages/ui/src/styles.css", import.meta.url)),
       },
     ],
+  },
+  test: {
+    environment: "node",
+    include: ["test/**/*.test.ts"],
   },
   build: { sourcemap: true },
 });

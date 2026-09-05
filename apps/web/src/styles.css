@@ -326,6 +326,12 @@ h2 {
 .city-diagnostics strong {
   text-transform: uppercase;
 }
+.selection-status {
+  margin: 0 0 12px;
+  color: var(--city-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
 .city-viewport {
   position: relative;
   min-width: 0;

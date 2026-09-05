@@ -8,8 +8,10 @@ import {
   type MapSize,
   PRESET_PARAMETERS,
   validateLandCity,
+  validatePlacedCity,
   validateRoadCity,
 } from "../src/index.js";
+import { TEST_ASSETS } from "./catalog-assets.js";
 
 const timestamp = "2026-09-04T12:00:00.000Z";
 
@@ -20,10 +22,11 @@ function inputFor(seed: string, preset: CityPreset = "balanced", size: MapSize =
     seed,
     timestamp,
     parameters: { ...PRESET_PARAMETERS[preset], size },
+    assets: TEST_ASSETS,
   };
 }
 
-describe("M1/M2 city generation", () => {
+describe("M1–M3 city generation", () => {
   it("TST-001 produces the same structural hash for equal inputs", async () => {
     const first = await generateRoadCity(inputFor("golden-grid"));
     const second = await generateRoadCity({
@@ -32,11 +35,11 @@ describe("M1/M2 city generation", () => {
       timestamp: "2027-01-01T00:00:00.000Z",
     });
     expect(hashGeneratedStructure(first)).toBe(hashGeneratedStructure(second));
-    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"364c6d26"`);
+    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"7e2c1420"`);
   });
 
   it("TST-001 derives reproducible attempts and retries at most three times", async () => {
-    expect(deriveAttemptSeed("retry-city", 2)).toBe("retry-city::0.3.0::attempt-2");
+    expect(deriveAttemptSeed("retry-city", 2)).toBe("retry-city::0.4.0::attempt-2");
     const attempts: number[] = [];
     const city = await generateRoadCity(inputFor("retry-city"), {
       validateAttempt(document) {
@@ -61,12 +64,14 @@ describe("M1/M2 city generation", () => {
         );
         expect(validateRoadCity(city), label).toEqual([]);
         expect(validateLandCity(city), label).toEqual([]);
+        expect(validatePlacedCity(city, TEST_ASSETS), label).toEqual([]);
         expect(city.blocks.length, label).toBeGreaterThan(0);
         expect(city.lots.length, label).toBeGreaterThan(0);
+        expect(Object.keys(city.entities).length, label).toBeGreaterThan(0);
         expect(city.roadGraph.nodes.filter((node) => node.kind === "gate")).toHaveLength(
           size === 64 ? 2 : size === 96 ? 3 : 4,
         );
       }
     }
-  }, 60_000);
+  }, 90_000);
 });

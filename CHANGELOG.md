@@ -4,6 +4,14 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-04
+
+### Added
+
+- Deterministic M3 placement: footprint-valid buildings, park trees, decoration, district palettes, and spatial-hash occupancy checks.
+- Instanced city rendering grouped by asset and texture variant, quality profiles Auto/Low/Medium/High, fixed sun/ambient/shadows/fog, and a one-time WebGPU→WebGL 2 fallback that keeps the open document.
+- Worker `placement` and `decoration` stages, renderer fallback tests, and 200-city placement invariants.
+
 ## [0.3.0] - 2026-09-04
 
 ### Added
