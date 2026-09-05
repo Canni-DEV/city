@@ -133,6 +133,34 @@ export function buildRoadBatches(document: CityDocumentV1): RenderBatch[] {
     });
 }
 
+export function buildSidewalkBatches(document: CityDocumentV1): RenderBatch[] {
+  const groups = new Map<string, RenderItem[]>();
+  for (const cell of [...document.sidewalks].sort((left, right) =>
+    left.id.localeCompare(right.id),
+  )) {
+    const items = groups.get(cell.assetId) ?? [];
+    items.push({
+      id: cell.id,
+      position: [cell.position[0] + 0.5, 0.02, cell.position[1] + 0.5],
+      rotation: [0, cell.rotation, 0],
+      scale: [1, 1, 1],
+    });
+    groups.set(cell.assetId, items);
+  }
+  return [...groups.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([assetId, items]) => {
+      const entry = assetById.get(assetId);
+      return {
+        key: `sidewalk:${assetId}`,
+        assetId,
+        variant: "colormap",
+        texturePath: entry ? variantTexturePath(entry, "colormap") : "",
+        items,
+      };
+    });
+}
+
 export function instanceLookupKey(batchKey: string, instanceId: number): string {
   return `${batchKey}:${instanceId}`;
 }

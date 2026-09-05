@@ -390,6 +390,51 @@
       ],
       "additionalProperties": false
     },
+    "sidewalks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "blockId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "position": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "items": false,
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "assetId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rotation": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "blockId",
+          "position",
+          "assetId",
+          "rotation"
+        ],
+        "additionalProperties": false
+      }
+    },
     "blocks": {
       "type": "array",
       "items": {
@@ -679,6 +724,7 @@
     "map",
     "districts",
     "roadGraph",
+    "sidewalks",
     "blocks",
     "lots",
     "entities"

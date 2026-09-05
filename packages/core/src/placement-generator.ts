@@ -55,6 +55,9 @@ export function occupancyFromRoads(document: CityDocumentV1): SpatialHash {
   for (const cell of document.roadGraph.cells) {
     hash.occupy(occupiedCellsForRoadTile(cell), `road:${cell.id}`);
   }
+  for (const cell of document.sidewalks) {
+    hash.occupy([cell.position], `sidewalk:${cell.id}`);
+  }
   return hash;
 }
 
@@ -296,6 +299,31 @@ export function placeBuildingsAndParks(
     const cells = frontCells(bounds, lot.frontage, span.alongX, span.alongZ);
     if (cells) tryPlace(document, hash, entities, chosen, cells, yaw, refs);
   }
+
+  for (const block of document.blocks) {
+    if (block.zone !== "park") continue;
+    if (document.lots.some((lot) => lot.blockId === block.id)) continue;
+    const chance = 0.42 + document.generator.parameters.decorationDensity / 400;
+    const refs = {
+      districtId: block.districtId,
+      blockId: block.id,
+      lotId: null,
+      zone: block.zone,
+    };
+    let planted = 0;
+    for (const cell of block.cells) {
+      if (hash.has(cell) || random.float() > chance) continue;
+      const tree = pickAsset(trees, random, (asset) => asset.proceduralWeight);
+      if (tree && tryPlace(document, hash, entities, tree, [cell], 0, refs)) planted += 1;
+    }
+    if (planted === 0) {
+      const tree = pickAsset(trees, random, (asset) => asset.proceduralWeight);
+      for (const cell of block.cells) {
+        if (!tree) break;
+        if (tryPlace(document, hash, entities, tree, [cell], 0, refs)) break;
+      }
+    }
+  }
   return entities;
 }
 
@@ -428,6 +456,9 @@ export function validatePlacedCity(
 
   for (const cell of document.roadGraph.cells) {
     if (!catalogIds.has(cell.assetId)) issues.push(`road cell ${cell.id} has missing asset`);
+  }
+  for (const cell of document.sidewalks) {
+    if (!catalogIds.has(cell.assetId)) issues.push(`sidewalk ${cell.id} has missing asset`);
   }
   for (const entity of Object.values(document.entities)) {
     if (seen.has(entity.id)) issues.push(`duplicate entity ID ${entity.id}`);

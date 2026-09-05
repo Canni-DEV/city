@@ -9,7 +9,7 @@ import {
   agentWorldPosition,
   type CityDocumentV1,
   clipForAgent,
-  createRoadWalkPolicy,
+  createSidewalkWalkPolicy,
   spawnAgents,
   tickAgents,
 } from "@city/core";
@@ -143,20 +143,18 @@ function AgentAvatar({
 
 export function AgentLayer({ document, count }: { document: CityDocumentV1; count: number }) {
   const body = assetById.get("protagonists:character-medium");
+  const policy = useMemo(() => createSidewalkWalkPolicy(document), [document]);
   const spawned = useMemo(
     () =>
       spawnAgents({
         seed: document.generator.seed,
         tiles: document.roadGraph.cells,
         count,
+        policy,
       }),
-    [count, document.generator.seed, document.roadGraph.cells],
+    [count, document.generator.seed, document.roadGraph.cells, policy],
   );
   const agentsRef = useRef(spawned);
-  const policy = useMemo(
-    () => createRoadWalkPolicy(document.roadGraph.cells),
-    [document.roadGraph.cells],
-  );
 
   useLayoutEffect(() => {
     agentsRef.current = spawned;

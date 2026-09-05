@@ -6,9 +6,9 @@ import {
   normalizeGenerationParameters,
   occupiedRoadSet,
   PRESET_PARAMETERS,
+  quotaZoneAreaShares,
   validateLandCity,
   ZONE_TYPES,
-  zoneAreaShares,
 } from "../src/index.js";
 
 import { TEST_ASSETS } from "./catalog-assets.js";
@@ -72,7 +72,9 @@ describe("M2 blocks and zoning", () => {
         (Math.max(...xs) - Math.min(...xs) + 1) * (Math.max(...ys) - Math.min(...ys) + 1),
       );
       const [dx, dy] = deltas[lot.frontage];
-      expect(lot.cells.some(([x, y]) => roads.has(`${x + dx},${y + dy}`))).toBe(true);
+      const sidewalks = new Set(city.sidewalks.map((cell) => cell.position.join(",")));
+      expect(lot.cells.some(([x, y]) => sidewalks.has(`${x + dx},${y + dy}`))).toBe(true);
+      expect(lot.cells.every((point) => !sidewalks.has(point.join(",")))).toBe(true);
       for (const point of lot.cells) {
         expect(occupied.has(point.join(","))).toBe(false);
         expect(free.has(point.join(","))).toBe(true);
@@ -81,7 +83,7 @@ describe("M2 blocks and zoning", () => {
     }
     for (const zone of ZONE_TYPES)
       expect(
-        Math.abs(zoneAreaShares(city)[zone] - city.generator.parameters.zoneMix[zone]),
+        Math.abs(quotaZoneAreaShares(city)[zone] - city.generator.parameters.zoneMix[zone]),
       ).toBeLessThanOrEqual(5);
   });
 
@@ -128,7 +130,7 @@ describe("M2 blocks and zoning", () => {
     }, "not rectangular");
     mutate((copy) => {
       firstLot(copy).cells = [[-5, -5]];
-    }, "no full road frontage");
+    }, "no full sidewalk frontage");
     mutate((copy) => {
       for (const block of copy.blocks) block.zone = "park";
     }, "area tolerance");
@@ -144,7 +146,14 @@ describe("M2 blocks and zoning", () => {
   });
 
   it("FUN-016 cancels during each M2 and M3 stage without returning a partial city", async () => {
-    for (const stage of ["blocks", "lots", "zones", "placement", "decoration"] as const) {
+    for (const stage of [
+      "blocks",
+      "sidewalks",
+      "lots",
+      "zones",
+      "placement",
+      "decoration",
+    ] as const) {
       let cancelled = false;
       await expect(
         generateRoadCity(input, {

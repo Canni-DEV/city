@@ -5,6 +5,7 @@ import {
   clipForAgent,
   createGridWalkPolicy,
   createRoadWalkPolicy,
+  createSidewalkWalkPolicy,
   DEFAULT_AGENT_SPEED,
   findPath,
   generateRoadCity,
@@ -33,6 +34,8 @@ function standingAgent(
     index,
     cell,
     nextCell: null,
+    lane: 0,
+    nextLane: null,
     progress: 0,
     heading: 0,
     path: [],
@@ -90,7 +93,8 @@ describe("TST-008 runtime agents", () => {
         path: [[1, 0]],
         destCount: 1,
       }),
-      standingAgent(1, [1, 0]),
+      standingAgent(1, [1, 0], { lane: 0 }),
+      standingAgent(2, [1, 0], { lane: 1 }),
     ];
     const blocked = tickAgents(agents, { policy, dt: 0.2, seed: "wait-seed", waitLimit: 0.5 });
     expect(blocked[0]?.moving).toBe(false);
@@ -106,7 +110,7 @@ describe("TST-008 runtime agents", () => {
     expect(current[0]?.destCount).toBeGreaterThan(1);
   });
 
-  it("does not let two agents occupy or step into the same cell", () => {
+  it("allows two agents to share a cell on distinct lanes and waits when both lanes are taken", () => {
     const policy = createGridWalkPolicy(new Set(["0,0", "1,0", "2,0"]));
     const agents: AgentRuntimeState[] = [
       standingAgent(0, [0, 0], {
@@ -115,6 +119,7 @@ describe("TST-008 runtime agents", () => {
           [1, 0],
           [2, 0],
         ],
+        lane: 0,
       }),
       standingAgent(1, [2, 0], {
         destination: [0, 0],
@@ -122,14 +127,30 @@ describe("TST-008 runtime agents", () => {
           [1, 0],
           [0, 0],
         ],
+        lane: 0,
       }),
     ];
     const next = tickAgents(agents, { policy, dt: 0.1, seed: "meet-seed", speed: 1 });
     const reserved = reservationMap(next);
-    expect(new Set(reserved.values()).size).toBe(next.length);
+    expect(reserved.size).toBeGreaterThanOrEqual(2);
     expect(
       next.filter((agent) => agent.nextCell && agent.nextCell[0] === 1 && agent.nextCell[1] === 0),
-    ).toHaveLength(1);
+    ).toHaveLength(2);
+    expect(new Set(next.map((agent) => agent.nextLane)).size).toBe(2);
+
+    const jammed: AgentRuntimeState[] = [
+      standingAgent(0, [1, 0], { lane: 0 }),
+      standingAgent(1, [1, 0], { lane: 1 }),
+      standingAgent(2, [0, 0], {
+        destination: [1, 0],
+        path: [[1, 0]],
+        lane: 0,
+      }),
+    ];
+    const blocked = tickAgents(jammed, { policy, dt: 0.2, seed: "full-cell", waitLimit: 0.5 });
+    expect(blocked[2]?.moving).toBe(false);
+    expect(blocked[2]?.cell).toEqual([0, 0]);
+    expect(blocked[2]?.waitSeconds).toBeCloseTo(0.2);
   });
 
   it("spawns deterministically from the document seed and agent index", () => {
@@ -139,7 +160,9 @@ describe("TST-008 runtime agents", () => {
     const other = spawnAgents({ seed: "other-seed", tiles, count: 4 });
     expect(first).toEqual(second);
     expect(first.map((agent) => agent.cell)).not.toEqual(other.map((agent) => agent.cell));
-    expect(new Set(first.map((agent) => `${agent.cell[0]},${agent.cell[1]}`)).size).toBe(4);
+    expect(
+      new Set(first.map((agent) => `${agent.cell[0]},${agent.cell[1]}:${agent.lane}`)).size,
+    ).toBe(4);
     expect(first.every((agent) => ["idle", "run"].includes(clipForAgent(agent)))).toBe(true);
   });
 
@@ -187,16 +210,20 @@ describe("TST-008 runtime agents", () => {
     const before = structuredClone(city);
     const hash = hashGeneratedStructure(city);
     const snapshot = JSON.stringify(city);
+    const policy = createSidewalkWalkPolicy(city);
     const agents = spawnAgents({
       seed: city.generator.seed,
       tiles: city.roadGraph.cells,
       count: 8,
+      policy,
     });
     expect(agents.length).toBe(8);
+    const sidewalks = new Set(city.sidewalks.map((cell) => cell.position.join(",")));
+    expect(agents.every((agent) => sidewalks.has(agent.cell.join(",")))).toBe(true);
     let current = agents;
     for (let step = 0; step < 30; step += 1) {
       current = tickAgents(current, {
-        policy: createRoadWalkPolicy(city.roadGraph.cells),
+        policy,
         dt: 1 / 30,
         seed: city.generator.seed,
       });

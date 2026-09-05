@@ -6,7 +6,7 @@
 - **DEP-004:** Production excludes `#/dev/assets` and copies only catalog-referenced runtime models and textures.
 - **DEP-005:** The public repository licenses code under MIT and preserves Kenney pack CC0 notices and original documentation.
 
-Release versions start at `0.x`. `1.0.0` is authorized only when M0–M6, intermediate M3.5/M3.6, and every acceptance entry in the requirements matrix are complete.
+Release versions start at `0.x`. `1.0.0` is authorized only when M0–M6, intermediate M3.5/M3.6/M3.6.1, and every acceptance entry in the requirements matrix are complete.
 
 ## Initial Pages setup and recovery (DEP-002–003)
 

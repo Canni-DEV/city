@@ -79,6 +79,14 @@ const RoadCellSchema = z.object({
   rotation: z.number(),
 });
 
+const SidewalkCellSchema = z.object({
+  id: z.string().min(1),
+  blockId: z.string().min(1),
+  position: Vector2Schema,
+  assetId: z.string().min(1),
+  rotation: z.number(),
+});
+
 const DistrictSchema = z.object({
   id: z.string().min(1),
   center: Vector2Schema,
@@ -140,6 +148,7 @@ export const CityDocumentSchema = z.object({
     edges: z.array(RoadEdgeSchema),
     cells: z.array(RoadCellSchema),
   }),
+  sidewalks: z.array(SidewalkCellSchema),
   blocks: z.array(BlockSchema),
   lots: z.array(LotSchema),
   entities: z.record(z.string(), CityEntitySchema),
@@ -174,6 +183,7 @@ export function createEmptyCityDocument(input: {
     },
     districts: [],
     roadGraph: { nodes: [], edges: [], cells: [] },
+    sidewalks: [],
     blocks: [],
     lots: [],
     entities: {},

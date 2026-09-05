@@ -4,7 +4,11 @@ import { OrbitControls, PerspectiveCamera, useGLTF } from "@react-three/drei";
 import { Canvas, type RootState, useFrame, useThree } from "@react-three/fiber";
 import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three/webgpu";
-import { buildEntityBatches, buildRoadBatches } from "../rendering/instance-map";
+import {
+  buildEntityBatches,
+  buildRoadBatches,
+  buildSidewalkBatches,
+} from "../rendering/instance-map";
 import type { ResolvedQuality } from "../rendering/quality";
 import {
   createCompatibleRenderer,
@@ -180,15 +184,16 @@ function CityScene({
     [document, quality.showDecoration, quality.useLod],
   );
   const roadBatches = useMemo(() => buildRoadBatches(document), [document]);
+  const sidewalkBatches = useMemo(() => buildSidewalkBatches(document), [document]);
 
   useEffect(() => {
-    for (const batch of [...entityBatches.batches, ...roadBatches]) {
+    for (const batch of [...entityBatches.batches, ...roadBatches, ...sidewalkBatches]) {
       const entry = assetById.get(batch.assetId);
       if (entry) useGLTF.preload(runtimeAssetUrl(entry.runtimePath, import.meta.env.BASE_URL));
     }
     const body = assetById.get("protagonists:character-medium");
     if (body) useGLTF.preload(runtimeAssetUrl(body.runtimePath, import.meta.env.BASE_URL));
-  }, [entityBatches.batches, roadBatches]);
+  }, [entityBatches.batches, roadBatches, sidewalkBatches]);
 
   return (
     <>
@@ -230,6 +235,9 @@ function CityScene({
       <UrbanGround document={document} />
       <LandOverlays city={document} overlays={overlays} />
       <Suspense fallback={null}>
+        {sidewalkBatches.map((batch) => (
+          <InstancedAssetBatch key={batch.key} batch={batch} half={half} castShadow={false} />
+        ))}
         {roadBatches.map((batch) => (
           <InstancedAssetBatch key={batch.key} batch={batch} half={half} castShadow={false} />
         ))}

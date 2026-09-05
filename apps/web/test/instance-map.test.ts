@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildEntityBatches,
   buildRoadBatches,
+  buildSidewalkBatches,
   textureVariantFor,
 } from "../src/rendering/instance-map";
 
@@ -133,5 +134,36 @@ describe("REN-004 instance mapping", () => {
     expect(curve?.position).toEqual([11, 0.015, 21]);
     expect(straight?.position).toEqual([3.5, 0.015, 4.5]);
     expect(roundabout?.position).toEqual([1.5, 0.015, 9.5]);
+  });
+
+  it("instances sidewalk tiles separately from road batches", () => {
+    const document = createEmptyCityDocument({
+      id: "city-sidewalks",
+      name: "Sidewalks",
+      seed: "sidewalks",
+      parameters: PRESET_PARAMETERS.balanced,
+      timestamp: "2026-09-05T00:00:00.000Z",
+    });
+    document.sidewalks = [
+      {
+        id: "walk-a",
+        blockId: "block-a",
+        position: [2, 3],
+        assetId: "roads:tile-low",
+        rotation: 0,
+      },
+      {
+        id: "walk-b",
+        blockId: "block-a",
+        position: [4, 3],
+        assetId: "roads:tile-low",
+        rotation: 90,
+      },
+    ];
+    const batches = buildSidewalkBatches(document);
+    expect(batches).toHaveLength(1);
+    expect(batches[0]?.key).toBe("sidewalk:roads:tile-low");
+    expect(batches[0]?.items.map((item) => item.id)).toEqual(["walk-a", "walk-b"]);
+    expect(batches[0]?.items[0]?.position).toEqual([2.5, 0.02, 3.5]);
   });
 });

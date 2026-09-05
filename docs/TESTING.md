@@ -4,12 +4,12 @@
 
 - **TST-001:** Unit tests prove same-input document hashes and deterministic retry derivation.
 - **TST-002:** Generator batch tests run 50 seeds per preset distributed across all three sizes.
-- **TST-003:** Invariant tests cover unique IDs/references, one connected road component of occupied cells, exact gate count, catalog-connector tile combinations, footprints, boundaries, frontage, street-bounded blocks, and zone quotas ±5 points.
+- **TST-003:** Invariant tests cover unique IDs/references, one connected road component of occupied cells, one connected sidewalk-plus-crossing pedestrian graph, exact gate count, catalog-connector tile combinations, footprints, boundaries, sidewalk rings, frontage on sidewalk, street-bounded blocks, and zone quotas ±5 points.
 - **TST-004:** Every editor command proves exact apply/revert, ID preservation, drag consolidation, redo clearing, and 100-entry history.
 - **TST-005:** Persistence tests cover migrations, invalid input, size limit, future schema, ID collision, and snapshot round trips.
 - **TST-006:** Catalog tests require exactly 213 unique valid city-kit GLB entries, existing runtime sources, positive footprints, and complete road connectors. M3.6 implementation extends this suite to generated protagonist GLBs and skins without packing source FBX.
 - **TST-007:** Renderer integration tests prove forced fallback keeps the open document.
-- **TST-008:** Agent tests prove walk-graph construction from occupied road cells, A*, cell reservation with wait-then-repath, seeded spawn, idle/run clip selection, and that agent ticks do not mutate `CityDocumentV1`.
+- **TST-008:** Agent tests prove walk-graph construction from sidewalks and crossings, A*, two-lane reservation with wait-then-repath, seeded spawn on sidewalks, idle/run clip selection, and that agent ticks do not mutate `CityDocumentV1`.
 
 CI runs frozen install, Biome check, TypeScript typecheck, Vitest, and production build on pushes and pull requests. There is no numeric coverage gate, Playwright suite, or automated Markdown/link validation.
 
@@ -21,7 +21,9 @@ M3 evidence extends the same 200-city batch with placement invariants: every pro
 
 M3.5 evidence regenerates that 200-city batch under generator `0.5.0`: occupied road cells form one 4-connected component, resolved tiles match rotated catalog connectors, typical enclosed blocks on 96/128 maps have multi-side frontage and manzana-scale bounds, lots keep full road frontage, and zone shares stay within ±5 points. Connector yaw unit tests cover `road-bend` and `road-curve`.
 
-M3.6 evidence is independent of document hashes: seeded agent spawn, road-cell A*, reservation/wait/repath, and unchanged `CityDocumentV1` identity after ticks (TST-008). Catalog tests also reject Kenney `0.Targeting Pose` clips in exported idle/run/jump GLBs (TST-006).
+M3.6 evidence is independent of document hashes: seeded agent spawn, A*, reservation/wait/repath, and unchanged `CityDocumentV1` identity after ticks (TST-008). Catalog tests also reject Kenney `0.Targeting Pose` clips in exported idle/run/jump GLBs (TST-006).
+
+M3.6.1 evidence regenerates the 200-city batch under generator `0.6.3`: habitable sidewalk rings occupy the 1-cell road-adjacent perimeter of each block that still has an interior, remnants too thin for a ring are pocket parks, lots do not overlap sidewalks and keep sidewalk frontage, local T/4-way tiles are Kenney `*-path` while avenue T/4-way tiles are unsuffixed `road-intersection` / `road-crossroad`, the pedestrian graph is one 4-connected component, and two agents may share a sidewalk cell on distinct lanes.
 
 ## Manual QA per milestone
 

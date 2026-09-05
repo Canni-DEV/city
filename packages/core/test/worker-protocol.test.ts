@@ -14,6 +14,7 @@ describe("M2 generation worker protocol", () => {
       "routing",
       "tiles",
       "blocks",
+      "sidewalks",
       "lots",
       "zones",
       "placement",
