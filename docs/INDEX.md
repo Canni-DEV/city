@@ -1,6 +1,6 @@
 # City documentation index
 
-City is specified through stable requirement (`PRD`, `FUN`, `UX`, `ARC`, `DAT`, `GEN`, `EDT`, `PER`, `AST`, `REN`, `ACC`), acceptance (`AC`), test (`TST`), decision (`ADR`), and milestone (`M`) IDs.
+City is specified through stable requirement (`PRD`, `FUN`, `UX`, `ARC`, `DAT`, `GEN`, `SIM`, `EDT`, `PER`, `AST`, `REN`, `ACC`), acceptance (`AC`), test (`TST`), decision (`ADR`), and milestone (`M`) IDs.
 
 ## Product and experience
 
@@ -14,6 +14,7 @@ City is specified through stable requirement (`PRD`, `FUN`, `UX`, `ARC`, `DAT`, 
 - [Architecture](ARCHITECTURE.md)
 - [Data model](DATA_MODEL.md)
 - [Generator](GENERATOR_SPEC.md)
+- [Simulation](SIMULATION_SPEC.md)
 - [Editor](EDITOR_SPEC.md)
 - [Persistence](PERSISTENCE_SPEC.md)
 - [Asset catalog](ASSET_CATALOG.md)

@@ -2,7 +2,7 @@
 
 ## Inventory
 
-- **AST-001:** The generated catalog contains exactly 213 GLB models: 41 commercial, 37 industrial, 95 roads, and 40 suburban.
+- **AST-001:** The city-kit catalog contains exactly 213 GLB models: 41 commercial, 37 industrial, 95 roads, and 40 suburban. M3.6 adds generated protagonist runtime GLBs and skins **outside** `/assets` (FBX sources stay in `assets/kenney_animated-characters-protagonists/`). TST-006 is extended when those entries exist.
 - **AST-002:** Original GLB, FBX, OBJ, previews, HTML documentation, textures, and CC0 license files remain unchanged under `/assets`.
 - **AST-003:** Production preparation copies only catalog-referenced GLB models and textures to the ignored runtime directory.
 
@@ -19,4 +19,4 @@ Regenerate with `pnpm catalog`. Do not hand-edit `catalog.generated.json`; encod
 
 ## Licensing and credits
 
-The commercial, industrial, roads, and suburban packs are by [Kenney](https://kenney.nl/) and retain their included [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) notices. City source code uses the MIT License.
+The commercial, industrial, roads, suburban, and Animated Characters Protagonists packs are by [Kenney](https://kenney.nl/) and retain their included [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) notices. City source code uses the MIT License.

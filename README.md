@@ -1,6 +1,6 @@
 # City
 
-City is a browser-based procedural city sandbox and editor. It generates deterministic low-poly cities from the Kenney City Kit asset family and exposes the resolved city as an editable, versioned document.
+City is a browser-based procedural city sandbox. It generates deterministic low-poly cities from Kenney City Kit packs, can show a small number of runtime pedestrians on the streets (M3.6), and will expose the resolved city as an editable, versioned document (M4).
 
 Milestone M2 adds blocks, fronted lots, and five-zone assignment on top of the M1 road slice: presets, advanced mix controls, overlays, and invariant checks for frontage and area quotas. Buildings and decoration follow in M3.
 
@@ -37,4 +37,4 @@ Start with [the documentation index](docs/INDEX.md) and [the repository agent in
 
 ## License
 
-Project code is MIT licensed. The four asset packs retain their original CC0 1.0 license files. See [Credits](docs/ASSET_CATALOG.md#licensing-and-credits).
+Project code is MIT licensed. The Kenney packs retain their original CC0 1.0 license files. See [Credits](docs/ASSET_CATALOG.md#licensing-and-credits).

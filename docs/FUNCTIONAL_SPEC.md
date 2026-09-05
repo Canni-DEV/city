@@ -25,6 +25,10 @@
 - **FUN-024:** Overlaps are blocked with a reason. Zone incompatibility warns but permits placement.
 - **FUN-025:** Block regeneration requires confirmation and replaces every entity in that block.
 
+## Runtime agents
+
+- **FUN-040:** After generation, a small set of seeded pedestrians walks the occupied road graph (SIM-001–007). They are not selectable editor objects in M3.6.
+
 ## Persistence and routes
 
 - **FUN-030:** Routes are `#/`, `#/city/:cityId`, `#/credits`, and development-only `#/dev/assets`.

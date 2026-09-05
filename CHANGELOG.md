@@ -1,8 +1,12 @@
 # Changelog
 
-All notable changes use Semantic Versioning. The project remains in `0.x` until M0–M6 and every 1.0 acceptance criterion are complete.
+All notable changes use Semantic Versioning. The project remains in `0.x` until M0–M6, intermediate M3.5/M3.6, and every 1.0 acceptance criterion are complete.
 
 ## [Unreleased]
+
+### Added
+
+- Planning for M3.6 runtime agents (SIM-001–007, ADR-0012): seeded pedestrians on the occupied road graph, Kenney Animated Characters Protagonists 1.1 preserved under `assets/`, character GLBs to be generated outside `/assets` at implementation.
 
 ## [0.5.0] - 2026-09-05
 

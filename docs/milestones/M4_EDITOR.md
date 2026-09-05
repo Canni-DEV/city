@@ -2,7 +2,7 @@
 
 ## IDs and inputs
 
-**Milestone:** M4. **Requirements:** FUN-020–025, UX-010–023, EDT-001–010, TST-004. Inputs are populated M3 documents, scene instance maps, footprints, lots, and zone compatibility.
+**Milestone:** M4. **Requirements:** FUN-020–025, UX-010–023, EDT-001–010, TST-004. Inputs are populated M3.5 documents after M3.6 runtime agents, scene instance maps, footprints, lots, and zone compatibility.
 
 ## Outputs and tasks
 

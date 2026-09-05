@@ -13,3 +13,4 @@ Accepted decisions are immutable historical records. Supersede them with a new A
 9. [Explicit editor commands](0009-explicit-editor-commands.md)
 10. [Unit tests and manual QA](0010-testing-scope.md)
 11. [Hierarchical urban block mesh](0011-urban-block-mesh.md)
+12. [Runtime agents outside CityDocument](0012-runtime-agents.md)

@@ -3,14 +3,14 @@
 ## Structure
 
 - **UX-001:** The library is the entry point; the city route combines a dominant 3D viewport with generator/editor controls.
-- **UX-002:** The credits page names Kenney, the four packs, their links, CC0, and the MIT code license.
+- **UX-002:** The credits page names Kenney, the five packs (four City Kits plus Animated Characters Protagonists), their links, CC0, and the MIT code license.
 - **UX-003:** The asset viewer is discoverable only in development builds.
 - **UX-004:** Status messages use plain language and identify actionable validation failures.
 
 ## Camera and input
 
 - **UX-010:** Left click selects; left-drag on empty ground pans; Shift+drag performs rectangle selection.
-- **UX-011:** Right-drag orbits, wheel zooms, and Q/E rotates the camera.
+- **UX-011:** Right-drag orbits, wheel zooms, and Q/E rotates the camera. Default framing still shows the whole city; OrbitControls `maxZoom` is raised above 28 in M3.6 so streets and agents can be inspected.
 - **UX-012:** Delete removes; Ctrl/Cmd+Z undoes; Shift+Ctrl/Cmd+Z redoes; Ctrl/Cmd+D duplicates; Escape cancels.
 - **UX-013:** Continuous transforms preview live but commit as one history command.
 
@@ -22,7 +22,7 @@
 - **UX-023:** Destructive library and block-regeneration actions require explicit confirmation.
 - **UX-024:** The technical diagnostic exposes Auto/Low/Medium/High quality and active WebGPU or WebGL 2 backend.
 
-M3 implements that diagnostic in the city laboratory, including a quality selector, backend notice, frame-rate/draw-call readouts, and a textual selection status. Object editing remains M4.
+M3 implements that diagnostic in the city laboratory, including a quality selector, backend notice, frame-rate/draw-call readouts, and a textual selection status. Object editing remains M4. M3.6 adds runtime pedestrians; they are not editor selection targets.
 
 ## Layout
 
