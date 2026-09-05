@@ -17,7 +17,8 @@ export const AGENT_SKINS = [
 export type AgentSkin = (typeof AGENT_SKINS)[number];
 export type AgentClip = "idle" | "run";
 
-export const DEFAULT_AGENT_SPEED = 1.85;
+/** Cells per second. One cell is one world unit; ~1/3 of the first M3.6 draft. */
+export const DEFAULT_AGENT_SPEED = 1.85 / 3;
 export const DEFAULT_AGENT_WAIT_LIMIT = 0.7;
 
 /** SIM-006: 8–16 on 96 Auto/high; Low may reduce the count. */

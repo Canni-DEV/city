@@ -343,6 +343,22 @@ h2 {
   overflow: hidden;
   background: #0b1210;
 }
+.free-camera-hint {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 2;
+  margin: 0;
+  max-width: min(420px, calc(100% - 32px));
+  padding: 10px 12px;
+  border: 1px solid #826b2f;
+  border-radius: 9px;
+  color: #f3d98c;
+  background: rgb(42 36 20 / 92%);
+  font-size: 13px;
+  line-height: 1.4;
+  pointer-events: none;
+}
 .viewport-empty {
   position: absolute;
   inset: 0;

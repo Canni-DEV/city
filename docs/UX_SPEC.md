@@ -10,7 +10,7 @@
 ## Camera and input
 
 - **UX-010:** Left click selects; left-drag on empty ground pans; Shift+drag performs rectangle selection.
-- **UX-011:** Right-drag orbits, wheel zooms, and Q/E rotates the camera. Default framing still shows the whole city; OrbitControls `maxZoom` is raised above 28 in M3.6 so streets and agents can be inspected.
+- **UX-011:** Right-drag orbits, wheel zooms, and Q/E rotates the camera. Default framing still shows the whole city; OrbitControls `maxZoom` is raised above 28 in M3.6 so streets and agents can be inspected. **F** toggles an optional unrestricted free camera (perspective, WASD, right-drag look, no zoom/distance clamps). Escape or **F** returns to the default city view. Free camera is inspect-only; it is not a player avatar.
 - **UX-012:** Delete removes; Ctrl/Cmd+Z undoes; Shift+Ctrl/Cmd+Z redoes; Ctrl/Cmd+D duplicates; Escape cancels.
 - **UX-013:** Continuous transforms preview live but commit as one history command.
 

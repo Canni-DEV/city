@@ -5,6 +5,7 @@ import {
   clipForAgent,
   createGridWalkPolicy,
   createRoadWalkPolicy,
+  DEFAULT_AGENT_SPEED,
   findPath,
   generateRoadCity,
   hashGeneratedStructure,
@@ -145,6 +146,25 @@ describe("TST-008 runtime agents", () => {
   it("selects idle while stopped and run while moving", () => {
     expect(clipForAgent({ moving: false })).toBe("idle");
     expect(clipForAgent({ moving: true })).toBe("run");
+  });
+
+  it("walks about one third of a cell per second by default", () => {
+    expect(DEFAULT_AGENT_SPEED).toBeCloseTo(1.85 / 3);
+    const policy = createGridWalkPolicy(new Set(["0,0", "1,0", "2,0", "3,0"]));
+    const agents = [
+      standingAgent(0, [0, 0], {
+        destination: [3, 0],
+        path: [
+          [1, 0],
+          [2, 0],
+          [3, 0],
+        ],
+      }),
+    ];
+    const next = tickAgents(agents, { policy, dt: 1, seed: "speed-seed" });
+    expect(next[0]?.cell).toEqual([0, 0]);
+    expect(next[0]?.progress).toBeCloseTo(DEFAULT_AGENT_SPEED);
+    expect(next[0]?.clip).toBe("run");
   });
 
   it("keeps Auto/high agent counts in 8–16 on 96 maps and lets Low reduce them", () => {

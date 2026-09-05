@@ -6,6 +6,7 @@ export default defineConfig({
   base: "/city/",
   plugins: [react()],
   resolve: {
+    dedupe: ["three"],
     alias: [
       {
         find: /^@city\/core$/,

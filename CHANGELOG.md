@@ -9,6 +9,12 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 ### Added
 
 - M3.6 runtime pedestrians: seeded NPCs walk the occupied road graph with A*, cell reservation, idle/run clips, and Kenney protagonist skins. Character GLBs are generated outside `/assets`.
+- Optional free camera (**F**) for unrestricted city inspection; the default orbital city view is unchanged.
+
+### Fixed
+
+- Pedestrian mixers clone idle/run clips per agent and use WebGPU-compatible skinned materials so skeletons pose instead of staying in a T-pose.
+- Pedestrian travel speed is about one-third of the first M3.6 draft so walks match the run cycle.
 
 ## [0.5.0] - 2026-09-05
 

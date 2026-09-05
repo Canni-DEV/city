@@ -16,6 +16,7 @@ import {
 import { useGLTF } from "@react-three/drei";
 import { useFrame, useLoader } from "@react-three/fiber";
 import { useLayoutEffect, useMemo, useRef } from "react";
+import { AnimationMixer, LoopRepeat } from "three";
 import { clone } from "three/addons/utils/SkeletonUtils.js";
 import * as THREE from "three/webgpu";
 
@@ -23,6 +24,38 @@ function skinUrl(entry: AssetCatalogEntry, skin: string, baseUrl: string): strin
   const path =
     entry.texturePaths.find((texture) => texture.endsWith(`/${skin}.png`)) ?? entry.texturePaths[0];
   return runtimeAssetUrl(path ?? "", baseUrl);
+}
+
+function bindAgentClips(
+  mixer: AnimationMixer,
+  animations: THREE.AnimationClip[],
+): { idle: THREE.AnimationAction | null; run: THREE.AnimationAction | null } {
+  const idleSource = animations.find((clip) => clip.name === "idle");
+  const runSource = animations.find((clip) => clip.name === "run");
+  const idle = idleSource ? mixer.clipAction(idleSource.clone()) : null;
+  const run = runSource ? mixer.clipAction(runSource.clone()) : null;
+  idle?.setLoop(LoopRepeat, Infinity);
+  run?.setLoop(LoopRepeat, Infinity);
+  run?.setEffectiveTimeScale(0.5);
+  return { idle, run };
+}
+
+function playAgentClip(
+  actions: { idle: THREE.AnimationAction | null; run: THREE.AnimationAction | null },
+  clip: "idle" | "run",
+): void {
+  const active = clip === "run" ? actions.run : actions.idle;
+  const other = clip === "run" ? actions.idle : actions.run;
+  if (active) {
+    active.enabled = true;
+    active.setEffectiveWeight(1);
+    if (!active.isRunning()) active.reset().play();
+  }
+  if (other) {
+    other.enabled = true;
+    other.setEffectiveWeight(0);
+    if (!other.isRunning()) other.play();
+  }
 }
 
 function AgentAvatar({
@@ -44,14 +77,8 @@ function AgentAvatar({
   const skin = agentsRef.current[index]?.skin ?? "skaterMaleA";
   const texture = useLoader(THREE.TextureLoader, skinUrl(entry, skin, import.meta.env.BASE_URL));
   const root = useMemo(() => clone(scene), [scene]);
-  const mixer = useMemo(() => new THREE.AnimationMixer(root), [root]);
-  const idleClip = animations.find((item) => item.name === "idle");
-  const runClip = animations.find((item) => item.name === "run");
-  const idleAction = useMemo(
-    () => (idleClip ? mixer.clipAction(idleClip) : null),
-    [mixer, idleClip],
-  );
-  const runAction = useMemo(() => (runClip ? mixer.clipAction(runClip) : null), [mixer, runClip]);
+  const mixer = useMemo(() => new AnimationMixer(root), [root]);
+  const actions = useMemo(() => bindAgentClips(mixer, animations), [animations, mixer]);
   const scale = agentUniformScale(entry);
 
   useLayoutEffect(() => {
@@ -59,16 +86,18 @@ function AgentAvatar({
     texture.flipY = true;
     texture.needsUpdate = true;
     root.traverse((child) => {
-      const mesh = child as THREE.Mesh;
+      const mesh = child as THREE.SkinnedMesh;
       if (!mesh.isMesh) return;
+      mesh.frustumCulled = false;
       const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      const next = materials.map((material) => {
-        const cloned = material.clone();
-        if ("map" in cloned) {
-          (cloned as THREE.MeshStandardMaterial).map = texture;
-          cloned.needsUpdate = true;
-        }
-        return cloned;
+      const next = materials.map(() => {
+        const nodeMaterial = new THREE.MeshStandardNodeMaterial();
+        nodeMaterial.color.set("#ffffff");
+        nodeMaterial.metalness = 0;
+        nodeMaterial.roughness = 0.7;
+        nodeMaterial.map = texture;
+        nodeMaterial.side = THREE.FrontSide;
+        return nodeMaterial;
       });
       mesh.material = next.length === 1 ? (next[0] ?? mesh.material) : next;
       mesh.castShadow = true;
@@ -77,14 +106,11 @@ function AgentAvatar({
   }, [root, texture]);
 
   useLayoutEffect(() => {
-    idleAction?.reset().play();
-    runAction?.reset().play();
-    idleAction?.setEffectiveWeight(1);
-    runAction?.setEffectiveWeight(0);
+    playAgentClip(actions, "idle");
     return () => {
       mixer.stopAllAction();
     };
-  }, [idleAction, mixer, runAction]);
+  }, [actions, mixer]);
 
   useFrame((_, delta) => {
     const agent = agentsRef.current[index];
@@ -100,10 +126,14 @@ function AgentAvatar({
     const nextClip = clipForAgent(agent);
     if (nextClip !== clip.current) {
       clip.current = nextClip;
-      idleAction?.setEffectiveWeight(nextClip === "idle" ? 1 : 0);
-      runAction?.setEffectiveWeight(nextClip === "run" ? 1 : 0);
+      playAgentClip(actions, nextClip);
     }
     mixer.update(Math.min(delta, 0.05));
+    root.updateMatrixWorld(true);
+    root.traverse((child) => {
+      const mesh = child as THREE.SkinnedMesh;
+      if (mesh.isSkinnedMesh) mesh.skeleton.update();
+    });
   });
 
   return (

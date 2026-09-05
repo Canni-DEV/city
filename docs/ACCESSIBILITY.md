@@ -10,7 +10,7 @@ M2 generator overlays already implement those color-plus-pattern fills and a tex
 - **ACC-006:** Motion respects `prefers-reduced-motion`; essential selection and validation feedback remains available without animation.
 - **ACC-007:** The 3D canvas has a meaningful label and adjacent textual selection/diagnostic state.
 
-M3 adds a textual selection status beside the canvas. M6 still owns the full contrast, keyboard, and 1280×720 accessibility QA.
+M3 adds a textual selection status beside the canvas. M3.6 free camera is a named control (button plus **F**); Escape returns to the default city view. M6 still owns the full contrast, keyboard, and 1280×720 accessibility QA.
 - **ACC-008:** Dialogs use Radix primitives and require explicit confirmation only for genuinely destructive actions.
 
 Manual QA covers Tab/Shift+Tab order, activation, shortcuts, Escape, focus restoration, contrast, patterns, zoom, and 1280×720 layout in Chrome and Edge.
