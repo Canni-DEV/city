@@ -47,7 +47,7 @@ import {
 import { createSidewalks, validateSidewalks } from "./sidewalks.js";
 import type { GenerationStage } from "./worker-protocol.js";
 
-export const GENERATOR_VERSION = "0.6.5";
+export const GENERATOR_VERSION = "0.6.6";
 
 type Direction = "north" | "east" | "south" | "west";
 

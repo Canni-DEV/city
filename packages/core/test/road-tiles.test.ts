@@ -114,6 +114,43 @@ describe("GEN-005 connector yaw", () => {
     expect(tryArterialRoundabout([5, 5], occupied, 12, new Set(["4,4"]), mask)).toBeUndefined();
   });
 
+  it("places a 3x3 Kenney roundabout on a local 4-way plus", () => {
+    const classes = new Map<string, RoadClass>(
+      [
+        [5, 5],
+        [5, 4],
+        [5, 3],
+        [6, 5],
+        [7, 5],
+        [5, 6],
+        [5, 7],
+        [4, 5],
+        [3, 5],
+      ].map(([x, y]) => [`${x},${y}`, "local"] as const),
+    );
+    const localMask = Array.from({ length: 12 * 12 }, () => true);
+    const tiles = resolveRoadTiles(classes, 12, "seed", 100, localMask);
+    expect(tiles.some((tile) => tile.assetId === "roads:road-roundabout")).toBe(true);
+    const none = resolveRoadTiles(classes, 12, "seed", 0, localMask);
+    expect(none.some((tile) => tile.assetId === "roads:road-roundabout")).toBe(false);
+    expect(none.find((tile) => tile.position[0] === 5 && tile.position[1] === 5)?.assetId).toBe(
+      "roads:road-crossroad-path",
+    );
+  });
+
+  it("does not place a 3x3 roundabout on a dual-avenue 4-way", () => {
+    const classes = new Map<string, RoadClass>();
+    for (const x of [5, 6]) {
+      for (let y = 2; y <= 10; y += 1) classes.set(`${x},${y}`, "arterial");
+    }
+    for (const y of [5, 6]) {
+      for (let x = 2; x <= 10; x += 1) classes.set(`${x},${y}`, "arterial");
+    }
+    const dualMask = Array.from({ length: 16 * 16 }, () => true);
+    const tiles = resolveRoadTiles(classes, 16, "seed", 100, dualMask);
+    expect(tiles.some((tile) => tile.assetId === "roads:road-roundabout")).toBe(false);
+  });
+
   it("requires T and 4-way meshes to match neighbor arity", () => {
     const tee = {
       position: [5, 5] as [number, number],

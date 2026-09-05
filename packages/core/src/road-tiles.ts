@@ -427,7 +427,7 @@ const CORNER_DELTAS: readonly Point[] = [
   [-1, 1],
 ];
 
-/** Kenney roundabout is a 3×3 mesh centered on an arterial 4-way. */
+/** Kenney roundabout is a 3×3 mesh centered on a 1-cell-wide 4-way (local or remnant arterial). */
 export function tryArterialRoundabout(
   center: Point,
   occupied: ReadonlySet<string>,
@@ -585,7 +585,6 @@ export function resolveRoadTiles(
   for (const center of positions) {
     const key = pointKey(center);
     if (covered.has(key)) continue;
-    if ((classes.get(key) ?? "local") !== "arterial") continue;
     const roll = (hashText(`${seed}:roundabout:${key}`) >>> 0) % 100;
     if (roll >= roundaboutFrequency) continue;
     const placed = tryArterialRoundabout(center, occupied, size, covered, mask);

@@ -14,7 +14,7 @@ flowchart LR
 | M3.5 | Closed manzanas, avenue/local tiles, connector-correct curves, ring lots | Morphology batch, connector tests, overlay screenshots |
 | M3.6 | Bounded runtime pedestrians, idle/run, cell avoidance | TST-008, 8–16 agents, both backends |
 | M3.6.1 | 1-cell sidewalk rings, local `*-path` / avenue unsuffixed T/4-way, two-lane sidewalk walking | TST-001/003/008, 200-city batch, both backends |
-| M3.6.1 avenues | Arterial/collector 2-cell carriageways, logical tile topology (GEN-028) | TST-001/003, 200-city batch, overlay QA |
+| M3.6.1 avenues | Arterial/collector 2-cell carriageways, dual nudos, local 3×3 roundabouts (GEN-028/005) | TST-001/003, 200-city batch, overlay QA |
 | M4 | Full object editor, commands, selection, placement, block regeneration | Exact undo/redo and input QA pass |
 | M5 | Dexie library, autosave, thumbnails, import/export, migrations | Persistence recovery and migration QA pass |
 | M6 | Accessibility, performance, final QA/docs/release | All requirements accepted; `1.0.0` may ship |
