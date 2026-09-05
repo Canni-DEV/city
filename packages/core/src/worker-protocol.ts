@@ -2,6 +2,16 @@ import { z } from "zod";
 import { CityDocumentSchema, GenerationParametersSchema } from "./domain.js";
 
 const RequestIdSchema = z.string().min(1);
+export const GENERATION_STAGES = [
+  "mask",
+  "districts",
+  "graph",
+  "routing",
+  "tiles",
+  "validation",
+] as const;
+export const GenerationStageSchema = z.enum(GENERATION_STAGES);
+export type GenerationStage = z.infer<typeof GenerationStageSchema>;
 
 export const GenerationWorkerRequestSchema = z.discriminatedUnion("type", [
   z.object({
@@ -18,7 +28,7 @@ export const GenerationWorkerEventSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("progress"),
     requestId: RequestIdSchema,
-    stage: z.string().min(1),
+    stage: GenerationStageSchema,
     percent: z.number().min(0).max(100),
     message: z.string().min(1),
   }),

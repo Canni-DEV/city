@@ -1,14 +1,9 @@
 import type { AssetCatalogEntry } from "@city/assets";
 import { runtimeAssetUrl } from "@city/assets";
 import { OrbitControls, useGLTF } from "@react-three/drei";
-import { Canvas, extend } from "@react-three/fiber";
+import { Canvas } from "@react-three/fiber";
 import { Suspense, useMemo } from "react";
-import type { WebGLRendererParameters } from "three";
-import * as THREE from "three/webgpu";
-
-extend(THREE as unknown as Parameters<typeof extend>[0]);
-
-type Backend = "webgpu" | "webgl2";
+import { createCompatibleRenderer, type RendererBackend } from "../rendering/renderer";
 
 function AssetModel({ entry }: { entry: AssetCatalogEntry }) {
   const { scene } = useGLTF(runtimeAssetUrl(entry.runtimePath, import.meta.env.BASE_URL));
@@ -19,44 +14,17 @@ function AssetModel({ entry }: { entry: AssetCatalogEntry }) {
   );
 }
 
-async function createRenderer(
-  parameters: WebGLRendererParameters,
-  report: (backend: Backend) => void,
-) {
-  const canvas = parameters.canvas;
-  if (!(canvas instanceof HTMLCanvasElement)) {
-    throw new Error("City requires an HTML canvas renderer surface.");
-  }
-  if (new URLSearchParams(window.location.search).has("forceWebGL")) {
-    const renderer = new THREE.WebGPURenderer({ canvas, antialias: true, forceWebGL: true });
-    await renderer.init();
-    report("webgl2");
-    return renderer;
-  }
-  try {
-    const renderer = new THREE.WebGPURenderer({ canvas, antialias: true });
-    await renderer.init();
-    report("webgpu");
-    return renderer;
-  } catch {
-    const renderer = new THREE.WebGPURenderer({ canvas, antialias: true, forceWebGL: true });
-    await renderer.init();
-    report("webgl2");
-    return renderer;
-  }
-}
-
 export function AssetCanvas({
   entry,
   onBackend,
 }: {
   entry: AssetCatalogEntry;
-  onBackend: (backend: Backend) => void;
+  onBackend: (backend: RendererBackend) => void;
 }) {
   return (
     <Canvas
       camera={{ position: [5, 4, 5], fov: 38 }}
-      gl={(parameters) => createRenderer(parameters, onBackend)}
+      gl={(parameters) => createCompatibleRenderer(parameters, onBackend)}
       shadows
     >
       <color attach="background" args={["#111a18"]} />
