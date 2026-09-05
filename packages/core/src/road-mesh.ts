@@ -4,10 +4,15 @@ import type { SeededRandom } from "./rng.js";
 import {
   CARDINALS,
   type Cardinal,
-  connectionNames,
   DIRECTION_DELTA,
+  isAvenueClass,
+  isLiveCarriagewayShoulder,
+  type LaneMates,
+  logicalConnections,
   neighborKeys,
+  OPPOSITE_CARDINAL,
   type Point,
+  pairLaneMates,
   parsePointKey,
   pointKey,
   type RoadClass,
@@ -209,6 +214,444 @@ function paintLine(
   }
 }
 
+function pairLaneKeys(mates: Map<string, string>, left: string, right: string): void {
+  if (left === right || mates.has(left) || mates.has(right)) return;
+  mates.set(left, right);
+  mates.set(right, left);
+}
+
+function axisPoint(vertical: boolean, axis: number, cursor: number): Point {
+  return vertical ? [axis, cursor] : [cursor, axis];
+}
+
+/** Columns (or rows) that carry a through-avenue, not a single crossing. */
+function strongAvenueAxes(
+  classes: ReadonlyMap<string, RoadClass>,
+  size: number,
+  vertical: boolean,
+): number[] {
+  const axes: number[] = [];
+  for (let axis = 0; axis < size; axis += 1) {
+    let along = 0;
+    for (let cursor = 0; cursor < size; cursor += 1) {
+      const point = axisPoint(vertical, axis, cursor);
+      if (!isAvenueClass(classes.get(pointKey(point)))) continue;
+      if (sharesAlong(new Set(avenueNeighborDirs(point, classes)), vertical)) along += 1;
+    }
+    if (along >= 3) axes.push(axis);
+  }
+  return axes;
+}
+
+function adjacentAxisClusters(axes: readonly number[]): number[][] {
+  const clusters: number[][] = [];
+  for (const axis of axes) {
+    const last = clusters[clusters.length - 1];
+    if (last && axis === (last[last.length - 1] ?? axis) + 1) last.push(axis);
+    else clusters.push([axis]);
+  }
+  return clusters;
+}
+
+function chooseKeepPair(
+  cluster: readonly number[],
+  vertical: boolean,
+  classes: ReadonlyMap<string, RoadClass>,
+  protectedKeys: ReadonlySet<string>,
+  size: number,
+): [number, number] {
+  let best: [number, number] = [cluster[0] ?? 0, (cluster[0] ?? 0) + 1];
+  let bestScore = Number.NEGATIVE_INFINITY;
+  for (let index = 0; index < cluster.length - 1; index += 1) {
+    const left = cluster[index];
+    if (left === undefined) continue;
+    const right = left + 1;
+    if (!cluster.includes(right)) continue;
+    let score = 0;
+    for (const axis of [left, right]) {
+      for (let cursor = 0; cursor < size; cursor += 1) {
+        const key = pointKey(axisPoint(vertical, axis, cursor));
+        if (protectedKeys.has(key)) score += 10;
+        if (isAvenueClass(classes.get(key))) score += 1;
+      }
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      best = [left, right];
+    }
+  }
+  return best;
+}
+
+/**
+ * Adjacent parallel 1-cell centerlines are one 2-cell corridor, not a 3-cell slab.
+ * Cells that continue a perpendicular avenue outside the cluster stay (real crossings).
+ */
+function collapseParallelAvenueAxes(
+  classes: Map<string, RoadClass>,
+  size: number,
+  vertical: boolean,
+  protectedKeys: ReadonlySet<string>,
+): void {
+  for (const cluster of adjacentAxisClusters(strongAvenueAxes(classes, size, vertical))) {
+    if (cluster.length < 3) continue;
+    const [keep0, keep1] = chooseKeepPair(cluster, vertical, classes, protectedKeys, size);
+    const clusterSet = new Set(cluster);
+    const perp: Cardinal[] = vertical ? ["east", "west"] : ["north", "south"];
+    for (const extra of cluster) {
+      if (extra === keep0 || extra === keep1) continue;
+      for (let cursor = 0; cursor < size; cursor += 1) {
+        const point = axisPoint(vertical, extra, cursor);
+        const key = pointKey(point);
+        const roadClass = classes.get(key);
+        if (!roadClass || !isAvenueClass(roadClass)) continue;
+        paintClass(classes, axisPoint(vertical, keep0, cursor), roadClass);
+        paintClass(classes, axisPoint(vertical, keep1, cursor), roadClass);
+        const continuesOutside = perp.some((direction) => {
+          const next = neighborKeys(point).find((neighbor) => neighbor.direction === direction);
+          if (!next || !isAvenueClass(classes.get(next.key))) return false;
+          const nextAxis = vertical ? next.point[0] : next.point[1];
+          return !clusterSet.has(nextAxis);
+        });
+        if (!continuesOutside && !protectedKeys.has(key)) {
+          classes.delete(key);
+          if (!roadOccupancyConnected(classes)) classes.set(key, roadClass);
+        }
+      }
+    }
+  }
+}
+
+function originalDirections(point: Point, original: ReadonlySet<string>): Set<Cardinal> {
+  return new Set(
+    neighborKeys(point)
+      .filter(({ key }) => original.has(key))
+      .map(({ direction }) => direction),
+  );
+}
+
+function sharesAlong(dirs: ReadonlySet<Cardinal>, vertical: boolean): boolean {
+  return vertical ? dirs.has("north") || dirs.has("south") : dirs.has("east") || dirs.has("west");
+}
+
+function stepKey(point: Point, direction: Cardinal): string {
+  const delta = DIRECTION_DELTA[direction];
+  return pointKey([point[0] + delta[0], point[1] + delta[1]]);
+}
+
+function isParallelLane(
+  center: Point,
+  toward: Cardinal,
+  classes: ReadonlyMap<string, RoadClass>,
+  vertical: boolean,
+): boolean {
+  const key = stepKey(center, toward);
+  if (!isAvenueClass(classes.get(key))) return false;
+  const dirs = new Set(
+    neighborKeys(parsePointKey(key))
+      .filter(({ key: next }) => isAvenueClass(classes.get(next)))
+      .map(({ direction }) => direction),
+  );
+  return sharesAlong(dirs, vertical);
+}
+
+function avenueNeighborDirs(point: Point, classes: ReadonlyMap<string, RoadClass>): Cardinal[] {
+  return neighborKeys(point)
+    .filter(({ key }) => isAvenueClass(classes.get(key)))
+    .map(({ direction }) => direction);
+}
+
+/**
+ * GEN-028: assign each arterial/collector run an explicit 2-cell carriageway.
+ * Parallel 1-cell axes that already touch (or form a 3+ slab) become one pair.
+ * Remaining 1-cell runs dilate by one cell only when that does not merge corridors.
+ */
+export function widenAvenueCorridors(
+  classes: Map<string, RoadClass>,
+  size: number,
+  protectedKeys: ReadonlySet<string> = new Set(),
+): Map<string, string> {
+  collapseParallelAvenueAxes(classes, size, true, protectedKeys);
+  collapseParallelAvenueAxes(classes, size, false, protectedKeys);
+
+  const centerlines = [...classes.entries()]
+    .filter(([, roadClass]) => isAvenueClass(roadClass))
+    .map(([key]) => key)
+    .sort();
+  const centerlineSet = new Set(centerlines);
+  const mates = new Map<string, string>();
+
+  for (const key of centerlines) {
+    if (mates.has(key)) continue;
+    const point = parsePointKey(key);
+    const dirs = originalDirections(point, centerlineSet);
+    const vertical = dirs.has("north") || dirs.has("south");
+    const horizontal = dirs.has("east") || dirs.has("west");
+    if (vertical && horizontal) continue;
+    const perps: Cardinal[] = vertical ? ["east", "west"] : ["south", "north"];
+    for (const direction of perps) {
+      const next = neighborKeys(point).find((neighbor) => neighbor.direction === direction);
+      if (!next || !centerlineSet.has(next.key) || mates.has(next.key)) continue;
+      if (!sharesAlong(originalDirections(next.point, centerlineSet), vertical)) continue;
+      pairLaneKeys(mates, key, next.key);
+      break;
+    }
+  }
+
+  const wouldCreateTriple = (center: Point, direction: Cardinal, vertical: boolean): boolean => {
+    const back = OPPOSITE_CARDINAL[direction];
+    if (isParallelLane(center, back, classes, vertical)) return true;
+    const twin: Point = [
+      center[0] + DIRECTION_DELTA[direction][0],
+      center[1] + DIRECTION_DELTA[direction][1],
+    ];
+    return isParallelLane(twin, direction, classes, vertical);
+  };
+
+  for (const key of centerlines) {
+    if (mates.has(key)) continue;
+    const point = parsePointKey(key);
+    const roadClass = classes.get(key);
+    if (!roadClass || !isAvenueClass(roadClass)) continue;
+    const dirs = originalDirections(point, centerlineSet);
+    const vertical = dirs.has("north") || dirs.has("south");
+    const horizontal = dirs.has("east") || dirs.has("west");
+    if (vertical && horizontal) continue;
+    const runVertical = vertical || !horizontal;
+    const offsets: Cardinal[] = runVertical ? ["east", "west"] : ["south", "north"];
+    for (const direction of offsets) {
+      if (wouldCreateTriple(point, direction, runVertical)) continue;
+      const twin: Point = [
+        point[0] + DIRECTION_DELTA[direction][0],
+        point[1] + DIRECTION_DELTA[direction][1],
+      ];
+      if (!inBounds(size, twin)) continue;
+      const twinKey = pointKey(twin);
+      if (isAvenueClass(classes.get(twinKey))) {
+        if (!mates.has(twinKey)) pairLaneKeys(mates, key, twinKey);
+        break;
+      }
+      paintClass(classes, twin, roadClass);
+      pairLaneKeys(mates, key, twinKey);
+      break;
+    }
+  }
+
+  return pairLaneMates(classes);
+}
+
+function cellAllowed(point: Point, size: number, mask: readonly boolean[] | undefined): boolean {
+  if (!inBounds(size, point)) return false;
+  if (!mask) return true;
+  return mask[indexOf(size, point[0], point[1])] === true;
+}
+
+function neighborAvenueClass(point: Point, classes: ReadonlyMap<string, RoadClass>): RoadClass {
+  let best: RoadClass = "collector";
+  for (const { key } of neighborKeys(point)) {
+    const roadClass = classes.get(key);
+    if (roadClass && isAvenueClass(roadClass) && CLASS_RANK[roadClass] > CLASS_RANK[best]) {
+      best = roadClass;
+    }
+  }
+  return best;
+}
+
+function fillingCreatesFatSlab(
+  point: Point,
+  roadClass: RoadClass,
+  classes: ReadonlyMap<string, RoadClass>,
+  size: number,
+): boolean {
+  const next = new Map(classes);
+  paintClass(next, point, roadClass);
+  return fatStraightAvenueCells(next, size).length > fatStraightAvenueCells(classes, size).length;
+}
+
+/** Concave L gap: two perpendicular avenue neighbors and the fourth 2×2 cell still empty. */
+function isOpenElbowGap(
+  point: Point,
+  classes: ReadonlyMap<string, RoadClass>,
+  size: number,
+  mask: readonly boolean[] | undefined,
+  neighbors: readonly { direction: Cardinal; point: Point }[],
+): boolean {
+  if (neighbors.length !== 2) return false;
+  const first = neighbors[0];
+  const second = neighbors[1];
+  if (!first || !second) return false;
+  if (OPPOSITE_CARDINAL[first.direction] === second.direction) return false;
+  const fourth: Point = [
+    first.point[0] + second.point[0] - point[0],
+    first.point[1] + second.point[1] - point[1],
+  ];
+  if (!cellAllowed(fourth, size, mask)) return false;
+  if (isAvenueClass(classes.get(pointKey(fourth)))) return false;
+  return true;
+}
+
+/** Empty (or local) cell that sits between avenue cells of a real junction, not a 3-wide median. */
+export function shouldStitchAvenueCell(
+  point: Point,
+  classes: ReadonlyMap<string, RoadClass>,
+  size: number,
+  mask?: readonly boolean[],
+): boolean {
+  if (!cellAllowed(point, size, mask)) return false;
+  const current = classes.get(pointKey(point));
+  if (current && isAvenueClass(current)) return false;
+  const ave = neighborKeys(point).filter(({ key }) => isAvenueClass(classes.get(key)));
+  const dirs = new Set(ave.map(({ direction }) => direction));
+  const opposite =
+    (dirs.has("north") && dirs.has("south")) || (dirs.has("east") && dirs.has("west"));
+  const corner = isOpenElbowGap(point, classes, size, mask, ave);
+  if (opposite) {
+    const fillingEastWest = dirs.has("east") && dirs.has("west");
+    const sides = fillingEastWest ? (["east", "west"] as const) : (["north", "south"] as const);
+    const parallel = sides.every((direction) => {
+      const next = neighborKeys(point).find((neighbor) => neighbor.direction === direction);
+      if (!next) return false;
+      const neighborDirs = new Set(avenueNeighborDirs(next.point, classes));
+      return fillingEastWest
+        ? neighborDirs.has("north") && neighborDirs.has("south")
+        : neighborDirs.has("east") && neighborDirs.has("west");
+    });
+    if (parallel) return false;
+  }
+  if (!opposite && !corner) return false;
+  return !fillingCreatesFatSlab(point, neighborAvenueClass(point, classes), classes, size);
+}
+
+export function openAvenueGaps(
+  classes: ReadonlyMap<string, RoadClass>,
+  size: number,
+  mask?: readonly boolean[],
+): string[] {
+  const gaps: string[] = [];
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      const point: Point = [x, y];
+      if (shouldStitchAvenueCell(point, classes, size, mask)) gaps.push(pointKey(point));
+    }
+  }
+  return gaps.sort();
+}
+
+/**
+ * Fill 1-cell holes and inner L corners so dual avenues meet as a designed junction block.
+ */
+export function stitchAvenueJunctions(
+  classes: Map<string, RoadClass>,
+  size: number,
+  mask?: readonly boolean[],
+): void {
+  for (let guard = 0; guard < size * 8; guard += 1) {
+    let changed = false;
+    for (let y = 0; y < size; y += 1) {
+      for (let x = 0; x < size; x += 1) {
+        const point: Point = [x, y];
+        if (!shouldStitchAvenueCell(point, classes, size, mask)) continue;
+        paintClass(classes, point, neighborAvenueClass(point, classes));
+        changed = true;
+      }
+    }
+    if (!changed) return;
+  }
+}
+
+function avenueRunLength(
+  point: Point,
+  alongVertical: boolean,
+  classes: ReadonlyMap<string, RoadClass>,
+  size: number,
+): number {
+  const step: Point = alongVertical ? [0, 1] : [1, 0];
+  let count = 1;
+  for (const sign of [-1, 1] as const) {
+    let x = point[0];
+    let y = point[1];
+    while (true) {
+      x += step[0] * sign;
+      y += step[1] * sign;
+      if (!inBounds(size, [x, y]) || !isAvenueClass(classes.get(pointKey([x, y])))) break;
+      count += 1;
+    }
+  }
+  return count;
+}
+
+/** Cells that sit in a 3+ wide through-slab (not a real crossing or the long axis of a pair). */
+export function fatStraightAvenueCells(
+  classes: ReadonlyMap<string, RoadClass>,
+  size: number,
+): string[] {
+  const drop = new Set<string>();
+  for (let y = 0; y < size; y += 1) {
+    let x = 0;
+    while (x < size) {
+      if (!isAvenueClass(classes.get(pointKey([x, y])))) {
+        x += 1;
+        continue;
+      }
+      let end = x;
+      while (end < size && isAvenueClass(classes.get(pointKey([end, y])))) end += 1;
+      const width = end - x;
+      if (width >= 3) {
+        let verticalThrough = 0;
+        let along = Number.POSITIVE_INFINITY;
+        for (let cursor = x; cursor < end; cursor += 1) {
+          const point: Point = [cursor, y];
+          const dirs = avenueNeighborDirs(point, classes);
+          if (dirs.includes("north") && dirs.includes("south")) verticalThrough += 1;
+          along = Math.min(along, avenueRunLength(point, true, classes, size));
+        }
+        if (verticalThrough === width && width <= along && along >= 4) {
+          for (let cursor = x + 2; cursor < end; cursor += 1) drop.add(pointKey([cursor, y]));
+        }
+      }
+      x = end;
+    }
+  }
+  for (let x = 0; x < size; x += 1) {
+    let y = 0;
+    while (y < size) {
+      if (!isAvenueClass(classes.get(pointKey([x, y])))) {
+        y += 1;
+        continue;
+      }
+      let end = y;
+      while (end < size && isAvenueClass(classes.get(pointKey([x, end])))) end += 1;
+      const width = end - y;
+      if (width >= 3) {
+        let horizontalThrough = 0;
+        let along = Number.POSITIVE_INFINITY;
+        for (let cursor = y; cursor < end; cursor += 1) {
+          const point: Point = [x, cursor];
+          const dirs = avenueNeighborDirs(point, classes);
+          if (dirs.includes("east") && dirs.includes("west")) horizontalThrough += 1;
+          along = Math.min(along, avenueRunLength(point, false, classes, size));
+        }
+        if (horizontalThrough === width && width <= along && along >= 4) {
+          for (let cursor = y + 2; cursor < end; cursor += 1) drop.add(pointKey([x, cursor]));
+        }
+      }
+      y = end;
+    }
+  }
+  return [...drop].sort();
+}
+
+/** Collapse accidental 3+ cell slabs on a single through-run back to a 2-cell pair. */
+export function trimStraightAvenueWidth(
+  classes: Map<string, RoadClass>,
+  size: number,
+  protectedKeys: ReadonlySet<string> = new Set(),
+): void {
+  for (const key of fatStraightAvenueCells(classes, size)) {
+    if (!protectedKeys.has(key)) classes.delete(key);
+  }
+}
+
 /** Keep street axes at least MIN_STREET_GAP apart so a 1-cell ring still leaves an interior. */
 export function keepSpacedAxes(coords: readonly number[], blocked: readonly number[]): number[] {
   const kept: number[] = [];
@@ -266,6 +709,12 @@ export function paintLocalMesh(
 
 function occupiedSet(classes: ReadonlyMap<string, RoadClass>): Set<string> {
   return new Set(classes.keys());
+}
+
+function roadOccupancyConnected(classes: ReadonlyMap<string, RoadClass>): boolean {
+  const keys = [...classes.keys()];
+  if (keys.length === 0) return true;
+  return floodComponents(keys).length === 1;
 }
 
 function floodComponents(keys: Iterable<string>): string[][] {
@@ -340,15 +789,26 @@ export function pruneInternalDeadEnds(
   while (changed) {
     changed = false;
     const occupied = occupiedSet(classes);
+    const mates = pairLaneMates(classes);
     for (const key of [...classes.keys()].sort()) {
       if (gateKeys.has(key)) continue;
       const point = parsePointKey(key);
-      if (connectionNames(point, occupied).length <= 1) {
+      if (logicalConnections(point, occupied, mates).length <= 1) {
+        if (isLiveCarriagewayShoulder(point, occupied, mates)) continue;
         classes.delete(key);
         changed = true;
       }
     }
   }
+}
+
+export function expandGateKeys(gateKeys: ReadonlySet<string>, mates: LaneMates): Set<string> {
+  const expanded = new Set(gateKeys);
+  for (const key of gateKeys) {
+    const mate = mates.get(key);
+    if (mate) expanded.add(mate);
+  }
+  return expanded;
 }
 
 function freeRegions(
@@ -487,6 +947,7 @@ function highestClass(keys: readonly string[], classes: ReadonlyMap<string, Road
 export function rebuildRoadGraph(
   classes: ReadonlyMap<string, RoadClass>,
   seeds: readonly MeshNode[],
+  _mates: LaneMates = pairLaneMates(classes),
 ): { nodes: MeshNode[]; edges: MeshEdge[] } {
   const occupied = occupiedSet(classes);
   const nodes = seeds.map((node) => ({ ...node, position: [...node.position] as Point }));
@@ -494,7 +955,7 @@ export function rebuildRoadGraph(
   let junctionIndex = 0;
   for (const key of [...occupied].sort()) {
     const point = parsePointKey(key);
-    const degree = connectionNames(point, occupied).length;
+    const degree = neighborKeys(point).filter(({ key: next }) => occupied.has(next)).length;
     if (degree === 2) continue;
     if (at.has(key)) continue;
     if (degree < 2) continue;
@@ -515,8 +976,9 @@ export function rebuildRoadGraph(
 
   for (const node of nodes) {
     const startKey = pointKey(node.position);
-    for (const { key: nextKey, point: next } of neighborKeys(node.position)) {
-      if (!occupied.has(nextKey)) continue;
+    for (const { key: nextKey, point: next } of neighborKeys(node.position).filter(({ key }) =>
+      occupied.has(key),
+    )) {
       const mark = undirected(startKey, nextKey);
       if (used.has(mark)) continue;
       used.add(mark);

@@ -25,6 +25,8 @@ M3.6 evidence is independent of document hashes: seeded agent spawn, A*, reserva
 
 M3.6.1 evidence regenerates the 200-city batch under generator `0.6.3`: habitable sidewalk rings occupy the 1-cell road-adjacent perimeter of each block that still has an interior, remnants too thin for a ring are pocket parks, lots do not overlap sidewalks and keep sidewalk frontage, local T/4-way tiles are Kenney `*-path` while avenue T/4-way tiles are unsuffixed `road-intersection` / `road-crossroad`, the pedestrian graph is one 4-connected component, and two agents may share a sidewalk cell on distinct lanes.
 
+The M3.6.1 avenue hotfix regenerates that batch under generator `0.6.6`: arterial/collector corridors occupy two cells, parallel 1-cell axes collapse into that pair instead of a 3-cell through-slab, dual corridors one cell apart stitch into L/T/4-way blocks, dual through-runs resolve to `road-straight` (not mid-run `road-intersection`), dual T/4-way 2×2 cells with four openings use `road-crossroad`, 1-cell-wide local 4-ways may take `road-roundabout`, tile connectors match logical neighbors, sidewalk rings and frontage still hold, and old `0.6.5` snapshots remain loadable without silent regeneration.
+
 ## Manual QA per milestone
 
 Test current Chrome and Edge, WebGPU and forced WebGL 2, 1280×720 and 1920×1080, keyboard/focus/contrast/patterns, and capture implemented flows. From M3 onward record the rendering and generation budgets in `RENDERING_AND_PERFORMANCE.md`.

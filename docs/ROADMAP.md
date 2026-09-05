@@ -2,7 +2,7 @@
 
 ```mermaid
 flowchart LR
-  M0["M0 Foundation"] --> M1["M1 Road slice"] --> M2["M2 Blocks and zoning"] --> M3["M3 Placement and rendering"] --> M35["M3.5 Urban morphology"] --> M36["M3.6 Animated agents"] --> M361["M3.6.1 Sidewalks"] --> M4["M4 Editor"] --> M5["M5 Local library"] --> M6["M6 Hardening / 1.0"]
+  M0["M0 Foundation"] --> M1["M1 Road slice"] --> M2["M2 Blocks and zoning"] --> M3["M3 Placement and rendering"] --> M35["M3.5 Urban morphology"] --> M36["M3.6 Animated agents"] --> M361["M3.6.1 Sidewalks"] --> M361A["M3.6.1 Avenues"] --> M4["M4 Editor"] --> M5["M5 Local library"] --> M6["M6 Hardening / 1.0"]
 ```
 
 | Milestone | Outcome | Review gate |
@@ -14,8 +14,9 @@ flowchart LR
 | M3.5 | Closed manzanas, avenue/local tiles, connector-correct curves, ring lots | Morphology batch, connector tests, overlay screenshots |
 | M3.6 | Bounded runtime pedestrians, idle/run, cell avoidance | TST-008, 8–16 agents, both backends |
 | M3.6.1 | 1-cell sidewalk rings, local `*-path` / avenue unsuffixed T/4-way, two-lane sidewalk walking | TST-001/003/008, 200-city batch, both backends |
+| M3.6.1 avenues | Arterial/collector 2-cell carriageways, dual nudos, local 3×3 roundabouts (GEN-028/005) | TST-001/003, 200-city batch, overlay QA |
 | M4 | Full object editor, commands, selection, placement, block regeneration | Exact undo/redo and input QA pass |
 | M5 | Dexie library, autosave, thumbnails, import/export, migrations | Persistence recovery and migration QA pass |
 | M6 | Accessibility, performance, final QA/docs/release | All requirements accepted; `1.0.0` may ship |
 
-Each milestone uses its brief in `docs/milestones`, a dedicated branch and PR, and stops for review before the next begins. M3.5 (morphology), M3.6 (runtime agents), and M3.6.1 (sidewalks) are intermediate patches; they do not replace M4.
+Each milestone uses its brief in `docs/milestones`, a dedicated branch and PR, and stops for review before the next begins. M3.5 (morphology), M3.6 (runtime agents), M3.6.1 (sidewalks), and the M3.6.1 avenue hotfix are intermediate patches; they do not replace M4.

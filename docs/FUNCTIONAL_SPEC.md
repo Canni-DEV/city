@@ -28,7 +28,7 @@
 ## Runtime agents
 
 - **FUN-040:** After generation, a small set of seeded pedestrians walks a reconstructible walk graph (SIM-001–010). They are not selectable editor objects.
-- **FUN-041:** Default M3.6.1 walking uses the sidewalk ring plus local `*-path` and avenue unsuffixed T/4-way crossings, not the carriageway. Streets remain reserved for future vehicles.
+- **FUN-041:** Default M3.6.1 walking uses the sidewalk ring plus local `*-path` and avenue unsuffixed T/4-way crossings (real junctions only, not the dual-carriageway median), not the carriageway. Streets remain reserved for future vehicles.
 
 ## Persistence and routes
 

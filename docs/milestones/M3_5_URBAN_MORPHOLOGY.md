@@ -21,7 +21,9 @@ Prove determinism (`GENERATOR_VERSION` `0.5.0`), connector-accurate tiles, one 4
 
 ## Exclusions and stop
 
-No object editor, road editing, zoning editing, 2-cell-wide carriageways, elevated roads, placement-weight retunes, or M3.6 agent runtime. Request review and stop before M3.6 implementation.
+No object editor, road editing, zoning editing, elevated roads, placement-weight retunes, or M3.6 agent runtime. Request review and stop before M3.6 implementation.
+
+The “no 2-cell-wide carriageways” exclusion of this milestone is **superseded** by the M3.6.1 avenue hotfix (`docs/milestones/M3_6_1_AVENUES.md`, generator `0.6.6`): arterial/collector corridors are now intentional 2-cell carriageways with designed dual L/T/4-way blocks, and 1-cell-wide local 4-ways may take the 3×3 Kenney roundabout. This brief is not rewritten as if M3.5 already shipped that geometry.
 
 ## Completion evidence
 

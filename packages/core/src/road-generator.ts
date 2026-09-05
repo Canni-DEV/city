@@ -15,21 +15,30 @@ import { normalizeGenerationParameters } from "./presets.js";
 import { hashText, SeededRandom } from "./rng.js";
 import {
   connectLocalComponents,
+  expandGateKeys,
+  fatStraightAvenueCells,
+  openAvenueGaps,
   paintClass,
   paintLocalMesh,
   pruneInternalDeadEnds,
   rebuildRoadGraph,
   routeCardinalCorridor,
+  stitchAvenueJunctions,
   subdivideLargeVoids,
+  widenAvenueCorridors,
 } from "./road-mesh.js";
 import {
   CARDINALS,
-  connectionNames,
   DIRECTION_DELTA,
+  isAvenueClass,
+  isLiveCarriagewayShoulder,
+  logicalConnections,
   neighborKeys,
   occupiedCellsForRoadTile,
   occupiedRoadSet,
   type Point,
+  pairLaneMates,
+  parsePointKey,
   pointKey,
   type RoadClass,
   resolveRoadTiles,
@@ -38,7 +47,7 @@ import {
 import { createSidewalks, validateSidewalks } from "./sidewalks.js";
 import type { GenerationStage } from "./worker-protocol.js";
 
-export const GENERATOR_VERSION = "0.6.3";
+export const GENERATOR_VERSION = "0.6.6";
 
 type Direction = "north" | "east" | "south" | "west";
 
@@ -432,13 +441,18 @@ function rasterizeNetwork(
   for (const edge of routed) {
     for (const point of edge.path) paintClass(classes, point, edge.roadClass);
   }
+  const protectedKeys = new Set(nodes.map((node) => pointKey(node.position)));
+  widenAvenueCorridors(classes, size, protectedKeys);
+  stitchAvenueJunctions(classes, size, mask);
   paintLocalMesh(size, mask, classes, regularity, random);
   connectLocalComponents(size, mask, classes);
   subdivideLargeVoids(size, mask, classes);
-  const gateKeys = new Set(
-    nodes.filter((node) => node.kind === "gate").map((node) => pointKey(node.position)),
+  const seedKeys = expandGateKeys(
+    new Set(nodes.map((node) => pointKey(node.position))),
+    pairLaneMates(classes),
   );
-  pruneInternalDeadEnds(classes, gateKeys);
+  pruneInternalDeadEnds(classes, seedKeys);
+  stitchAvenueJunctions(classes, size, mask);
   return classes;
 }
 
@@ -450,9 +464,11 @@ function createDocument(
   seeds: readonly GraphNode[],
   classes: Map<string, RoadClass>,
 ): CityDocumentV1 {
+  const mates = pairLaneMates(classes);
   const rebuilt = rebuildRoadGraph(
     classes,
     seeds.map((node) => ({ ...node, position: [...node.position] as Point })),
+    mates,
   );
   const tiles = resolveRoadTiles(
     classes,
@@ -460,6 +476,7 @@ function createDocument(
     deriveAttemptSeed(input.seed, attempt),
     input.parameters.roundaboutFrequency,
     mask,
+    mates,
   );
   for (const tile of tiles) {
     for (const [x, y] of occupiedCellsForRoadTile(tile)) {
@@ -503,6 +520,10 @@ function createDocument(
         position: tile.position,
         assetId: tile.assetId,
         rotation: tile.rotation,
+        roadClass:
+          occupiedCellsForRoadTile(tile)
+            .map((cell) => classes.get(pointKey(cell)))
+            .find((value) => value !== undefined) ?? "local",
       })),
     },
     blocks: [],
@@ -511,6 +532,47 @@ function createDocument(
     entities: {},
   };
   return CityDocumentSchema.parse(document);
+}
+
+function roadClassesFromDocument(document: CityDocumentV1): Map<string, RoadClass> {
+  const classes = new Map<string, RoadClass>();
+  for (const cell of document.roadGraph.cells) {
+    if (!cell.roadClass) continue;
+    for (const point of occupiedCellsForRoadTile(cell)) paintClass(classes, point, cell.roadClass);
+  }
+  if (classes.size > 0) {
+    const occupied = occupiedRoadSet(document.roadGraph.cells);
+    for (const key of occupied) {
+      if (!classes.has(key)) classes.set(key, "local");
+    }
+    return classes;
+  }
+  for (const edge of document.roadGraph.edges) {
+    for (const cell of edge.cells) paintClass(classes, cell, edge.roadClass);
+  }
+  const occupied = occupiedRoadSet(document.roadGraph.cells);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const key of occupied) {
+      if (classes.has(key)) continue;
+      const point = parsePointKey(key);
+      let best: RoadClass | undefined;
+      for (const { key: neighbor } of neighborKeys(point)) {
+        const value = classes.get(neighbor);
+        if (!isAvenueClass(value)) continue;
+        if (value === "arterial" || best !== "arterial") best = value;
+      }
+      if (best) {
+        classes.set(key, best);
+        changed = true;
+      }
+    }
+  }
+  for (const key of occupied) {
+    if (!classes.has(key)) classes.set(key, "local");
+  }
+  return classes;
 }
 
 export function validateRoadCity(document: CityDocumentV1): string[] {
@@ -549,17 +611,44 @@ export function validateRoadCity(document: CityDocumentV1): string[] {
         }
       }
     }
-    if (visited.size !== nodes.size) issues.push("road graph is disconnected");
+    if (visited.size !== nodes.size) {
+      const missing = document.roadGraph.nodes
+        .filter((node) => !visited.has(node.id))
+        .map((node) => `${node.kind}@${node.position.join(",")}`)
+        .join("; ");
+      issues.push(`road graph is disconnected (${visited.size}/${nodes.size}: ${missing})`);
+    }
   }
   const occupied = occupiedRoadSet(document.roadGraph.cells);
-  const gatePositions = new Set(gates.map((gate) => pointKey(gate.position)));
+  const classes = roadClassesFromDocument(document);
+  const mates = pairLaneMates(classes);
+  const seedPositions = new Set(
+    document.roadGraph.nodes
+      .filter((node) => node.kind === "gate" || node.kind === "district")
+      .map((node) => pointKey(node.position)),
+  );
+  for (const key of [...seedPositions]) {
+    const mate = mates.get(key);
+    if (mate) seedPositions.add(mate);
+  }
   const cellIds = new Set<string>();
   const covered = new Set<string>();
   for (const cell of document.roadGraph.cells) {
     if (cellIds.has(cell.id)) issues.push(`duplicate road cell ID ${cell.id}`);
     cellIds.add(cell.id);
-    if (!tileMatchesNeighbors(cell, occupied))
-      issues.push(`invalid road tile at ${pointKey(cell.position)}`);
+    if (!tileMatchesNeighbors(cell, occupied, mates)) {
+      const logical = logicalConnections(cell.position, occupied, mates);
+      const key = pointKey(cell.position);
+      const neighborClass = neighborKeys(cell.position)
+        .map(
+          ({ key: next }) =>
+            `${next}:${classes.get(next) ?? (occupied.has(next) ? "occ" : "empty")}`,
+        )
+        .join(" ");
+      issues.push(
+        `invalid road tile at ${key} (${cell.assetId} yaw ${cell.rotation}; logical ${logical.join(",") || "none"}; mate ${mates.get(key) ?? "none"}; class ${classes.get(key) ?? "none"}; nbr ${neighborClass})`,
+      );
+    }
     for (const point of occupiedCellsForRoadTile(cell)) {
       const key = pointKey(point);
       if (covered.has(key)) issues.push(`overlapping road occupancy at ${key}`);
@@ -584,10 +673,17 @@ export function validateRoadCity(document: CityDocumentV1): string[] {
     }
     if (seen.size !== occupied.size) issues.push("road cells are disconnected");
   }
+  if (fatStraightAvenueCells(classes, document.map.size).length > 0) {
+    issues.push("avenue carriageway wider than two cells");
+  }
+  if (openAvenueGaps(classes, document.map.size, document.map.boundaryMask).length > 0) {
+    issues.push("avenue corridors leave a 1-cell gap");
+  }
   for (const key of occupied) {
     const [x, y] = key.split(",").map(Number);
     const point: Point = [x ?? 0, y ?? 0];
-    if (connectionNames(point, occupied).length <= 1 && !gatePositions.has(key)) {
+    if (logicalConnections(point, occupied, mates).length <= 1 && !seedPositions.has(key)) {
+      if (isLiveCarriagewayShoulder(point, occupied, mates)) continue;
       issues.push(`internal dead end at ${key}`);
     }
   }
