@@ -8,7 +8,7 @@
 - **REN-006:** Shared visual profile includes fixed sun, ambient light, nearby shadows, soft fog, and selection with no heavy post-processing.
 - **REN-007:** Materials and node features must work on both backends; avoid incompatible `ShaderMaterial`, `EffectComposer`, and helpers.
 - **REN-008:** Quality adjusts shadows, distance, fog, decoration, LOD, and agent count without changing the document.
-- **REN-009:** Runtime agents use per-instance `SkinnedMesh` and `AnimationMixer` (idle/run). Each mixer clones its clips so agents do not share interpolants (shared clips leave a T-pose). Agent materials are `MeshStandardNodeMaterial` so skinning works on WebGPU and the WebGL 2 fallback. City-kit buildings and roads stay instanced (REN-004). Agent source FBX is never shipped; only generated GLB and PNG enter the runtime copy.
+- **REN-009:** Runtime agents use per-instance `SkinnedMesh` and `AnimationMixer` (idle/run). Each mixer clones its clips so interpolants are not shared across agents. Generated character GLBs store Kenney Idle/Run, not the FBX `0.Targeting Pose`. Agent materials are `MeshStandardNodeMaterial` with a per-skin map so WebGPU and the WebGL 2 fallback can deform the skeleton. City-kit buildings and roads stay instanced (REN-004). Agent source FBX is never shipped; only generated GLB and PNG enter the runtime copy.
 
 For local/manual fallback QA, add `?forceWebGL=1` before the hash route (for example, `/city/?forceWebGL=1#/dev/assets`).
 

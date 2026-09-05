@@ -105,9 +105,25 @@ function pruneAndNormalize(root) {
   root.updateMatrixWorld(true);
 }
 
-function firstClip(root, name) {
-  const clip = root.animations[0];
-  if (!clip) throw new Error(`No animation clip in ${name}`);
+const MIN_LOCOMOTION_DURATION = 0.2;
+
+function selectClip(root, name) {
+  const clips = root.animations ?? [];
+  if (clips.length === 0) throw new Error(`No animation clip in ${name}`);
+  const lowered = name.toLowerCase();
+  const clip = clips.find((item) => {
+    const clipName = item.name.toLowerCase();
+    return clipName.includes(lowered) && !clipName.includes("targeting");
+  });
+  if (!clip) {
+    const found = clips.map((item) => item.name).join(", ");
+    throw new Error(`No ${name} locomotion clip in FBX (found: ${found})`);
+  }
+  if (clip.duration < MIN_LOCOMOTION_DURATION) {
+    throw new Error(
+      `Clip ${clip.name} for ${name} is too short (${clip.duration}s); refused targeting pose`,
+    );
+  }
   const renamed = AnimationClip.parse(clip.toJSON());
   renamed.name = name;
   return renamed;
@@ -160,13 +176,12 @@ const bodyBuffer = await readFile(path.join(packRoot, "Model/characterMedium.fbx
 const inspect = parseFbx(bodyBuffer, `${path.join(packRoot, "Skins")}/`);
 pruneAndNormalize(inspect);
 const measured = measureMeshes(inspect);
-console.log(JSON.stringify(measured, null, 2));
 
 const clips = [];
 for (const clipFile of CLIP_FILES) {
   const buffer = await readFile(path.join(packRoot, clipFile.source));
   const parsed = parseFbx(buffer, `${path.join(packRoot, "Skins")}/`);
-  clips.push(firstClip(parsed, clipFile.name));
+  clips.push(selectClip(parsed, clipFile.name));
 }
 
 const TARGET_HEIGHT = 0.32;
@@ -184,7 +199,6 @@ function prepareRoot(root, name) {
 
 const body = parseFbx(bodyBuffer, `${path.join(packRoot, "Skins")}/`);
 prepareRoot(body, "characterMedium");
-console.log("scaled", JSON.stringify(measureMeshes(body)));
 await writeFile(path.join(outputRoot, "character-medium.glb"), await exportGlb(body, clips));
 
 for (const clip of clips) {

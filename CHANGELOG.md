@@ -13,8 +13,8 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 
 ### Fixed
 
-- Pedestrian mixers clone idle/run clips per agent and use WebGPU-compatible skinned materials so skeletons pose instead of staying in a T-pose.
-- Pedestrian travel speed is about one-third of the first M3.6 draft so walks match the run cycle.
+- Character GLB export picks Kenney `Root|Idle` / `Root|Run` instead of the first FBX clip (`Root|0.Targeting Pose`), which left walking NPCs in a T-pose.
+- Pedestrian travel speed is about one-third of a cell per second so the Kenney run cycle reads as a walk.
 
 ## [0.5.0] - 2026-09-05
 

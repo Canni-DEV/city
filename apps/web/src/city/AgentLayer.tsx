@@ -16,9 +16,12 @@ import {
 import { useGLTF } from "@react-three/drei";
 import { useFrame, useLoader } from "@react-three/fiber";
 import { useLayoutEffect, useMemo, useRef } from "react";
-import { AnimationMixer, LoopRepeat } from "three";
 import { clone } from "three/addons/utils/SkeletonUtils.js";
 import * as THREE from "three/webgpu";
+
+/** Kenney Run is a sprint; half speed matches DEFAULT_AGENT_SPEED (SIM-005). */
+const RUN_CYCLE_TIME_SCALE = 0.5;
+const MAX_FRAME_DELTA = 0.05;
 
 function skinUrl(entry: AssetCatalogEntry, skin: string, baseUrl: string): string {
   const path =
@@ -27,16 +30,16 @@ function skinUrl(entry: AssetCatalogEntry, skin: string, baseUrl: string): strin
 }
 
 function bindAgentClips(
-  mixer: AnimationMixer,
+  mixer: THREE.AnimationMixer,
   animations: THREE.AnimationClip[],
 ): { idle: THREE.AnimationAction | null; run: THREE.AnimationAction | null } {
   const idleSource = animations.find((clip) => clip.name === "idle");
   const runSource = animations.find((clip) => clip.name === "run");
   const idle = idleSource ? mixer.clipAction(idleSource.clone()) : null;
   const run = runSource ? mixer.clipAction(runSource.clone()) : null;
-  idle?.setLoop(LoopRepeat, Infinity);
-  run?.setLoop(LoopRepeat, Infinity);
-  run?.setEffectiveTimeScale(0.5);
+  idle?.setLoop(THREE.LoopRepeat, Infinity);
+  run?.setLoop(THREE.LoopRepeat, Infinity);
+  run?.setEffectiveTimeScale(RUN_CYCLE_TIME_SCALE);
   return { idle, run };
 }
 
@@ -77,7 +80,7 @@ function AgentAvatar({
   const skin = agentsRef.current[index]?.skin ?? "skaterMaleA";
   const texture = useLoader(THREE.TextureLoader, skinUrl(entry, skin, import.meta.env.BASE_URL));
   const root = useMemo(() => clone(scene), [scene]);
-  const mixer = useMemo(() => new AnimationMixer(root), [root]);
+  const mixer = useMemo(() => new THREE.AnimationMixer(root), [root]);
   const actions = useMemo(() => bindAgentClips(mixer, animations), [animations, mixer]);
   const scale = agentUniformScale(entry);
 
@@ -109,6 +112,7 @@ function AgentAvatar({
     playAgentClip(actions, "idle");
     return () => {
       mixer.stopAllAction();
+      mixer.uncacheRoot(mixer.getRoot());
     };
   }, [actions, mixer]);
 
@@ -128,12 +132,7 @@ function AgentAvatar({
       clip.current = nextClip;
       playAgentClip(actions, nextClip);
     }
-    mixer.update(Math.min(delta, 0.05));
-    root.updateMatrixWorld(true);
-    root.traverse((child) => {
-      const mesh = child as THREE.SkinnedMesh;
-      if (mesh.isSkinnedMesh) mesh.skeleton.update();
-    });
+    mixer.update(Math.min(delta, MAX_FRAME_DELTA));
   });
 
   return (
@@ -167,7 +166,7 @@ export function AgentLayer({ document, count }: { document: CityDocumentV1; coun
   useFrame((_, delta) => {
     agentsRef.current = tickAgents(agentsRef.current, {
       policy,
-      dt: Math.min(delta, 0.05),
+      dt: Math.min(delta, MAX_FRAME_DELTA),
       seed: document.generator.seed,
     });
   });

@@ -1,5 +1,41 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { assetCatalog, CITY_KIT_ENTRY_COUNT, isCityKitEntry } from "../src";
+
+const charactersRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../generated/characters",
+);
+
+function animationDurations(buffer: Buffer): Record<string, number> {
+  const jsonLength = buffer.readUInt32LE(12);
+  const json = JSON.parse(
+    buffer
+      .subarray(20, 20 + jsonLength)
+      .toString()
+      .replaceAll("\0", "")
+      .trim(),
+  ) as {
+    accessors?: Array<{ max?: number[] }>;
+    animations?: Array<{
+      name?: string;
+      samplers?: Array<{ input: number }>;
+    }>;
+  };
+  const durations: Record<string, number> = {};
+  for (const animation of json.animations ?? []) {
+    let max = 0;
+    for (const sampler of animation.samplers ?? []) {
+      const accessor = json.accessors?.[sampler.input];
+      const value = accessor?.max?.[0];
+      if (typeof value === "number") max = Math.max(max, value);
+    }
+    durations[animation.name ?? ""] = max;
+  }
+  return durations;
+}
 
 describe("asset catalog", () => {
   it("TST-006 keeps exactly 213 unique city-kit GLB entries", () => {
@@ -31,6 +67,19 @@ describe("asset catalog", () => {
     expect(body?.dimensions[1]).toBeCloseTo(0.32);
     expect(body?.instancing).toBe(false);
     expect(body?.proceduralWeight).toBe(0);
+  });
+
+  it("exported idle/run clips are Kenney locomotion, not targeting-pose T-pose", async () => {
+    const body = await readFile(path.join(charactersRoot, "character-medium.glb"));
+    const run = await readFile(path.join(charactersRoot, "run.glb"));
+    const idle = await readFile(path.join(charactersRoot, "idle.glb"));
+    const bodyDurations = animationDurations(body);
+    expect(bodyDurations.idle).toBeGreaterThan(0.5);
+    expect(bodyDurations.run).toBeGreaterThan(0.5);
+    expect(bodyDurations.run).toBeLessThan(2);
+    expect(bodyDurations.jump).toBeGreaterThan(0.2);
+    expect(animationDurations(idle).idle).toBeGreaterThan(0.5);
+    expect(animationDurations(run).run).toBeGreaterThan(0.5);
   });
 
   it("provides connectors for every road tile", () => {

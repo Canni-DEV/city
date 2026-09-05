@@ -22,7 +22,7 @@ No object editor, no user-controlled player, no leaving the road graph, no parks
 
 ## Completion evidence
 
-- Character GLBs and clips are generated into `packages/assets/generated/characters/` from untouched Kenney FBX; runtime copy is GLB/PNG only (AC-012).
+- Character GLBs and clips are generated into `packages/assets/generated/characters/` from untouched Kenney FBX; export binds `Root|Idle` / `Root|Run` / `Root|Jump` and skips `0.Targeting Pose`. Runtime copy is GLB/PNG only (AC-012).
 - Catalog keeps 213 city-kit GLBs and adds protagonist body, idle/run/jump clips, and four skins. Pedestrian height is baked to ~0.32 vs `commercial:building-a` (~1.293); city-kit scale is unchanged.
 - `@city/core` exposes a `WalkPolicy` plus mover: occupied-road graph, A*, cell reservation with wait-then-repath, and spawn RNG from document seed + agent index. Agents never enter `CityDocumentV1`.
 - The city canvas clones a `SkinnedMesh` per NPC (`AnimationMixer` idle/run with per-agent clip clones), keeps default zoom 9, and raises OrbitControls `maxZoom` to 48. **F** enables unrestricted free camera; default city orbit is unchanged. No player avatar or jump clip. Pedestrians walk at about one-third of a cell per second.

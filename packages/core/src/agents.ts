@@ -17,7 +17,7 @@ export const AGENT_SKINS = [
 export type AgentSkin = (typeof AGENT_SKINS)[number];
 export type AgentClip = "idle" | "run";
 
-/** Cells per second. One cell is one world unit; ~1/3 of the first M3.6 draft. */
+/** Cells per second. SIM-005: about one-third cell/s so Kenney Run reads as a walk. */
 export const DEFAULT_AGENT_SPEED = 1.85 / 3;
 export const DEFAULT_AGENT_WAIT_LIMIT = 0.7;
 

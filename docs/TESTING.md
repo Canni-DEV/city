@@ -21,7 +21,7 @@ M3 evidence extends the same 200-city batch with placement invariants: every pro
 
 M3.5 evidence regenerates that 200-city batch under generator `0.5.0`: occupied road cells form one 4-connected component, resolved tiles match rotated catalog connectors, typical enclosed blocks on 96/128 maps have multi-side frontage and manzana-scale bounds, lots keep full road frontage, and zone shares stay within ±5 points. Connector yaw unit tests cover `road-bend` and `road-curve`.
 
-M3.6 evidence is independent of document hashes: seeded agent spawn, road-cell A*, reservation/wait/repath, and unchanged `CityDocumentV1` identity after ticks (TST-008).
+M3.6 evidence is independent of document hashes: seeded agent spawn, road-cell A*, reservation/wait/repath, and unchanged `CityDocumentV1` identity after ticks (TST-008). Catalog tests also reject Kenney `0.Targeting Pose` clips in exported idle/run/jump GLBs (TST-006).
 
 ## Manual QA per milestone
 
