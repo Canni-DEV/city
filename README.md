@@ -1,8 +1,6 @@
 # City
 
-City is a browser-based procedural city sandbox. It generates deterministic low-poly cities from Kenney City Kit packs, can show a small number of runtime pedestrians on the streets (M3.6), and will expose the resolved city as an editable, versioned document (M4).
-
-Milestone M2 adds blocks, fronted lots, and five-zone assignment on top of the M1 road slice: presets, advanced mix controls, overlays, and invariant checks for frontage and area quotas. Buildings and decoration follow in M3.
+City is a browser-based procedural city sandbox. It generates deterministic low-poly cities from Kenney City Kit packs. M3.6.1 persists 1-cell sidewalk rings on `CityDocumentV1` and walks a small number of runtime pedestrians on that ring plus Kenney junction crossings (local `*-path`, avenue unsuffixed T/4-way). M4 will expose the resolved city as an editable, versioned document.
 
 ## Requirements
 

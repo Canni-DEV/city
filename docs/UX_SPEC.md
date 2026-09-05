@@ -22,7 +22,7 @@
 - **UX-023:** Destructive library and block-regeneration actions require explicit confirmation.
 - **UX-024:** The technical diagnostic exposes Auto/Low/Medium/High quality and active WebGPU or WebGL 2 backend.
 
-M3 implements that diagnostic in the city laboratory, including a quality selector, backend notice, frame-rate/draw-call readouts, and a textual selection status. Object editing remains M4. M3.6 adds runtime pedestrians; they are not editor selection targets.
+M3 implements that diagnostic in the city laboratory, including a quality selector, backend notice, frame-rate/draw-call readouts, and a textual selection status. Object editing remains M4. M3.6 adds runtime pedestrians; they are not editor selection targets. M3.6.1 keeps them on sidewalks; sidewalk tiles are not editor selection targets.
 
 ## Layout
 

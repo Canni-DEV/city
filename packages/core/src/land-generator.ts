@@ -1,6 +1,7 @@
 import { type CityDocumentV1, ZONE_TYPES, type ZoneType } from "./domain.js";
 import { deriveProceduralId } from "./ids.js";
 import { CARDINALS, DIRECTION_DELTA, occupiedRoadSet, type Point, pointKey } from "./road-tiles.js";
+import { isPocketParkBlock, sidewalkKeySet } from "./sidewalks.js";
 
 type Block = CityDocumentV1["blocks"][number];
 type Lot = CityDocumentV1["lots"][number];
@@ -73,19 +74,19 @@ const MAX_LOT_WIDTH = 4;
 
 function assignedFrontage(
   cell: Point,
-  roads: ReadonlySet<string>,
-  blockCells: ReadonlySet<string>,
+  sidewalks: ReadonlySet<string>,
+  packable: ReadonlySet<string>,
 ): Lot["frontage"] | undefined {
   let best: { direction: Lot["frontage"]; depth: number } | undefined;
   for (const direction of DIRECTIONS) {
     let depth: number | undefined;
     for (let step = 1; step <= MAX_LOT_DEPTH; step += 1) {
       const next: Point = [cell[0] + direction.dx * step, cell[1] + direction.dy * step];
-      if (roads.has(key(next))) {
+      if (sidewalks.has(key(next))) {
         depth = step;
         break;
       }
-      if (!blockCells.has(key(next))) break;
+      if (!packable.has(key(next))) break;
     }
     if (depth === undefined) continue;
     if (!best || depth < best.depth) best = { direction: direction.name, depth };
@@ -93,15 +94,16 @@ function assignedFrontage(
   return best?.direction;
 }
 
-/** GEN-007/GEN-022: pack a frontage ring; interior cells remain a courtyard. */
+/** GEN-007/GEN-022: pack a frontage ring inward of the sidewalk; interior remains a courtyard. */
 export function createLots(document: CityDocumentV1): Lot[] {
-  const roads = occupiedRoadSet(document.roadGraph.cells);
+  const sidewalks = sidewalkKeySet(document);
   const lots: Lot[] = [];
   for (const block of document.blocks) {
-    const blockCells = new Set(block.cells.map(key));
+    const packable = new Set(block.cells.filter((cell) => !sidewalks.has(key(cell))).map(key));
     const assignment = new Map<string, Lot["frontage"]>();
     for (const cell of block.cells) {
-      const frontage = assignedFrontage(cell, roads, blockCells);
+      if (!packable.has(key(cell))) continue;
+      const frontage = assignedFrontage(cell, sidewalks, packable);
       if (frontage) assignment.set(key(cell), frontage);
     }
     const available = new Set(assignment.keys());
@@ -112,12 +114,12 @@ export function createLots(document: CityDocumentV1): Lot[] {
       if (!frontage) continue;
       const direction = DIRECTIONS.find((entry) => entry.name === frontage);
       if (!direction) continue;
-      if (!roads.has(key([start[0] + direction.dx, start[1] + direction.dy]))) continue;
+      if (!sidewalks.has(key([start[0] + direction.dx, start[1] + direction.dy]))) continue;
       let best: Point[] | undefined;
       const tangent: Point = direction.dx === 0 ? [1, 0] : [0, 1];
       for (let width = MAX_LOT_WIDTH; width >= 1; width -= 1) {
         if (
-          !roads.has(
+          !sidewalks.has(
             key([
               start[0] + tangent[0] * (width - 1) + direction.dx,
               start[1] + tangent[1] * (width - 1) + direction.dy,
@@ -166,13 +168,16 @@ export function createLots(document: CityDocumentV1): Lot[] {
 
 /** GEN-008/GEN-023: spatial suitability within remaining area quotas. */
 export function assignZones(document: CityDocumentV1): void {
-  const total = document.blocks.reduce((sum, block) => sum + block.cells.length, 0);
+  const roads = occupiedRoadSet(document.roadGraph.cells);
+  const pocket = document.blocks.filter((block) => isPocketParkBlock(block.cells, roads));
+  const buildable = document.blocks.filter((block) => !isPocketParkBlock(block.cells, roads));
+  for (const block of pocket) block.zone = "park";
+  const total = buildable.reduce((sum, block) => sum + block.cells.length, 0);
   const mix = document.generator.parameters.zoneMix;
   const remaining = Object.fromEntries(
     ZONE_TYPES.map((zone) => [zone, (total * mix[zone]) / 100]),
   ) as Record<ZoneType, number>;
-  const roads = occupiedRoadSet(document.roadGraph.cells);
-  for (const block of [...document.blocks].sort(
+  for (const block of [...buildable].sort(
     (a, b) =>
       b.cells.length - a.cells.length || ordered(a.cells[0] ?? [0, 0], b.cells[0] ?? [0, 0]),
   )) {
@@ -208,6 +213,18 @@ export function assignZones(document: CityDocumentV1): void {
 }
 
 export function zoneAreaShares(document: CityDocumentV1): Record<ZoneType, number> {
+  return zoneAreaSharesFrom(document.blocks);
+}
+
+/** GEN-023: pocket-park remnants are excluded from mix quotas. */
+export function quotaZoneAreaShares(document: CityDocumentV1): Record<ZoneType, number> {
+  const roads = occupiedRoadSet(document.roadGraph.cells);
+  return zoneAreaSharesFrom(
+    document.blocks.filter((block) => !isPocketParkBlock(block.cells, roads)),
+  );
+}
+
+function zoneAreaSharesFrom(blocks: readonly Block[]): Record<ZoneType, number> {
   const areas: Record<ZoneType, number> = {
     suburban: 0,
     urban: 0,
@@ -216,7 +233,7 @@ export function zoneAreaShares(document: CityDocumentV1): Record<ZoneType, numbe
     park: 0,
   };
   let total = 0;
-  for (const block of document.blocks) {
+  for (const block of blocks) {
     areas[block.zone] += block.cells.length;
     total += block.cells.length;
   }
@@ -229,6 +246,7 @@ export function validateLandCity(document: CityDocumentV1): string[] {
   const issues: string[] = [];
   const size = document.map.size;
   const roads = occupiedRoadSet(document.roadGraph.cells);
+  const sidewalks = sidewalkKeySet(document);
   const districts = new Set(document.districts.map((district) => district.id));
   const blocks = new Map(document.blocks.map((block) => [block.id, new Set(block.cells.map(key))]));
   const covered = new Set<string>();
@@ -271,6 +289,7 @@ export function validateLandCity(document: CityDocumentV1): string[] {
     for (const point of lot.cells) {
       const cell = key(point);
       if (!owner?.has(cell)) issues.push(`lot ${lot.id} leaves its block`);
+      if (sidewalks.has(cell)) issues.push(`lot ${lot.id} overlaps sidewalk`);
       if (lotCells.has(cell)) issues.push(`overlapping lot cell ${cell}`);
       lotCells.add(cell);
     }
@@ -298,11 +317,11 @@ export function validateLandCity(document: CityDocumentV1): string[] {
     if (
       !direction ||
       !front.length ||
-      !front.every(([x, y]) => roads.has(key([x + direction.dx, y + direction.dy])))
+      !front.every(([x, y]) => sidewalks.has(key([x + direction.dx, y + direction.dy])))
     )
-      issues.push(`lot ${lot.id} has no full road frontage`);
+      issues.push(`lot ${lot.id} has no full sidewalk frontage`);
   }
-  const shares = zoneAreaShares(document);
+  const shares = quotaZoneAreaShares(document);
   if (!document.blocks.length || !document.lots.length)
     issues.push("land generation produced no blocks or lots");
   for (const zone of ZONE_TYPES) {

@@ -398,6 +398,10 @@ export function CityPage() {
                 <span>Road cells</span>
                 <strong>{generatedCity.roadGraph.cells.length}</strong>
               </div>
+              <div>
+                <span>Sidewalks</span>
+                <strong>{generatedCity.sidewalks.length}</strong>
+              </div>
             </Panel>
           </>
         )}

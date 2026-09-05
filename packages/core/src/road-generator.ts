@@ -35,9 +35,10 @@ import {
   resolveRoadTiles,
   tileMatchesNeighbors,
 } from "./road-tiles.js";
+import { createSidewalks, validateSidewalks } from "./sidewalks.js";
 import type { GenerationStage } from "./worker-protocol.js";
 
-export const GENERATOR_VERSION = "0.5.0";
+export const GENERATOR_VERSION = "0.6.3";
 
 type Direction = "north" | "east" | "south" | "west";
 
@@ -506,6 +507,7 @@ function createDocument(
     },
     blocks: [],
     lots: [],
+    sidewalks: [],
     entities: {},
   };
   return CityDocumentSchema.parse(document);
@@ -601,6 +603,7 @@ function canonicalGeneratedData(document: CityDocumentV1) {
     map: document.map,
     districts: document.districts,
     roadGraph: document.roadGraph,
+    sidewalks: document.sidewalks,
     blocks: document.blocks,
     lots: document.lots,
     entities: document.entities,
@@ -651,7 +654,9 @@ export async function generateRoadCity(
     const document = createDocument(input, attempt, [...mask], densityField, nodes, classes);
     await checkpoint(hooks, "blocks", 76, "Finding free regions and creating blocks");
     document.blocks = createBlocks(document);
-    await checkpoint(hooks, "lots", 83, "Subdividing lots with road frontage");
+    await checkpoint(hooks, "sidewalks", 80, "Laying sidewalk rings around manzanas");
+    document.sidewalks = createSidewalks(document);
+    await checkpoint(hooks, "lots", 83, "Subdividing lots with sidewalk frontage");
     document.lots = createLots(document);
     await checkpoint(hooks, "zones", 89, "Assigning zones within area quotas");
     assignZones(document);
@@ -681,6 +686,7 @@ export async function generateRoadCity(
     finalIssues = [
       ...validateRoadCity(document),
       ...validateLandCity(document),
+      ...validateSidewalks(document),
       ...validatePlacedCity(document, input.assets),
       ...(hooks.validateAttempt?.(document) ?? []),
     ];

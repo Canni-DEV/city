@@ -36,26 +36,42 @@ export const ROAD_TILE_CONNECTORS: Readonly<Record<string, readonly Cardinal[]>>
   "roads:road-curve": ["west", "south"],
   "roads:road-intersection": ["east", "south", "west"],
   "roads:road-intersection-line": ["east", "south", "west"],
+  "roads:road-intersection-path": ["east", "south", "west"],
   "roads:road-crossroad": ["north", "east", "south", "west"],
   "roads:road-crossroad-line": ["north", "east", "south", "west"],
+  "roads:road-crossroad-path": ["north", "east", "south", "west"],
   "roads:road-roundabout": ["north", "east", "south", "west"],
 };
+
+export const SIDEWALK_ASSET_ID = "roads:tile-low";
+
+/** GEN-027: Kenney T/4-way meshes that read as pedestrian passages. */
+export const PEDESTRIAN_PATH_TILES: ReadonlySet<string> = new Set([
+  "roads:road-intersection-path",
+  "roads:road-crossroad-path",
+]);
+
+/** GEN-027: arterial/collector T/4-way meshes whose connectors match topology. */
+export const AVENUE_JUNCTION_TILES: ReadonlySet<string> = new Set([
+  "roads:road-intersection",
+  "roads:road-crossroad",
+]);
 
 const AVENUE_TILES: Record<RoadTopology, string> = {
   end: "roads:road-end",
   // Kenney road-square is a plaza with curb on all four sides; it cannot join a through street.
   straight: "roads:road-straight",
   bend: "roads:road-bend-sidewalk",
-  t: "roads:road-intersection-line",
-  cross: "roads:road-crossroad-line",
+  t: "roads:road-intersection",
+  cross: "roads:road-crossroad",
 };
 
 const LOCAL_TILES: Record<RoadTopology, string> = {
   end: "roads:road-end",
   straight: "roads:road-straight",
   bend: "roads:road-bend",
-  t: "roads:road-intersection",
-  cross: "roads:road-crossroad",
+  t: "roads:road-intersection-path",
+  cross: "roads:road-crossroad-path",
 };
 
 export function pointKey([x, y]: Point): string {

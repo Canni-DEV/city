@@ -11,6 +11,7 @@ import {
   validateLandCity,
   validatePlacedCity,
   validateRoadCity,
+  validateSidewalks,
 } from "../src/index.js";
 import { TEST_ASSETS } from "./catalog-assets.js";
 
@@ -36,11 +37,11 @@ describe("M1–M3.5 city generation", () => {
       timestamp: "2027-01-01T00:00:00.000Z",
     });
     expect(hashGeneratedStructure(first)).toBe(hashGeneratedStructure(second));
-    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"87023de6"`);
+    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"fb1a30c1"`);
   });
 
   it("TST-001 derives reproducible attempts and retries at most three times", async () => {
-    expect(deriveAttemptSeed("retry-city", 2)).toBe("retry-city::0.5.0::attempt-2");
+    expect(deriveAttemptSeed("retry-city", 2)).toBe("retry-city::0.6.3::attempt-2");
     const attempts: number[] = [];
     const city = await generateRoadCity(inputFor("retry-city"), {
       validateAttempt(document) {
@@ -65,9 +66,11 @@ describe("M1–M3.5 city generation", () => {
         );
         expect(validateRoadCity(city), label).toEqual([]);
         expect(validateLandCity(city), label).toEqual([]);
+        expect(validateSidewalks(city), label).toEqual([]);
         expect(validatePlacedCity(city, TEST_ASSETS), label).toEqual([]);
         expect(city.blocks.length, label).toBeGreaterThan(0);
         expect(city.lots.length, label).toBeGreaterThan(0);
+        expect(city.sidewalks.length, label).toBeGreaterThan(0);
         expect(Object.keys(city.entities).length, label).toBeGreaterThan(0);
         expect(city.roadGraph.nodes.filter((node) => node.kind === "gate")).toHaveLength(
           size === 64 ? 2 : size === 96 ? 3 : 4,

@@ -54,7 +54,7 @@ describe("GEN-005 connector yaw", () => {
       rotation: 270,
     });
     expect(resolveUnitTile(["north", "east", "south"], "local")).toEqual({
-      assetId: "roads:road-intersection",
+      assetId: "roads:road-intersection-path",
       rotation: 270,
     });
     expect(resolveUnitTile(["west", "south"], "local")).toEqual({
@@ -68,6 +68,14 @@ describe("GEN-005 connector yaw", () => {
     expect(resolveUnitTile(["west", "south"], "arterial")).toEqual({
       assetId: "roads:road-bend-sidewalk",
       rotation: 0,
+    });
+    expect(resolveUnitTile(["north", "east", "south", "west"], "arterial")).toEqual({
+      assetId: "roads:road-crossroad",
+      rotation: 0,
+    });
+    expect(resolveUnitTile(["north", "east", "south"], "arterial")).toEqual({
+      assetId: "roads:road-intersection",
+      rotation: 270,
     });
   });
 
@@ -98,5 +106,18 @@ describe("GEN-005 connector yaw", () => {
     for (const cell of occupiedCellsForRoadTile(tile)) expanded.add(`${cell[0]},${cell[1]}`);
     expect(tileMatchesNeighbors(tile, expanded)).toBe(true);
     expect(tryArterialRoundabout([5, 5], occupied, 12, new Set(["4,4"]), mask)).toBeUndefined();
+  });
+
+  it("requires T and 4-way meshes to match neighbor arity", () => {
+    const tee = {
+      position: [5, 5] as [number, number],
+      assetId: "roads:road-intersection",
+      rotation: 0,
+    };
+    const occupied = new Set(["5,5", "4,5", "6,5", "5,6"]);
+    expect(tileMatchesNeighbors(tee, occupied)).toBe(true);
+    expect(
+      tileMatchesNeighbors({ ...tee, assetId: "roads:road-straight", rotation: 0 }, occupied),
+    ).toBe(false);
   });
 });

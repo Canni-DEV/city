@@ -10,5 +10,6 @@ export * from "./rng.js";
 export * from "./road-generator.js";
 export * from "./road-mesh.js";
 export * from "./road-tiles.js";
+export * from "./sidewalks.js";
 export * from "./spatial-hash.js";
 export * from "./worker-protocol.js";

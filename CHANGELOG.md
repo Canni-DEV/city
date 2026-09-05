@@ -1,8 +1,18 @@
 # Changelog
 
-All notable changes use Semantic Versioning. The project remains in `0.x` until M0–M6, intermediate M3.5/M3.6, and every 1.0 acceptance criterion are complete.
+All notable changes use Semantic Versioning. The project remains in `0.x` until M0–M6, intermediate M3.5/M3.6/M3.6.1, and every 1.0 acceptance criterion are complete.
 
 ## [Unreleased]
+
+## [0.7.0] - 2026-09-05
+
+### Added
+
+- M3.6.1 sidewalk rings: each habitable manzana keeps a 1-cell paved perimeter (`roads:tile-low`) persisted on `CityDocumentV1`. NPCs walk that ring plus local Kenney `*-path` corners and unsuffixed avenue T/4-way openings on two logical lanes.
+
+### Changed
+
+- Generator `0.6.3`: lots pack inward of the sidewalk; local T/4-way tiles use pedestrian path meshes; avenue T/4-way tiles use unsuffixed Kenney `road-intersection` / `road-crossroad` (catalog connectors match neighbors; no `*-line` corner cubes); local streets do not open slivers thinner than a sidewalk+lot+sidewalk; leftover slivers are pocket parks.
 
 ## [0.6.0] - 2026-09-05
 

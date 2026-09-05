@@ -1,3 +1,4 @@
+import type { CityDocumentV1 } from "./domain.js";
 import { SeededRandom } from "./rng.js";
 import {
   neighborKeys,
@@ -7,6 +8,7 @@ import {
   pointKey,
   type RoadTile,
 } from "./road-tiles.js";
+import { pedestrianNeighbors, pedestrianWalkableSet, sidewalkKeySet } from "./sidewalks.js";
 
 export const AGENT_SKINS = [
   "skaterMaleA",
@@ -16,10 +18,13 @@ export const AGENT_SKINS = [
 ] as const;
 export type AgentSkin = (typeof AGENT_SKINS)[number];
 export type AgentClip = "idle" | "run";
+export type AgentLane = 0 | 1;
 
 /** Cells per second. SIM-005: about one-third cell/s so Kenney Run reads as a walk. */
 export const DEFAULT_AGENT_SPEED = 1.85 / 3;
 export const DEFAULT_AGENT_WAIT_LIMIT = 0.7;
+/** SIM-010: offset from cell center toward the right-hand lane. */
+export const AGENT_LANE_OFFSET = 0.2;
 
 /** SIM-006: 8–16 on 96 Auto/high; Low may reduce the count. */
 export function agentCountFor(mapSize: 64 | 96 | 128, quality: "low" | "medium" | "high"): number {
@@ -29,7 +34,7 @@ export function agentCountFor(mapSize: 64 | 96 | 128, quality: "low" | "medium" 
 }
 
 /**
- * SIM-007: walkability is injected so a later player policy can leave the road
+ * SIM-007: walkability is injected so a later player policy can leave the default
  * graph without rewriting the mover or avatar.
  */
 export interface WalkPolicy {
@@ -37,10 +42,16 @@ export interface WalkPolicy {
   isWalkable(cell: Point): boolean;
   neighbors(cell: Point): Point[];
   sampleDestination(from: Point, rng: SeededRandom): Point | undefined;
+  allCells(): Point[];
+  spawnCells(): Point[];
+}
+
+function cellsFromSet(walkable: ReadonlySet<string>): Point[] {
+  return [...walkable].sort().map(parsePointKey);
 }
 
 export function createGridWalkPolicy(walkable: ReadonlySet<string>, kind = "grid"): WalkPolicy {
-  const cells = [...walkable].sort();
+  const cells = cellsFromSet(walkable);
   return {
     kind,
     isWalkable: (cell) => walkable.has(pointKey(cell)),
@@ -51,20 +62,45 @@ export function createGridWalkPolicy(walkable: ReadonlySet<string>, kind = "grid
     },
     sampleDestination(from, rng) {
       const fromKey = pointKey(from);
-      const options = cells.filter((key) => key !== fromKey);
+      const options = cells.filter((cell) => pointKey(cell) !== fromKey);
       if (options.length === 0) return undefined;
-      const key = options[rng.integer(0, options.length - 1)];
-      return key ? parsePointKey(key) : undefined;
+      return options[rng.integer(0, options.length - 1)];
     },
+    allCells: () => cells.map((cell) => [...cell] as Point),
+    spawnCells: () => cells.map((cell) => [...cell] as Point),
   };
 }
 
-/** SIM-002: occupied `roadGraph` cells, one 4-connected component. */
+/** Occupied `roadGraph` cells. Kept injectable; M3.6.1 default is sidewalks. */
 export function createRoadWalkPolicy(tiles: readonly RoadTile[]): WalkPolicy {
   return createGridWalkPolicy(occupiedRoadSet(tiles), "road-graph");
 }
 
-export function walkableCells(policy: WalkPolicy, tiles: readonly RoadTile[]): Point[] {
+/** SIM-002/008/009: sidewalks plus corner crossings; destinations stay on sidewalks. */
+export function createSidewalkWalkPolicy(document: CityDocumentV1): WalkPolicy {
+  const walkable = pedestrianWalkableSet(document);
+  const sidewalks = sidewalkKeySet(document);
+  const destinations = cellsFromSet(sidewalks);
+  const base = createGridWalkPolicy(walkable, "sidewalk-graph");
+  return {
+    ...base,
+    neighbors(cell) {
+      return pedestrianNeighbors(cell, walkable, sidewalks);
+    },
+    sampleDestination(from, rng) {
+      const fromKey = pointKey(from);
+      const options = destinations.filter((cell) => pointKey(cell) !== fromKey);
+      if (options.length === 0) return undefined;
+      return options[rng.integer(0, options.length - 1)];
+    },
+    spawnCells: () => destinations.map((cell) => [...cell] as Point),
+  };
+}
+
+export function walkableCells(policy: WalkPolicy, tiles?: readonly RoadTile[]): Point[] {
+  const listed = policy.allCells();
+  if (listed.length > 0) return listed;
+  if (!tiles) return [];
   return [...occupiedRoadSet(tiles)]
     .filter((key) => policy.isWalkable(parsePointKey(key)))
     .sort()
@@ -116,6 +152,8 @@ export interface AgentRuntimeState {
   index: number;
   cell: Point;
   nextCell: Point | null;
+  lane: AgentLane;
+  nextLane: AgentLane | null;
   progress: number;
   heading: number;
   path: Point[];
@@ -131,11 +169,47 @@ export function clipForAgent(agent: Pick<AgentRuntimeState, "moving">): AgentCli
   return agent.moving ? "run" : "idle";
 }
 
+export function laneReservationKey(cell: Point, lane: AgentLane): string {
+  return `${pointKey(cell)}:${lane}`;
+}
+
+export function preferredLane(_from: Point, _to: Point): AgentLane {
+  return 1;
+}
+
+function laneOffset(heading: number, lane: AgentLane): [number, number] {
+  const dx = Math.sin(heading);
+  const dy = Math.cos(heading);
+  const sign = lane === 1 ? 1 : -1;
+  return [-dy * AGENT_LANE_OFFSET * sign, dx * AGENT_LANE_OFFSET * sign];
+}
+
 export function agentWorldPosition(agent: AgentRuntimeState): [number, number, number] {
   const [x, z] = agent.cell;
-  if (!agent.nextCell) return [x + 0.5, 0, z + 0.5];
+  const current = laneOffset(agent.heading, agent.lane);
+  if (!agent.nextCell) return [x + 0.5 + current[0], 0, z + 0.5 + current[1]];
   const t = Math.min(Math.max(agent.progress, 0), 1);
-  return [x + 0.5 + (agent.nextCell[0] - x) * t, 0, z + 0.5 + (agent.nextCell[1] - z) * t];
+  const heading = headingBetween(agent.cell, agent.nextCell);
+  const next = laneOffset(heading, agent.nextLane ?? agent.lane);
+  return [
+    x + 0.5 + (agent.nextCell[0] - x) * t + current[0] * (1 - t) + next[0] * t,
+    0,
+    z + 0.5 + (agent.nextCell[1] - z) * t + current[1] * (1 - t) + next[1] * t,
+  ];
+}
+
+function pickLane(
+  cell: Point,
+  reserved: Map<string, string>,
+  agentId: string,
+  preferred: AgentLane,
+): AgentLane | undefined {
+  const order: AgentLane[] = preferred === 1 ? [1, 0] : [0, 1];
+  for (const lane of order) {
+    const owner = reserved.get(laneReservationKey(cell, lane));
+    if (!owner || owner === agentId) return lane;
+  }
+  return undefined;
 }
 
 export function spawnAgents(input: {
@@ -145,32 +219,38 @@ export function spawnAgents(input: {
   policy?: WalkPolicy;
 }): AgentRuntimeState[] {
   const policy = input.policy ?? createRoadWalkPolicy(input.tiles);
-  const cells = walkableCells(policy, input.tiles);
-  const count = Math.min(Math.max(input.count, 0), cells.length);
+  const cells = policy.spawnCells();
+  const slots: Array<{ cell: Point; lane: AgentLane }> = [];
+  for (const lane of [0, 1] as const) {
+    for (const cell of cells) slots.push({ cell, lane });
+  }
+  const count = Math.min(Math.max(input.count, 0), slots.length);
   const taken = new Set<string>();
   const agents: AgentRuntimeState[] = [];
   for (let index = 0; index < count; index += 1) {
     const rng = new SeededRandom(`${input.seed}:agent:${index}`);
-    const free = cells.filter((cell) => !taken.has(pointKey(cell)));
+    const free = slots.filter((slot) => !taken.has(laneReservationKey(slot.cell, slot.lane)));
     if (free.length === 0) break;
-    const cell = free[rng.integer(0, free.length - 1)];
-    if (!cell) break;
-    taken.add(pointKey(cell));
+    const slot = free[rng.integer(0, free.length - 1)];
+    if (!slot) break;
+    taken.add(laneReservationKey(slot.cell, slot.lane));
     const skin = AGENT_SKINS[rng.integer(0, AGENT_SKINS.length - 1)] ?? AGENT_SKINS[0];
     const destination = policy.sampleDestination(
-      cell,
+      slot.cell,
       new SeededRandom(`${input.seed}:agent:${index}:dest:0`),
     );
-    const path = destination ? (findPath(policy, cell, destination)?.slice(1) ?? []) : [];
+    const path = destination ? (findPath(policy, slot.cell, destination)?.slice(1) ?? []) : [];
     agents.push({
       id: `agent:${index}`,
       index,
-      cell: [...cell],
+      cell: [...slot.cell],
       nextCell: null,
+      lane: slot.lane,
+      nextLane: null,
       progress: 0,
       heading: 0,
       path,
-      destination: destination ? [...destination] : [...cell],
+      destination: destination ? [...destination] : [...slot.cell],
       destCount: destination ? 1 : 0,
       waitSeconds: 0,
       moving: false,
@@ -189,7 +269,7 @@ export interface TickAgentsInput {
   waitLimit?: number;
 }
 
-/** SIM-003/004: time and RNG are inputs; reservation waits then replans. */
+/** SIM-003/004/010: time and RNG are inputs; lane reservation waits then replans. */
 export function tickAgents(
   agents: readonly AgentRuntimeState[],
   input: TickAgentsInput,
@@ -208,8 +288,10 @@ export function tickAgents(
 export function reservationMap(agents: readonly AgentRuntimeState[]): Map<string, string> {
   const reserved = new Map<string, string>();
   for (const agent of agents) {
-    reserved.set(pointKey(agent.cell), agent.id);
-    if (agent.nextCell) reserved.set(pointKey(agent.nextCell), agent.id);
+    reserved.set(laneReservationKey(agent.cell, agent.lane), agent.id);
+    if (agent.nextCell && agent.nextLane !== null) {
+      reserved.set(laneReservationKey(agent.nextCell, agent.nextLane), agent.id);
+    }
   }
   return reserved;
 }
@@ -233,9 +315,8 @@ function stepAgent(
         agent.moving = false;
         return;
       }
-      const stepKey = pointKey(stepTo);
-      const owner = reserved.get(stepKey);
-      if (owner && owner !== agent.id) {
+      const lane = pickLane(stepTo, reserved, agent.id, preferredLane(agent.cell, stepTo));
+      if (lane === undefined) {
         agent.moving = false;
         agent.waitSeconds += dt;
         if (agent.waitSeconds >= waitLimit) {
@@ -244,8 +325,9 @@ function stepAgent(
         }
         return;
       }
-      reserved.set(stepKey, agent.id);
+      reserved.set(laneReservationKey(stepTo, lane), agent.id);
       agent.nextCell = [...stepTo];
+      agent.nextLane = lane;
       agent.progress = 0;
       agent.waitSeconds = 0;
       agent.heading = headingBetween(agent.cell, stepTo);
@@ -265,13 +347,15 @@ function completeStep(
   seed: string,
   reserved: Map<string, string>,
 ): void {
-  const previous = pointKey(agent.cell);
+  const previous = laneReservationKey(agent.cell, agent.lane);
   if (agent.nextCell) agent.cell = [...agent.nextCell];
+  if (agent.nextLane !== null) agent.lane = agent.nextLane;
   agent.nextCell = null;
+  agent.nextLane = null;
   agent.progress = 0;
   agent.path = agent.path.slice(1);
   if (reserved.get(previous) === agent.id) reserved.delete(previous);
-  reserved.set(pointKey(agent.cell), agent.id);
+  reserved.set(laneReservationKey(agent.cell, agent.lane), agent.id);
   if (sameCell(agent.cell, agent.destination)) {
     agent.path = [];
     assignDestination(agent, policy, seed);

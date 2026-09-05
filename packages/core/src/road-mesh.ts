@@ -14,6 +14,9 @@ import {
 } from "./road-tiles.js";
 
 const CLASS_RANK: Record<RoadClass, number> = { local: 1, collector: 2, arterial: 3 };
+/** Sidewalk + lot + sidewalk. Consecutive street axes must be at least this far plus one. */
+export const MIN_MANZANA_SPAN = 3;
+export const MIN_STREET_GAP = MIN_MANZANA_SPAN + 1;
 const DIRECTIONS: ReadonlyArray<{ name: Cardinal; delta: Point }> = CARDINALS.map((name) => ({
   name,
   delta: DIRECTION_DELTA[name],
@@ -206,6 +209,32 @@ function paintLine(
   }
 }
 
+/** Keep street axes at least MIN_STREET_GAP apart so a 1-cell ring still leaves an interior. */
+export function keepSpacedAxes(coords: readonly number[], blocked: readonly number[]): number[] {
+  const kept: number[] = [];
+  for (const coord of [...coords].sort((left, right) => left - right)) {
+    if ([...blocked, ...kept].some((other) => Math.abs(other - coord) < MIN_STREET_GAP)) continue;
+    kept.push(coord);
+  }
+  return kept;
+}
+
+function majorRoadAxes(
+  classes: ReadonlyMap<string, RoadClass>,
+  size: number,
+  vertical: boolean,
+): number[] {
+  const counts = new Map<number, number>();
+  for (const [key, roadClass] of classes) {
+    if (roadClass === "local") continue;
+    const point = parsePointKey(key);
+    const axis = vertical ? point[0] : point[1];
+    counts.set(axis, (counts.get(axis) ?? 0) + 1);
+  }
+  const threshold = Math.max(8, Math.floor(size * 0.2));
+  return [...counts.entries()].filter(([, count]) => count >= threshold).map(([axis]) => axis);
+}
+
 export function paintLocalMesh(
   size: MapSize,
   mask: readonly boolean[],
@@ -227,8 +256,12 @@ export function paintLocalMesh(
     const shift = Math.round((random.float() * 2 - 1) * warp * 2);
     horizontal.push(Math.max(1, Math.min(size - 2, y + shift)));
   }
-  for (const x of vertical) paintLine(classes, size, mask, "local", true, x);
-  for (const y of horizontal) paintLine(classes, size, mask, "local", false, y);
+  for (const x of keepSpacedAxes(vertical, majorRoadAxes(classes, size, true))) {
+    paintLine(classes, size, mask, "local", true, x);
+  }
+  for (const y of keepSpacedAxes(horizontal, majorRoadAxes(classes, size, false))) {
+    paintLine(classes, size, mask, "local", false, y);
+  }
 }
 
 function occupiedSet(classes: ReadonlyMap<string, RoadClass>): Set<string> {
@@ -350,17 +383,39 @@ function freeRegions(
   return regions;
 }
 
+function chooseSpacedCut(coords: readonly number[]): number | undefined {
+  const unique = [...new Set(coords)].sort((left, right) => left - right);
+  const lo = unique[0];
+  const hi = unique[unique.length - 1];
+  if (lo === undefined || hi === undefined) return undefined;
+  if (hi - lo + 1 < MIN_MANZANA_SPAN * 2 + 1) return undefined;
+  const mid = lo + Math.floor((hi - lo) / 2);
+  const candidates = unique.filter(
+    (value) => value - lo >= MIN_MANZANA_SPAN && hi - value >= MIN_MANZANA_SPAN,
+  );
+  candidates.sort((left, right) => Math.abs(left - mid) - Math.abs(right - mid));
+  return candidates[0];
+}
+
+function regionSignature(region: readonly Point[]): string {
+  const xs = region.map(([x]) => x);
+  const ys = region.map(([, y]) => y);
+  return `${Math.min(...xs)},${Math.max(...xs)},${Math.min(...ys)},${Math.max(...ys)},${region.length}`;
+}
+
 export function subdivideLargeVoids(
   size: number,
   mask: readonly boolean[],
   classes: Map<string, RoadClass>,
   maxSpan = 14,
 ): void {
+  const skipped = new Set<string>();
   for (let guard = 0; guard < 24; guard += 1) {
     const regions = freeRegions(size, mask, classes).sort(
       (left, right) => right.length - left.length,
     );
     const oversized = regions.find((region) => {
+      if (skipped.has(regionSignature(region))) return false;
       const xs = region.map(([x]) => x);
       const ys = region.map(([, y]) => y);
       return (
@@ -369,13 +424,16 @@ export function subdivideLargeVoids(
       );
     });
     if (!oversized) return;
-    const xs = oversized.map(([x]) => x).sort((left, right) => left - right);
-    const ys = oversized.map(([, y]) => y).sort((left, right) => left - right);
-    const width = (xs[xs.length - 1] ?? 0) - (xs[0] ?? 0) + 1;
-    const height = (ys[ys.length - 1] ?? 0) - (ys[0] ?? 0) + 1;
+    const xs = oversized.map(([x]) => x);
+    const ys = oversized.map(([, y]) => y);
+    const width = Math.max(...xs) - Math.min(...xs) + 1;
+    const height = Math.max(...ys) - Math.min(...ys) + 1;
     const vertical = width >= height;
-    const cut = vertical ? xs[Math.floor(xs.length / 2)] : ys[Math.floor(ys.length / 2)];
-    if (cut === undefined) return;
+    const cut = chooseSpacedCut(vertical ? xs : ys);
+    if (cut === undefined) {
+      skipped.add(regionSignature(oversized));
+      continue;
+    }
     const regionKeys = new Set(oversized.map(pointKey));
     for (const [x, y] of oversized) {
       if ((vertical && x === cut) || (!vertical && y === cut)) paintClass(classes, [x, y], "local");
