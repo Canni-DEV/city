@@ -27,6 +27,8 @@ Values are suburban/urban/commercial/industrial/park, then density, districts, r
 
 M1 implements GEN-001–005 using generator version `0.2.0`. Delaunay edges express organic straight-line intent; deterministic cardinal A* rasterizes that intent onto the v1 ground-level Kenney road set. Consequently, diagonal intent is represented by alternating cardinal segments and curves rather than unsupported 45-degree asset rotations.
 
+M2 implements GEN-006–008 using generator version `0.3.0`. Connected free cells are flood-filled, then bounded into compact patches so five-zone area quotas stay achievable. Rectangular lots occupy only road-fronted parcels inside those blocks; leftover interior cells remain in the block without becoming lots. Zone assignment scores centrality, road access, periphery, and block size, then fills remaining normalized area quotas.
+
 ## Invariants and recovery
 
 - **GEN-020:** All roads form one connected component. External gates count is 2, 3, and 4 for sizes 64, 96, and 128.
@@ -36,4 +38,4 @@ M1 implements GEN-001–005 using generator version `0.2.0`. Delaunay edges expr
 - **GEN-024:** Failed validation retries at most twice after the initial attempt, deriving each attempt deterministically.
 - **GEN-025:** Same version, input, and attempt produce byte-equivalent canonical content and hash.
 
-The M1 structural hash excludes library identity, display name, and timestamps. It covers generator inputs plus the generated map, districts, graph, and resolved road cells, making it suitable for golden determinism tests.
+The structural hash excludes library identity, display name, and timestamps. It covers generator inputs plus the generated map, districts, graph, resolved road cells, blocks, lots, and entities, making it suitable for golden determinism tests.

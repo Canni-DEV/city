@@ -2,7 +2,7 @@
 
 City is a browser-based procedural city sandbox and editor. It generates deterministic low-poly cities from the Kenney City Kit asset family and exposes the resolved city as an editable, versioned document.
 
-Milestone M1 adds the first playable vertical slice: deterministic road generation in a worker, validated city gates and connections, modular Kenney road tiles, and a navigable 3D scene. Blocks and zoning follow in M2.
+Milestone M2 adds blocks, fronted lots, and five-zone assignment on top of the M1 road slice: presets, advanced mix controls, overlays, and invariant checks for frontage and area quotas. Buildings and decoration follow in M3.
 
 ## Requirements
 

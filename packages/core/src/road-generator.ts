@@ -3,9 +3,11 @@ import { xoroshiro128plus } from "pure-rand/generator/xoroshiro128plus";
 import type { CityDocumentV1, GenerationParameters, MapSize } from "./domain.js";
 import { CityDocumentSchema } from "./domain.js";
 import { deriveProceduralId } from "./ids.js";
+import { assignZones, createBlocks, createLots, validateLandCity } from "./land-generator.js";
+import { normalizeGenerationParameters } from "./presets.js";
 import type { GenerationStage } from "./worker-protocol.js";
 
-export const GENERATOR_VERSION = "0.2.0";
+export const GENERATOR_VERSION = "0.3.0";
 
 type Point = [number, number];
 type MutablePoint = Point;
@@ -701,6 +703,9 @@ function canonicalGeneratedData(document: CityDocumentV1) {
     map: document.map,
     districts: document.districts,
     roadGraph: document.roadGraph,
+    blocks: document.blocks,
+    lots: document.lots,
+    entities: document.entities,
   };
 }
 
@@ -714,6 +719,7 @@ export async function generateRoadCity(
   input: RoadGenerationInput,
   hooks: RoadGenerationHooks = {},
 ): Promise<CityDocumentV1> {
+  input = { ...input, parameters: normalizeGenerationParameters(input.parameters) };
   let finalIssues: readonly string[] = [];
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const attemptSeed = deriveAttemptSeed(input.seed, attempt);
@@ -735,12 +741,22 @@ export async function generateRoadCity(
     const graph = buildGraph(nodes, input.parameters.roadRegularity);
     await checkpoint(hooks, "routing", 52, "Routing modular streets");
     const routed = routeGraph(graph, nodes, input.parameters.size, mask, attemptSeed, attempt);
-    await checkpoint(hooks, "tiles", 82, "Resolving curves, junctions, and roundabouts");
+    await checkpoint(hooks, "tiles", 70, "Resolving curves, junctions, and roundabouts");
     const document = createDocument(input, attempt, [...mask], densityField, nodes, routed);
-    await checkpoint(hooks, "validation", 94, "Validating the connected road network");
-    finalIssues = [...validateRoadCity(document), ...(hooks.validateAttempt?.(document) ?? [])];
+    await checkpoint(hooks, "blocks", 76, "Finding free regions and creating blocks");
+    document.blocks = createBlocks(document);
+    await checkpoint(hooks, "lots", 83, "Subdividing lots with road frontage");
+    document.lots = createLots(document);
+    await checkpoint(hooks, "zones", 89, "Assigning zones within area quotas");
+    assignZones(document);
+    await checkpoint(hooks, "validation", 94, "Validating roads, frontage, and zone areas");
+    finalIssues = [
+      ...validateRoadCity(document),
+      ...validateLandCity(document),
+      ...(hooks.validateAttempt?.(document) ?? []),
+    ];
     if (finalIssues.length === 0) {
-      await checkpoint(hooks, "validation", 100, "Road network ready");
+      await checkpoint(hooks, "validation", 100, "City blocks and zones ready");
       return document;
     }
   }

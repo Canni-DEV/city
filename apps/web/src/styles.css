@@ -345,6 +345,95 @@ h2 {
   margin: 0 auto;
   color: var(--city-accent);
 }
+.advanced-controls summary {
+  cursor: pointer;
+  padding: 10px 0;
+  color: var(--city-text);
+}
+.advanced-controls p {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--city-muted);
+}
+.advanced-fields {
+  display: grid;
+  gap: 12px;
+}
+.advanced-fields label {
+  text-transform: capitalize;
+}
+.generator-panel form > .city-button {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: var(--city-surface-raised);
+}
+.overlay-controls {
+  margin: 20px 0;
+  border: 1px solid var(--city-border);
+  border-radius: 9px;
+  padding: 14px;
+}
+.overlay-controls label {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 12px 10px 0;
+}
+.overlay-controls input {
+  width: 18px;
+  min-height: 18px;
+  accent-color: var(--city-accent);
+}
+.zone-legend {
+  padding: 0;
+  margin: 4px 0;
+  list-style: none;
+  font-size: 13px;
+}
+.zone-legend li {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 3px 8px;
+  margin-top: 10px;
+  text-transform: capitalize;
+}
+.zone-legend small {
+  grid-column: 2;
+  color: var(--city-muted);
+}
+.zone-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 3px;
+  grid-row: span 2;
+}
+.zone-suburban {
+  background:
+    radial-gradient(circle, #26352f 2px, transparent 3px) 0 0 / 12px 12px,
+    #f1cf80;
+}
+.zone-urban {
+  background: repeating-linear-gradient(90deg, #26352f 0 2px, #93b8f0 2px 12px);
+}
+.zone-commercial {
+  background: repeating-linear-gradient(0deg, #26352f 0 2px, #e8a5c6 2px 12px);
+}
+.zone-industrial {
+  background: repeating-linear-gradient(45deg, #26352f 0 2px, #dca278 2px 12px);
+}
+.zone-park {
+  background: #91c79e;
+  position: relative;
+}
+.zone-park::after {
+  content: "+";
+  color: #26352f;
+  position: absolute;
+  inset: 0;
+  text-align: center;
+  font-size: 23px;
+  line-height: 24px;
+}
 @media (max-width: 900px) {
   .asset-layout {
     grid-template-columns: 260px 1fr;

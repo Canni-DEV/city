@@ -8,6 +8,9 @@ export const GENERATION_STAGES = [
   "graph",
   "routing",
   "tiles",
+  "blocks",
+  "lots",
+  "zones",
   "validation",
 ] as const;
 export const GenerationStageSchema = z.enum(GENERATION_STAGES);
