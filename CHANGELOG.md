@@ -14,6 +14,7 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 ### Fixed
 
 - Character GLB export picks Kenney `Root|Idle` / `Root|Run` instead of the first FBX clip (`Root|0.Targeting Pose`), which left walking NPCs in a T-pose.
+- Agent mixers keep their clip bindings across React remounts so the city canvas does not crash when pedestrians start idle/run.
 - Pedestrian travel speed is about one-third of a cell per second so the Kenney run cycle reads as a walk.
 
 ## [0.5.0] - 2026-09-05

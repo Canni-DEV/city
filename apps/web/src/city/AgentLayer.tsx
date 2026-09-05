@@ -112,7 +112,6 @@ function AgentAvatar({
     playAgentClip(actions, "idle");
     return () => {
       mixer.stopAllAction();
-      mixer.uncacheRoot(mixer.getRoot());
     };
   }, [actions, mixer]);
 
