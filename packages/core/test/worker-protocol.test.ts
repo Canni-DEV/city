@@ -13,6 +13,7 @@ describe("M2 generation worker protocol", () => {
       "graph",
       "routing",
       "tiles",
+      "traffic",
       "blocks",
       "sidewalks",
       "lots",

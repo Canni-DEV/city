@@ -2,7 +2,13 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { assetCatalog, CITY_KIT_ENTRY_COUNT, isCityKitEntry } from "../src";
+import {
+  assetCatalog,
+  CAR_KIT_ENTRY_COUNT,
+  CAR_KIT_MODELS,
+  CITY_KIT_ENTRY_COUNT,
+  isCityKitEntry,
+} from "../src";
 
 const charactersRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -82,10 +88,47 @@ describe("asset catalog", () => {
     expect(animationDurations(run).run).toBeGreaterThan(0.5);
   });
 
+  it("TST-006 catalogs 11 Kenney Car Kit bodies without karts, debris, or wheels", () => {
+    const cars = assetCatalog.entries.filter((entry) => entry.pack === "cars");
+    expect(cars).toHaveLength(CAR_KIT_ENTRY_COUNT);
+    expect(cars.map((entry) => entry.model).sort()).toEqual([...CAR_KIT_MODELS].sort());
+    expect(cars.every((entry) => entry.category === "vehicle")).toBe(true);
+    expect(cars.every((entry) => entry.instancing)).toBe(true);
+    expect(cars.every((entry) => entry.proceduralWeight === 0)).toBe(true);
+    expect(cars.every((entry) => entry.sourceFile.startsWith("assets/kenney_car-kit/"))).toBe(true);
+    expect(cars.every((entry) => entry.runtimePath.endsWith(".glb"))).toBe(true);
+    expect(
+      cars.every(
+        (entry) =>
+          (entry.uniformScale ?? 1) * Math.max(entry.footprint.width, entry.footprint.depth) <=
+          0.68,
+      ),
+    ).toBe(true);
+    expect(
+      assetCatalog.entries.some((entry) => /kart|debris|wheel|tractor|race/.test(entry.id)),
+    ).toBe(false);
+  });
+
   it("provides connectors for every road tile", () => {
     const roadTiles = assetCatalog.entries.filter((entry) => entry.category === "road");
     expect(roadTiles.length).toBeGreaterThan(0);
     expect(roadTiles.every((entry) => entry.connectors.length > 0)).toBe(true);
+  });
+
+  it("AST-014 measures carriageway separately from the footprint and keeps vehicle pivots", () => {
+    const straight=assetCatalog.entries.find(e=>e.id==="roads:road-straight");
+    const points=straight?.driveProfile?.triangles.flat()??[];
+    expect(points.length).toBeGreaterThan(0);
+    expect(Math.max(...points.map(p=>p[1]))).toBeCloseTo(0.4,5);
+    expect(Math.min(...points.map(p=>p[1]))).toBeCloseTo(-0.4,5);
+    expect(straight?.footprint.depth).toBe(1);
+    const sedan=assetCatalog.entries.find(e=>e.id==="cars:sedan");
+    expect(sedan?.vehicleBounds?.min[1]).toBeCloseTo(-1.3,5);
+    expect(sedan?.vehicleBounds?.max[1]).toBeCloseTo(1.25,5);
+    for(const car of assetCatalog.entries.filter(e=>e.pack==="cars")) {
+      expect(car.vehicleBounds).toBeDefined();
+      expect(car.vehicleBounds?.max[0]).toBeGreaterThan(car.vehicleBounds?.min[0]??Infinity);
+    }
   });
 
   it("resolves every declared LOD relationship", () => {

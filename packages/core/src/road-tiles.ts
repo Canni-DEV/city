@@ -2,7 +2,7 @@ import { hashText } from "./rng.js";
 
 export type Cardinal = "north" | "east" | "south" | "west";
 export type RoadClass = "arterial" | "collector" | "local";
-export type RoadTopology = "end" | "straight" | "bend" | "t" | "cross";
+export type RoadTileTopology = "end" | "straight" | "bend" | "t" | "cross";
 
 export type Point = [number, number];
 
@@ -66,7 +66,7 @@ export const AVENUE_JUNCTION_TILES: ReadonlySet<string> = new Set([
   "roads:road-crossroad",
 ]);
 
-const AVENUE_TILES: Record<RoadTopology, string> = {
+const AVENUE_TILES: Record<RoadTileTopology, string> = {
   end: "roads:road-end",
   // Kenney road-square is a plaza with curb on all four sides; it cannot join a through street.
   straight: "roads:road-straight",
@@ -75,7 +75,7 @@ const AVENUE_TILES: Record<RoadTopology, string> = {
   cross: "roads:road-crossroad",
 };
 
-const LOCAL_TILES: Record<RoadTopology, string> = {
+const LOCAL_TILES: Record<RoadTileTopology, string> = {
   end: "roads:road-end",
   straight: "roads:road-straight",
   bend: "roads:road-bend",
@@ -270,7 +270,7 @@ export function yawForConnectors(
   return undefined;
 }
 
-export function topologyFromConnections(connections: readonly Cardinal[]): RoadTopology {
+export function topologyFromConnections(connections: readonly Cardinal[]): RoadTileTopology {
   if (connections.length <= 1) return "end";
   if (connections.length === 3) return "t";
   if (connections.length >= 4) return "cross";
@@ -284,7 +284,7 @@ export function topologyFromConnections(connections: readonly Cardinal[]): RoadT
   return opposite ? "straight" : "bend";
 }
 
-export function tileAssetFor(roadClass: RoadClass, topology: RoadTopology): string {
+export function tileAssetFor(roadClass: RoadClass, topology: RoadTileTopology): string {
   const palette = roadClass === "local" ? LOCAL_TILES : AVENUE_TILES;
   return palette[topology];
 }
@@ -504,7 +504,7 @@ function isCorridorOverlap2x2(origin: Point, occupied: ReadonlySet<string>): boo
   return rowHasHorizontal(0) && rowHasHorizontal(1) && columnHasVertical(0) && columnHasVertical(1);
 }
 
-function turningDualOrigins(
+export function turningDualOrigins(
   occupied: ReadonlySet<string>,
   classes: ReadonlyMap<string, RoadClass>,
   size: number,

@@ -9,6 +9,6 @@
 - **EDT-007:** Placement uses footprints and spatial indexing. Overlap and invalid-boundary transforms are blocked with an explanation.
 - **EDT-008:** Incompatible zones warn but do not block user placement and set the entity warning flag.
 - **EDT-009:** Regenerate block is confirmed, replaces all block entities, retains the block ID, increments its regeneration index, and is one reversible command.
-- **EDT-010:** Zone, lot, and grid overlays are independent and do not mutate the document.
+- **EDT-010:** Zone, lot, and grid overlays are independent and do not mutate the document. Traffic lanes (FUN-043 / UX-025) is a diagnostic overlay on the same principle; it does not select vehicles or enable road editing.
 
 Command transactions calculate the complete next document before commit. A failed command has no partial effect. Render proxies and instance indexes update after the committed document mutation.

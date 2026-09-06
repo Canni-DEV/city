@@ -389,6 +389,199 @@
             ],
             "additionalProperties": false
           }
+        },
+        "topology": {
+          "type": "object",
+          "properties": {
+            "version": {
+              "type": "number",
+              "const": 1
+            },
+            "sections": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "tileIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "street",
+                      "junction",
+                      "curve",
+                      "roundabout",
+                      "terminal"
+                    ]
+                  },
+                  "roadClass": {
+                    "type": "string",
+                    "enum": [
+                      "local",
+                      "collector",
+                      "arterial"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "tileIds",
+                  "kind",
+                  "roadClass"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "ports": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "sectionId": {
+                    "type": "string"
+                  },
+                  "position": {
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "items": false,
+                    "minItems": 2,
+                    "maxItems": 2
+                  },
+                  "direction": {
+                    "type": "string",
+                    "enum": [
+                      "north",
+                      "east",
+                      "south",
+                      "west"
+                    ]
+                  },
+                  "inbound": {
+                    "type": "boolean"
+                  },
+                  "outbound": {
+                    "type": "boolean"
+                  },
+                  "offset": {
+                    "type": "number"
+                  },
+                  "peerId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "sectionId",
+                  "position",
+                  "direction",
+                  "inbound",
+                  "outbound",
+                  "offset",
+                  "peerId"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "movements": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "sectionId": {
+                    "type": "string"
+                  },
+                  "from": {
+                    "type": "string"
+                  },
+                  "to": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "sectionId",
+                  "from",
+                  "to"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "lanePairs": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "items": false,
+                "minItems": 2,
+                "maxItems": 2
+              }
+            },
+            "portals": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "gateId": {
+                    "type": "string"
+                  },
+                  "portIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "id",
+                  "gateId",
+                  "portIds"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "version",
+            "sections",
+            "ports",
+            "movements",
+            "lanePairs",
+            "portals"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [

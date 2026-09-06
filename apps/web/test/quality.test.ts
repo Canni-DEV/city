@@ -22,5 +22,7 @@ describe("REN-003/REN-008 quality profiles", () => {
     expect(low.agentCount).toBeLessThan(high.agentCount);
     expect(high.agentCount).toBe(12);
     expect(low.agentCount).toBe(6);
+    expect(high.vehicleCount).toBe(12);
+    expect(low.vehicleCount).toBe(6);
   });
 });

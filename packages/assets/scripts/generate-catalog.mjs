@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { access, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { measureDriveProfile, measureVehicleBounds } from "./drive-profiles.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(scriptDirectory, "../../..");
@@ -157,6 +158,7 @@ for (const pack of packs) {
       review: "heuristic",
       ...(overrides[id] ?? {}),
     };
+    if (entry.driveProfile) entry.driveProfile = measureDriveProfile(buffer, entry.driveProfile);
     entries.push(entry);
   }
 }
@@ -179,6 +181,21 @@ const characters = [
   { model: "run", category: "animation", subcategory: "protagonist-clip" },
   { model: "jump", category: "animation", subcategory: "protagonist-clip" },
 ];
+
+const CAR_KIT_MODELS = [
+  "sedan",
+  "sedan-sports",
+  "hatchback-sports",
+  "suv",
+  "suv-luxury",
+  "taxi",
+  "van",
+  "police",
+  "ambulance",
+  "firetruck",
+  "garbage-truck",
+];
+const TARGET_VEHICLE_LENGTH = 0.675;
 for (const character of characters) {
   const filename = `${character.model}.glb`;
   const sourcePath = path.join(characterRoot, filename);
@@ -217,14 +234,63 @@ for (const character of characters) {
   });
 }
 
+const carRoot = path.join(sourceRoot, "kenney_car-kit", "Models/GLB format");
+const carTextures = ["colormap.png"].map((name) => `runtime-assets/cars/Textures/${name}`);
+for (const model of CAR_KIT_MODELS) {
+  const filename = `${model}.glb`;
+  const sourcePath = path.join(carRoot, filename);
+  const buffer = await readFile(sourcePath);
+  digest.update("cars").update(model).update(buffer);
+  const bounds = parseBounds(buffer);
+  const length = Math.max(bounds.dimensions[0], bounds.dimensions[2], 0.0001);
+  const id = `cars:${model}`;
+  entries.push({
+    id,
+    pack: "cars",
+    model,
+    sourceFile: posix(path.relative(repositoryRoot, sourcePath)),
+    runtimePath: `runtime-assets/cars/${filename}`,
+    previewFile: previewFor("kenney_car-kit", model),
+    texturePaths: carTextures,
+    category: "vehicle",
+    subcategory: "car-body",
+    dimensions: bounds.dimensions.map((value) => Math.max(value, 0.0001)),
+    footprint: {
+      width: Math.max(bounds.dimensions[0], 0.0001),
+      depth: Math.max(bounds.dimensions[2], 0.0001),
+    },
+    verticalOffset: Number((-bounds.minimum[1]).toFixed(4)),
+    front: "south",
+    allowedRotations: [0, 90, 180, 270],
+    compatibleZones: [],
+    proceduralWeight: 0,
+    connectors: [],
+    instancing: true,
+    lodModelId: null,
+    decoration: false,
+    elevated: false,
+    availableInV1: true,
+    uniformScale: Number(Math.min(1, TARGET_VEHICLE_LENGTH / length).toFixed(4)),
+    vehicleBounds: measureVehicleBounds(buffer),
+    review: "heuristic",
+    ...(overrides[id] ?? {}),
+  });
+}
+
 entries.sort((left, right) => left.id.localeCompare(right.id));
-const cityKitCount = entries.filter((entry) => entry.pack !== "protagonists").length;
+const cityKitCount = entries.filter(
+  (entry) => entry.pack !== "protagonists" && entry.pack !== "cars",
+).length;
 if (cityKitCount !== CITY_KIT_COUNT) {
   throw new Error(`Expected ${CITY_KIT_COUNT} city-kit catalog entries, found ${cityKitCount}`);
 }
 const protagonistCount = entries.filter((entry) => entry.pack === "protagonists").length;
 if (protagonistCount !== characters.length) {
   throw new Error(`Expected ${characters.length} protagonist entries, found ${protagonistCount}`);
+}
+const carCount = entries.filter((entry) => entry.pack === "cars").length;
+if (carCount !== CAR_KIT_MODELS.length) {
+  throw new Error(`Expected ${CAR_KIT_MODELS.length} car entries, found ${carCount}`);
 }
 const entryIds = new Set(entries.map((entry) => entry.id));
 if (entryIds.size !== entries.length) throw new Error("Catalog contains duplicate IDs");

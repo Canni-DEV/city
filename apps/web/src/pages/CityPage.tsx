@@ -1,4 +1,6 @@
+import { assetCatalog } from "@city/assets";
 import {
+  buildDriveNetwork,
   CITY_PRESETS,
   type GenerationParameters,
   GenerationWorkerEventSchema,
@@ -15,6 +17,7 @@ import { CityCanvas } from "../city/CityCanvas";
 import { GenerationControls } from "../city/GenerationControls";
 import { isEditableTarget } from "../city/keyboard";
 import { suggestCityName } from "../city/suggest-city-name";
+import { TrafficInspector } from "../city/TrafficInspector";
 import { QUALITY_PROFILES, resolveQuality } from "../rendering/quality";
 import { useCityStore } from "../state/city-store";
 
@@ -27,7 +30,12 @@ export function CityPage() {
   const [size, setSize] = useState<MapSize>(96);
   const [preset, setPreset] = useState<(typeof CITY_PRESETS)[number]>("balanced");
   const [parameters, setParameters] = useState<GenerationParameters>(PRESET_PARAMETERS.balanced);
-  const [overlays, setOverlays] = useState({ zones: false, lots: false, grid: false });
+  const [overlays, setOverlays] = useState({
+    zones: false,
+    lots: false,
+    grid: false,
+    traffic: false,
+  });
   const [freeCamera, setFreeCamera] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [stats, setStats] = useState({ fps: 0, drawCalls: 0 });
@@ -36,6 +44,17 @@ export function CityPage() {
   const startedAtRef = useRef(0);
   const store = useCityStore();
   const generatedCity = store.document;
+  const [selectedDriveId, setSelectedDriveId] = useState<string | null>(null);
+  const driveNetwork = useMemo(
+    () =>
+      generatedCity?.roadGraph.topology
+        ? buildDriveNetwork(generatedCity, assetCatalog.entries)
+        : null,
+    [generatedCity],
+  );
+  useEffect(() => {
+    if(generatedCity) setSelectedDriveId(null);
+  }, [generatedCity]);
   const quality = useMemo(
     () =>
       resolveQuality(
@@ -54,6 +73,7 @@ export function CityPage() {
     function onKeyDown(event: KeyboardEvent) {
       if (isEditableTarget(event.target)) return;
       if (event.key === "Escape") {
+        setSelectedDriveId(null);
         if (freeCamera) {
           setFreeCamera(false);
           return;
@@ -291,6 +311,7 @@ export function CityPage() {
                 ["zones", "Zone colors"],
                 ["lots", "Lot edges"],
                 ["grid", "Cell grid"],
+                ["traffic", "Traffic lanes"],
               ] as const
             ).map(([overlay, label]) => (
               <label key={overlay}>
@@ -316,6 +337,13 @@ export function CityPage() {
               ))}
             </ul>
           </fieldset>
+        )}
+        {overlays.traffic && driveNetwork && (
+          <TrafficInspector
+            network={driveNetwork}
+            selected={selectedDriveId}
+            onSelect={setSelectedDriveId}
+          />
         )}
         {generatedCity && (
           <>
@@ -391,6 +419,10 @@ export function CityPage() {
                 <strong>{quality.agentCount}</strong>
               </div>
               <div>
+                <span>Vehicles</span>
+                <strong>{quality.vehicleCount}</strong>
+              </div>
+              <div>
                 <span>Lots</span>
                 <strong>{generatedCity.lots.length}</strong>
               </div>
@@ -408,6 +440,9 @@ export function CityPage() {
       </aside>
       <section className="city-viewport" aria-label="Generated city viewport">
         <CityCanvas
+          driveNetwork={driveNetwork}
+          selectedDriveId={selectedDriveId}
+          onSelectDrive={setSelectedDriveId}
           document={generatedCity}
           onBackend={store.setBackend}
           overlays={overlays}

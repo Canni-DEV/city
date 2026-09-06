@@ -1,11 +1,19 @@
 # Changelog
 
-All notable changes use Semantic Versioning. The project remains in `0.x` until M0–M6, intermediate M3.5/M3.6/M3.6.1 (including the avenue hotfix), and every 1.0 acceptance criterion are complete.
+All notable changes use Semantic Versioning. The project remains in `0.x` until M0–M6, intermediate M3.5/M3.6/M3.6.1/M3.6.2, and every 1.0 acceptance criterion are complete.
 
 ## [Unreleased]
 
+### Added
+
+- M3.6.2 runtime vehicles: seeded Kenney Car Kit bodies drive a persisted, validated directed lane network (cubic Bézier maneuvers, CCW roundabout rings, portals, and physical terminal returns) with A*, arc-length pose, and `InstancedMesh` batches. Vehicles stay outside `CityDocumentV1`. Bodies have no wheels this milestone.
+- Traffic lanes overlay (off by default) and a keyboard-accessible inspector share the reconstructed `DriveNetwork` with the mover. Selection is diagnostic only.
+- Catalog `driveProfile` (measured carriageway triangles and local ports) and `vehicleBounds` (pivot-aware body envelope) for road tiles and the 11 `cars:*` entries.
+
 ### Changed
 
+- Generator `0.6.7`: after tile resolution, repair local openings/transitions, persist `roadGraph.topology`, and validate required maneuvers plus whole-body clearance before sidewalks and land. Failed networks retry under GEN-024 and never return a partial city. Old `0.6.6` cities load without silent regeneration; they are not vehicle-enabled and have no inferred fallback graph.
+- Car Kit `uniformScale` fits body length to about 0.67 cells (~25% smaller than the first M3.6.2 fit).
 - Generator `0.6.6`: the 3×3 Kenney roundabout sits on 1-cell-wide 4-ways (local streets and remnant arterials) according to the Roundabouts control. Dual-avenue 4-ways stay unit `road-crossroad`. Old `0.6.5` cities load without silent regeneration.
 - Generator `0.6.5`: dual avenue L/T/4-way nudos stitch 1-cell gaps into occupancy blocks; dual T/4-way 2×2 cells with four openings use `road-crossroad`; a dual elbow counts the lane-mate as the other leg of the turn. Old `0.6.4` cities load without silent regeneration.
 - Generator `0.6.4`: arterial and collector corridors occupy two adjacent cells. Parallel 1-cell axes that already touch collapse into that pair instead of a 3-cell slab; remaining runs dilate only when that does not merge corridors. Tile topology ignores the lane-mate so `road-intersection` / `road-crossroad` appear only at real crossings. Local streets stay one cell. Resolved road cells may record `roadClass`. Old `0.6.3` cities load without silent regeneration.
@@ -82,3 +90,4 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 ### Repository
 
 - Established the public repository baseline and preserved the four original CC0 Kenney asset packs.
+

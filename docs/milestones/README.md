@@ -9,6 +9,7 @@ Each brief is an execution contract. Complete only its scope, attach its require
 - [M3.5 — Urban morphology](M3_5_URBAN_MORPHOLOGY.md)
 - [M3.6 — Animated agents](M3_6_ANIMATED_AGENTS.md)
 - [M3.6.1 — Pedestrian sidewalks](M3_6_1_SIDEWALKS.md)
+- [M3.6.2 — Runtime vehicles](M3_6_2_VEHICLES.md)
 - [M4 — Editor](M4_EDITOR.md)
 - [M5 — Local library](M5_LOCAL_LIBRARY.md)
 - [M6 — Hardening and 1.0](M6_HARDENING.md)

@@ -9,6 +9,7 @@ const packs = [
     name: "Animated Characters Protagonists 1.1",
     href: "https://kenney.nl/assets/animated-characters-protagonists",
   },
+  { name: "Car Kit 3.1", href: "https://kenney.nl/assets/car-kit" },
 ];
 
 export function CreditsPage() {
@@ -19,9 +20,10 @@ export function CreditsPage() {
       <Panel className="credits-panel">
         <h2>Kenney packs</h2>
         <p>
-          City uses five Kenney packs. The four City Kits contribute 213 source models; Animated
-          Characters Protagonists 1.1 supplies the pedestrian body, clips, and skins. Original files
-          remain under the CC0 1.0 Universal dedication.
+          City uses six Kenney packs. The four City Kits contribute 213 source models; Animated
+          Characters Protagonists 1.1 supplies the pedestrian body, clips, and skins; Car Kit 3.1
+          supplies the runtime vehicle bodies. Original files remain under the CC0 1.0 Universal
+          dedication.
         </p>
         <ul>
           {packs.map((pack) => (

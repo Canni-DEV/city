@@ -40,3 +40,5 @@ sequenceDiagram
 ## Dependency rule
 
 Dependencies point inward toward core contracts. Core never imports browser, rendering, persistence, or UI modules. Runtime asset paths are catalog-driven and no application feature reaches into original pack folders directly.
+
+M3.6.2 derives one `DriveNetwork` in `@city/core` from persisted `RoadTopology` plus generated catalog `driveProfile` / `vehicleBounds`. The web view shares that network between the vehicle mover, Traffic lanes overlay, and inspector. Core has no React or Three.js dependency. Runtime vehicles store `segmentId`, distance, and route — data that a later ECS adapter can reference without introducing components, signals, reservations, or pedestrian rule changes in this milestone. Overlay geometry is created only while Traffic lanes is on and is disposed on unmount.
