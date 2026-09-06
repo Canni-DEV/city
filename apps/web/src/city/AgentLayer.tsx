@@ -91,10 +91,12 @@ function AgentAvatar({
     actions.run?.play();
     actions.run?.setEffectiveWeight(0);
     return () => {
+      // stopAllAction is enough. uncacheRoot wipes AnimationAction bindings while
+      // React Strict Mode keeps the memoized mixer/actions, so the remount play()
+      // crashes with `_cacheIndex` and unmounts the city canvas.
       mixer.stopAllAction();
-      mixer.uncacheRoot(root);
     };
-  }, [actions, mixer, root]);
+  }, [actions, mixer]);
 
   useFrame(() => {
     const pose = runtime.display.get(id),
