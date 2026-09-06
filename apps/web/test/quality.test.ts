@@ -25,4 +25,13 @@ describe("REN-003/REN-008 quality profiles", () => {
     expect(high.vehicleCount).toBe(12);
     expect(low.vehicleCount).toBe(6);
   });
+
+  it("maps 256 cities to the 24-agent high curve instead of collapsing to 96", () => {
+    const high = resolveQuality("high", "webgpu", 256);
+    const low = resolveQuality("low", "webgpu", 256);
+    expect(high.agentCount).toBe(24);
+    expect(high.vehicleCount).toBe(24);
+    expect(low.agentCount).toBe(12);
+    expect(low.vehicleCount).toBe(12);
+  });
 });

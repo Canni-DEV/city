@@ -1,12 +1,17 @@
 import { z } from "zod";
 import { RoadTopologySchema } from "./drive-contracts.js";
 
-export const MAP_SIZES = [64, 96, 128] as const;
+export const MAP_SIZES = [64, 96, 128, 256] as const;
 export const ZONE_TYPES = ["suburban", "urban", "commercial", "industrial", "park"] as const;
-export const DENSITY_LEVELS = ["low", "medium", "high"] as const;
+export const DENSITY_LEVELS = ["low", "medium", "high", "very-high"] as const;
 export const CITY_PRESETS = ["balanced", "suburban", "commercial-core", "industrial-city"] as const;
 
-export const MapSizeSchema = z.union([z.literal(64), z.literal(96), z.literal(128)]);
+export const MapSizeSchema = z.union([
+  z.literal(64),
+  z.literal(96),
+  z.literal(128),
+  z.literal(256),
+]);
 export const ZoneTypeSchema = z.enum(ZONE_TYPES);
 export const DensityLevelSchema = z.enum(DENSITY_LEVELS);
 export const CityPresetSchema = z.enum(CITY_PRESETS);

@@ -15,10 +15,10 @@ export function App() {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <NavLink className="brand" to="/" aria-label="City library">
+        <NavLink className="brand" to="/" aria-label="City">
           <Building2 aria-hidden="true" />
           <span>City</span>
-          <small>procedural sandbox</small>
+          <small>sandbox</small>
         </NavLink>
         <nav aria-label="Primary navigation">
           <NavLink to="/">

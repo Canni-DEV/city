@@ -394,7 +394,12 @@ h2 {
   position: sticky;
   bottom: 0;
   z-index: 2;
-  background: var(--city-surface-raised);
+}
+.generator-panel form > .city-button--primary {
+  background: var(--city-accent);
+}
+.generator-panel form > .city-button--primary:hover {
+  background: var(--city-accent-strong);
 }
 .overlay-controls {
   margin: 20px 0;

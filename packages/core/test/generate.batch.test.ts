@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   CITY_PRESETS,
   type CityPreset,
+  gateCountFor,
   generateRoadCity,
   type MapSize,
   occupiedRoadSet,
@@ -56,7 +57,7 @@ describe("generator occupancy batch", () => {
         expect(city.sidewalks.length, label).toBeGreaterThan(0);
         expect(Object.keys(city.entities).length, label).toBeGreaterThan(0);
         expect(city.roadGraph.nodes.filter((node) => node.kind === "gate")).toHaveLength(
-          size === 64 ? 2 : size === 96 ? 3 : 4,
+          gateCountFor(size),
         );
         const roads = occupiedRoadSet(city.roadGraph.cells);
         const manzanas = city.blocks.filter((block) => {

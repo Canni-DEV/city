@@ -1,4 +1,4 @@
-import type { CityDocumentV1 } from "./domain.js";
+import type { CityDocumentV1, MapSize } from "./domain.js";
 import { SeededRandom } from "./rng.js";
 import {
   neighborKeys,
@@ -26,9 +26,9 @@ export const DEFAULT_AGENT_WAIT_LIMIT = 0.7;
 /** SIM-010: offset from cell center toward the right-hand lane. */
 export const AGENT_LANE_OFFSET = 0.2;
 
-/** SIM-006: 8–16 on 96 Auto/high; Low may reduce the count. */
-export function agentCountFor(mapSize: 64 | 96 | 128, quality: "low" | "medium" | "high"): number {
-  const auto = mapSize <= 64 ? 8 : mapSize >= 128 ? 16 : 12;
+/** SIM-006: 8–16 on 96 Auto/high; Low may reduce the count. UI may override 0–64. */
+export function agentCountFor(mapSize: MapSize, quality: "low" | "medium" | "high"): number {
+  const auto = mapSize <= 64 ? 8 : mapSize >= 256 ? 24 : mapSize >= 128 ? 16 : 12;
   if (quality === "low") return Math.max(4, Math.round(auto / 2));
   return auto;
 }

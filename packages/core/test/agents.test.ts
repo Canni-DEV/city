@@ -196,6 +196,8 @@ describe("TST-008 runtime agents", () => {
     expect(agentCountFor(96, "low")).toBe(6);
     expect(agentCountFor(64, "high")).toBe(8);
     expect(agentCountFor(128, "high")).toBe(16);
+    expect(agentCountFor(256, "high")).toBe(24);
+    expect(agentCountFor(256, "low")).toBe(12);
   });
 
   it("ticks agents without mutating CityDocumentV1 or its generator hash", async () => {

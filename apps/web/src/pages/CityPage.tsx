@@ -4,6 +4,7 @@ import {
   CITY_PRESETS,
   type GenerationParameters,
   GenerationWorkerEventSchema,
+  MAP_SIZES,
   type MapSize,
   normalizeGenerationParameters,
   PRESET_PARAMETERS,
@@ -21,7 +22,7 @@ import { TrafficInspector } from "../city/TrafficInspector";
 import { QUALITY_PROFILES, resolveQuality } from "../rendering/quality";
 import { useCityStore } from "../state/city-store";
 
-const SIZE_OPTIONS: readonly MapSize[] = [64, 96, 128];
+const RUNTIME_COUNT_MAX = 64;
 
 export function CityPage() {
   const [name, setName] = useState("Green Crossroads");
@@ -55,17 +56,27 @@ export function CityPage() {
   useEffect(() => {
     if (generatedCity) setSelectedDriveId(null);
   }, [generatedCity]);
-  const quality = useMemo(
+  const qualityBase = useMemo(
     () =>
       resolveQuality(
         store.quality,
         store.backend,
-        generatedCity?.map.size ?? 96,
+        generatedCity?.map.size ?? size,
         typeof navigator === "undefined"
           ? undefined
           : (navigator as Navigator & { deviceMemory?: number }).deviceMemory,
       ),
-    [generatedCity?.map.size, store.backend, store.quality],
+    [generatedCity?.map.size, size, store.backend, store.quality],
+  );
+  const [agentCount, setAgentCount] = useState(qualityBase.agentCount);
+  const [vehicleCount, setVehicleCount] = useState(qualityBase.vehicleCount);
+  useEffect(() => {
+    setAgentCount(qualityBase.agentCount);
+    setVehicleCount(qualityBase.vehicleCount);
+  }, [qualityBase.agentCount, qualityBase.vehicleCount]);
+  const quality = useMemo(
+    () => ({ ...qualityBase, agentCount, vehicleCount }),
+    [agentCount, qualityBase, vehicleCount],
   );
   const selectedEntity = generatedCity?.entities[store.selectedEntityId ?? ""] ?? null;
 
@@ -180,9 +191,8 @@ export function CityPage() {
     <div className="city-workspace">
       <aside className="generator-panel">
         <div>
-          <p className="eyebrow">City generator</p>
-          <h1>Give your city a shape</h1>
-          <p>Connected streets, buildings, parks, and decoration from the Kenney catalog.</p>
+          <p className="eyebrow">Generate</p>
+          <h1>Parameters</h1>
         </div>
         <form onSubmit={generate}>
           <label>
@@ -242,7 +252,7 @@ export function CityPage() {
                   setParameters((current) => ({ ...current, size: next }));
                 }}
               >
-                {SIZE_OPTIONS.map((option) => (
+                {MAP_SIZES.map((option) => (
                   <option key={option} value={option}>
                     {option} × {option}
                   </option>
@@ -268,6 +278,26 @@ export function CityPage() {
             </label>
           </div>
           <GenerationControls parameters={parameters} onChange={setParameters} />
+          <label>
+            Pedestrians: {agentCount}
+            <input
+              type="range"
+              min={0}
+              max={RUNTIME_COUNT_MAX}
+              value={agentCount}
+              onChange={(event) => setAgentCount(event.target.valueAsNumber)}
+            />
+          </label>
+          <label>
+            Vehicles: {vehicleCount}
+            <input
+              type="range"
+              min={0}
+              max={RUNTIME_COUNT_MAX}
+              value={vehicleCount}
+              onChange={(event) => setVehicleCount(event.target.valueAsNumber)}
+            />
+          </label>
           {formError && (
             <p className="error-message" role="alert">
               {formError}
@@ -279,7 +309,7 @@ export function CityPage() {
             </Button>
           ) : (
             <Button variant="primary" type="submit">
-              <Route size={18} /> {generatedCity ? "Generate another" : "Generate city"}
+              <Route size={18} /> {generatedCity ? "Regenerate" : "Generate"}
             </Button>
           )}
         </form>
@@ -365,7 +395,7 @@ export function CityPage() {
             <p className="selection-status" aria-live="polite">
               {selectedEntity
                 ? `Selected ${selectedEntity.assetId.replace(":", " ")}`
-                : "No object selected. Click a building or prop to highlight it."}
+                : "No selection."}
             </p>
             <button
               type="button"
@@ -460,11 +490,8 @@ export function CityPage() {
         {!generatedCity && (
           <div className="viewport-empty">
             <RotateCcw size={42} aria-hidden="true" />
-            <h2>A deterministic city is one click away.</h2>
-            <p>
-              The same seed and parameters always resolve to the same streets, buildings, and
-              decoration.
-            </p>
+            <h2>No city.</h2>
+            <p>Set seed and generate.</p>
           </div>
         )}
       </section>
