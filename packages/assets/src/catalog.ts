@@ -16,6 +16,11 @@ export function agentUniformScale(entry: AssetCatalogEntry): number {
   return assetUniformScale(entry);
 }
 
+/** Visual-only. `roads:tile-low` slab height; NPC pose, radius and navigation stay unchanged. */
+export function agentFootLift(): number {
+  return assetById.get("roads:tile-low")?.dimensions[1] ?? 0.02;
+}
+
 export function runtimeAssetUrl(entryPath: string, baseUrl = "/city/"): string {
   return `${baseUrl.replace(/\/$/, "")}/${entryPath.replace(/^\//, "")}`;
 }

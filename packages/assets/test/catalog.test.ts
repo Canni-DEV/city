@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
+  agentFootLift,
   assetCatalog,
   CAR_KIT_ENTRY_COUNT,
   CAR_KIT_MODELS,
@@ -42,6 +43,15 @@ function animationDurations(buffer: Buffer): Record<string, number> {
   }
   return durations;
 }
+
+it("TST-006 / M3.6.3 applies the reviewed 56.25% character scale", () => {
+  const body = assetCatalog.entries.find((entry) => entry.id === "protagonists:character-medium");
+  const slab = assetCatalog.entries.find((entry) => entry.id === "roads:tile-low");
+  expect(body?.uniformScale).toBe(0.5625);
+  expect((body?.dimensions[1] ?? 0) * (body?.uniformScale ?? 1)).toBeCloseTo(0.18);
+  expect(slab?.dimensions[1]).toBeCloseTo(0.02);
+  expect(agentFootLift()).toBeCloseTo(0.02);
+});
 
 describe("asset catalog", () => {
   it("TST-006 keeps exactly 213 unique city-kit GLB entries", () => {

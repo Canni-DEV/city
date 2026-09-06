@@ -11,7 +11,7 @@
 
 - **UX-010:** Left click selects; left-drag on empty ground pans; Shift+drag performs rectangle selection.
 - **UX-011:** Right-drag orbits, wheel zooms, and Q/E rotates the camera. Default framing still shows the whole city; OrbitControls `maxZoom` is raised above 28 in M3.6 so streets and agents can be inspected. **F** toggles an optional unrestricted free camera (perspective, WASD, right-drag look, no zoom/distance clamps). Escape or **F** returns to the default city view. Free camera is inspect-only; it is not a player avatar.
-- **UX-012:** Delete removes; Ctrl/Cmd+Z undoes; Shift+Ctrl/Cmd+Z redoes; Ctrl/Cmd+D duplicates; Escape cancels the current editor gesture and also clears Traffic lanes diagnostic selection (UX-025).
+- **UX-012:** Delete removes; Ctrl/Cmd+Z undoes; Shift+Ctrl/Cmd+Z redoes; Ctrl/Cmd+D duplicates; Escape cancels the current editor gesture and also clears Traffic lanes and Pedestrian navigation diagnostic selection (UX-025/026).
 - **UX-013:** Continuous transforms preview live but commit as one history command.
 
 ## Feedback
@@ -28,6 +28,8 @@ M3 implements that diagnostic in the city laboratory, including a quality select
 
 The supported minimum is 1280×720. Panels may collapse as space narrows but the viewport, current mode, primary action, and cancellation path remain available. The city workspace is a two-column grid whose viewport track is a definite `minmax(0, 1fr)` cell so the 3D canvas has a containing block on first paint. There is no onboarding; empty states teach the next action in one sentence.
 
-Zone, lot, grid, and Traffic lanes overlays are independently toggleable and do not mutate the document. Zone meaning uses a stable color, a repeating pattern, and a legend of actual versus target area shares.
+Zone, lot, grid, Traffic lanes and Pedestrian navigation overlays are independently toggleable and do not mutate the document. Zone meaning uses a stable color, a repeating pattern, and a legend of actual versus target area shares.
 
 - **UX-025:** Traffic lanes defaults off in Map overlays. Solid cyan lanes, dashed amber maneuvers/joins, purple roundabout ring, white direction arrows, gray carriageway boundaries, lime portal marks, pink crossing marks, and red invalid movements use a textual legend (not color alone). A keyboard-accessible segment selector exposes ID, class, movement, length, from/to, source tiles, successors, crossing IDs, and validation. Escape clears diagnostic selection. Selection does not edit roads or pick vehicles. No pause, step, or follow-vehicle controls.
+
+- **UX-026:** Pedestrian navigation defaults off. Blue corridors/arrows, pink crossings/wait points, green park samples, amber accesses, gray obstacles, red blocked areas and lime selected route/body circles include a textual legend. Keyboard selects NPCs or corridors. Inspector shows ID, status, order, reason, goal, speed, radius, crossing, neighbors and connectivity. Pause/Resume and Step affect both traffic layers and animation; Step requires pause. Escape clears selection. No manual order entry, editing or follow camera.

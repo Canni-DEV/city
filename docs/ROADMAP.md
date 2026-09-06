@@ -2,7 +2,7 @@
 
 ```mermaid
 flowchart LR
-  M0["M0 Foundation"] --> M1["M1 Road slice"] --> M2["M2 Blocks and zoning"] --> M3["M3 Placement and rendering"] --> M35["M3.5 Urban morphology"] --> M36["M3.6 Animated agents"] --> M361["M3.6.1 Sidewalks"] --> M361A["M3.6.1 Avenues"] --> M362["M3.6.2 Vehicles"] --> M4["M4 Editor"] --> M5["M5 Local library"] --> M6["M6 Hardening / 1.0"]
+  M0["M0 Foundation"] --> M1["M1 Road slice"] --> M2["M2 Blocks and zoning"] --> M3["M3 Placement and rendering"] --> M35["M3.5 Urban morphology"] --> M36["M3.6 Animated agents"] --> M361["M3.6.1 Sidewalks"] --> M361A["M3.6.1 Avenues"] --> M362["M3.6.2 Vehicles"] --> M363["M3.6.3 NPC refactor"] --> M4["M4 Editor"] --> M5["M5 Local library"] --> M6["M6 Hardening / 1.0"]
 ```
 
 | Milestone | Outcome | Review gate |
@@ -16,6 +16,7 @@ flowchart LR
 | M3.6.1 | 1-cell sidewalk rings, local `*-path` / avenue unsuffixed T/4-way, two-lane sidewalk walking | TST-001/003/008, 200-city batch, both backends |
 | M3.6.1 avenues | Arterial/collector 2-cell carriageways, dual nudos, local 3×3 roundabouts (GEN-028/005) | TST-001/003, 200-city batch, overlay QA |
 | M3.6.2 | Bounded runtime vehicles on a validated directed lane network, cubic Bézier maneuvers, instanced Kenney Car Kit, Traffic lanes overlay | TST-009, 8–16 vehicles, both backends, overlay QA |
+| M3.6.3 | Continuous component-based NPC movement, parks, safe crossings and shared diagnostics | TST-006/008/009, both backends, AC-010 evidence |
 | M4 | Full object editor, commands, selection, placement, block regeneration | Exact undo/redo and input QA pass |
 | M5 | Dexie library, autosave, thumbnails, import/export, migrations | Persistence recovery and migration QA pass |
 | M6 | Accessibility, performance, final QA/docs/release | All requirements accepted; `1.0.0` may ship |
