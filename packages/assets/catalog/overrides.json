@@ -1,7 +1,28 @@
 {
   "roads:road-roundabout": {
     "connectors": ["north", "east", "south", "west"],
-    "review": "override"
+    "review": "override",
+    "driveProfile": {
+      "surfaceHeight": 0.01,
+      "ports": [
+        {
+          "direction": "north",
+          "position": [0, -1.5]
+        },
+        {
+          "direction": "east",
+          "position": [1.5, 0]
+        },
+        {
+          "direction": "south",
+          "position": [0, 1.5]
+        },
+        {
+          "direction": "west",
+          "position": [-1.5, 0]
+        }
+      ]
+    }
   },
   "roads:road-split": {
     "connectors": ["north", "east", "south"],
@@ -9,11 +30,38 @@
   },
   "roads:road-curve": {
     "connectors": ["west", "south"],
-    "review": "override"
+    "review": "override",
+    "driveProfile": {
+      "surfaceHeight": 0.01,
+      "ports": [
+        {
+          "direction": "west",
+          "position": [-1, -0.5]
+        },
+        {
+          "direction": "south",
+          "position": [0.5, 1]
+        }
+      ],
+      "curveCenter": [-1, 1]
+    }
   },
   "roads:road-bend": {
     "connectors": ["west", "south"],
-    "review": "override"
+    "review": "override",
+    "driveProfile": {
+      "surfaceHeight": 0.01,
+      "ports": [
+        {
+          "direction": "west",
+          "position": [-0.5, 0]
+        },
+        {
+          "direction": "south",
+          "position": [0, 0.5]
+        }
+      ]
+    }
   },
   "industrial:windmill": {
     "front": "omnidirectional",
@@ -25,26 +73,218 @@
   },
   "protagonists:character-medium": {
     "dimensions": [0.3076, 0.32, 0.0891],
-    "footprint": { "width": 0.3076, "depth": 0.0891 },
+    "footprint": {
+      "width": 0.3076,
+      "depth": 0.0891
+    },
     "verticalOffset": 0,
     "review": "override"
   },
   "protagonists:idle": {
     "dimensions": [0.3076, 0.32, 0.0891],
-    "footprint": { "width": 0.3076, "depth": 0.0891 },
+    "footprint": {
+      "width": 0.3076,
+      "depth": 0.0891
+    },
     "verticalOffset": 0,
     "review": "override"
   },
   "protagonists:run": {
     "dimensions": [0.3076, 0.32, 0.0891],
-    "footprint": { "width": 0.3076, "depth": 0.0891 },
+    "footprint": {
+      "width": 0.3076,
+      "depth": 0.0891
+    },
     "verticalOffset": 0,
     "review": "override"
   },
   "protagonists:jump": {
     "dimensions": [0.3076, 0.32, 0.0891],
-    "footprint": { "width": 0.3076, "depth": 0.0891 },
+    "footprint": {
+      "width": 0.3076,
+      "depth": 0.0891
+    },
     "verticalOffset": 0,
     "review": "override"
+  },
+  "cars:sedan": {
+    "front": "south",
+    "uniformScale": 0.2118,
+    "review": "override"
+  },
+  "cars:sedan-sports": {
+    "front": "south",
+    "uniformScale": 0.2118,
+    "review": "override"
+  },
+  "cars:hatchback-sports": {
+    "front": "south",
+    "uniformScale": 0.1894,
+    "review": "override"
+  },
+  "cars:suv": {
+    "front": "south",
+    "uniformScale": 0.2118,
+    "review": "override"
+  },
+  "cars:suv-luxury": {
+    "front": "south",
+    "uniformScale": 0.1894,
+    "review": "override"
+  },
+  "cars:taxi": {
+    "front": "south",
+    "uniformScale": 0.1964,
+    "review": "override"
+  },
+  "cars:van": {
+    "front": "south",
+    "uniformScale": 0.1964,
+    "review": "override"
+  },
+  "cars:police": {
+    "front": "south",
+    "uniformScale": 0.1862,
+    "review": "override"
+  },
+  "cars:ambulance": {
+    "front": "south",
+    "uniformScale": 0.1662,
+    "review": "override"
+  },
+  "cars:firetruck": {
+    "front": "south",
+    "uniformScale": 0.1662,
+    "review": "override"
+  },
+  "cars:garbage-truck": {
+    "front": "south",
+    "uniformScale": 0.1566,
+    "review": "override"
+  },
+  "roads:road-end": {
+    "driveProfile": {
+      "surfaceHeight": 0.01,
+      "ports": [
+        {
+          "direction": "east",
+          "position": [0.5, 0]
+        }
+      ]
+    }
+  },
+  "roads:road-straight": {
+    "driveProfile": {
+      "surfaceHeight": 0.01,
+      "ports": [
+        {
+          "direction": "east",
+          "position": [0.5, 0]
+        },
+        {
+          "direction": "west",
+          "position": [-0.5, 0]
+        }
+      ]
+    }
+  },
+  "roads:road-bend-sidewalk": {
+    "driveProfile": {
+      "surfaceHeight": 0.01,
+      "ports": [
+        {
+          "direction": "west",
+          "position": [-0.5, 0]
+        },
+        {
+          "direction": "south",
+          "position": [0, 0.5]
+        }
+      ]
+    }
+  },
+  "roads:road-intersection": {
+    "driveProfile": {
+      "surfaceHeight": 0.01,
+      "ports": [
+        {
+          "direction": "east",
+          "position": [0.5, 0]
+        },
+        {
+          "direction": "south",
+          "position": [0, 0.5]
+        },
+        {
+          "direction": "west",
+          "position": [-0.5, 0]
+        }
+      ]
+    }
+  },
+  "roads:road-intersection-path": {
+    "driveProfile": {
+      "surfaceHeight": 0.01,
+      "ports": [
+        {
+          "direction": "east",
+          "position": [0.5, 0]
+        },
+        {
+          "direction": "south",
+          "position": [0, 0.5]
+        },
+        {
+          "direction": "west",
+          "position": [-0.5, 0]
+        }
+      ]
+    }
+  },
+  "roads:road-crossroad": {
+    "driveProfile": {
+      "surfaceHeight": 0.01,
+      "ports": [
+        {
+          "direction": "north",
+          "position": [0, -0.5]
+        },
+        {
+          "direction": "east",
+          "position": [0.5, 0]
+        },
+        {
+          "direction": "south",
+          "position": [0, 0.5]
+        },
+        {
+          "direction": "west",
+          "position": [-0.5, 0]
+        }
+      ]
+    }
+  },
+  "roads:road-crossroad-path": {
+    "driveProfile": {
+      "surfaceHeight": 0.01,
+      "ports": [
+        {
+          "direction": "north",
+          "position": [0, -0.5]
+        },
+        {
+          "direction": "east",
+          "position": [0.5, 0]
+        },
+        {
+          "direction": "south",
+          "position": [0, 0.5]
+        },
+        {
+          "direction": "west",
+          "position": [-0.5, 0]
+        }
+      ]
+    }
   }
 }

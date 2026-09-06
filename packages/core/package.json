@@ -17,6 +17,7 @@
     "build": "tsc -p tsconfig.build.json",
     "generate-schema": "node dist/export-schema.js",
     "test": "vitest run",
+    "test:batch": "vitest run --config vitest.batch.config.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

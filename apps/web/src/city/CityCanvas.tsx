@@ -1,5 +1,5 @@
 import { assetById, runtimeAssetUrl } from "@city/assets";
-import type { CityDocumentV1 } from "@city/core";
+import type { CityDocumentV1, DriveNetwork } from "@city/core";
 import { OrbitControls, PerspectiveCamera, useGLTF } from "@react-three/drei";
 import { Canvas, type RootState, useFrame, useThree } from "@react-three/fiber";
 import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
@@ -20,6 +20,8 @@ import { AgentLayer } from "./AgentLayer";
 import { FreeFlightControls } from "./FreeFlightControls";
 import { InstancedAssetBatch } from "./InstancedAssetBatch";
 import { LandOverlays, type OverlayOptions } from "./LandOverlays";
+import { TrafficOverlay } from "./TrafficOverlay";
+import { VehicleLayer } from "./VehicleLayer";
 
 const EMPTY_CITY_CAMERA = {
   position: [52.8, 67.2, 52.8] as [number, number, number],
@@ -159,6 +161,9 @@ function SelectionProxy({
 function CityScene({
   document,
   overlays,
+  driveNetwork,
+  selectedDriveId,
+  onSelectDrive,
   quality,
   selectedEntityId,
   freeCamera,
@@ -167,6 +172,9 @@ function CityScene({
 }: {
   document: CityDocumentV1;
   overlays: OverlayOptions;
+  driveNetwork: DriveNetwork | null;
+  selectedDriveId: string | null;
+  onSelectDrive: (id: string | null) => void;
   quality: ResolvedQuality;
   selectedEntityId: string | null;
   freeCamera: boolean;
@@ -193,6 +201,11 @@ function CityScene({
     }
     const body = assetById.get("protagonists:character-medium");
     if (body) useGLTF.preload(runtimeAssetUrl(body.runtimePath, import.meta.env.BASE_URL));
+    for (const entry of assetById.values()) {
+      if (entry.pack === "cars") {
+        useGLTF.preload(runtimeAssetUrl(entry.runtimePath, import.meta.env.BASE_URL));
+      }
+    }
   }, [entityBatches.batches, roadBatches, sidewalkBatches]);
 
   return (
@@ -234,6 +247,14 @@ function CityScene({
       </mesh>
       <UrbanGround document={document} />
       <LandOverlays city={document} overlays={overlays} />
+      {overlays.traffic && driveNetwork && (
+        <TrafficOverlay
+          network={driveNetwork}
+          half={half}
+          selected={selectedDriveId}
+          onSelect={onSelectDrive}
+        />
+      )}
       <Suspense fallback={null}>
         {sidewalkBatches.map((batch) => (
           <InstancedAssetBatch key={batch.key} batch={batch} half={half} castShadow={false} />
@@ -254,6 +275,9 @@ function CityScene({
         ))}
         <SelectionProxy document={document} entityId={selectedEntityId} />
         <AgentLayer document={document} count={quality.agentCount} />
+        {driveNetwork && (
+          <VehicleLayer document={document} count={quality.vehicleCount} network={driveNetwork} />
+        )}
       </Suspense>
       {freeCamera ? null : (
         <OrbitControls
@@ -272,6 +296,9 @@ export function CityCanvas({
   document,
   onBackend,
   overlays,
+  driveNetwork,
+  selectedDriveId,
+  onSelectDrive,
   quality,
   selectedEntityId,
   freeCamera,
@@ -281,6 +308,9 @@ export function CityCanvas({
   document: CityDocumentV1 | null;
   onBackend: (backend: RendererBackend) => void;
   overlays: OverlayOptions;
+  driveNetwork: DriveNetwork | null;
+  selectedDriveId: string | null;
+  onSelectDrive: (id: string | null) => void;
   quality: ResolvedQuality;
   selectedEntityId: string | null;
   freeCamera: boolean;
@@ -315,6 +345,9 @@ export function CityCanvas({
           key={document.id}
           document={document}
           overlays={overlays}
+          driveNetwork={driveNetwork}
+          selectedDriveId={selectedDriveId}
+          onSelectDrive={onSelectDrive}
           quality={quality}
           selectedEntityId={selectedEntityId}
           freeCamera={freeCamera}

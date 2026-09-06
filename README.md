@@ -16,6 +16,7 @@ pnpm dev
 pnpm check
 pnpm typecheck
 pnpm test
+pnpm test:batch
 pnpm build
 pnpm catalog
 pnpm --filter @city/assets generate-characters

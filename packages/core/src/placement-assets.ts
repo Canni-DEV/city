@@ -1,6 +1,7 @@
 import type { ZoneType } from "./domain.js";
+import type { DriveAsset } from "./drive-contracts.js";
 
-export interface PlacementAsset {
+export interface PlacementAsset extends DriveAsset {
   id: string;
   category: string;
   subcategory: string;

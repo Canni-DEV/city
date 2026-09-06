@@ -8,8 +8,12 @@ export function isCityKitEntry(entry: AssetCatalogEntry): boolean {
   return (CITY_KIT_PACKS as readonly string[]).includes(entry.pack);
 }
 
-export function agentUniformScale(entry: AssetCatalogEntry): number {
+export function assetUniformScale(entry: AssetCatalogEntry): number {
   return entry.uniformScale ?? 1;
+}
+
+export function agentUniformScale(entry: AssetCatalogEntry): number {
+  return assetUniformScale(entry);
 }
 
 export function runtimeAssetUrl(entryPath: string, baseUrl = "/city/"): string {

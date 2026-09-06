@@ -1,6 +1,7 @@
 import { Delaunay } from "d3-delaunay";
 import type { CityDocumentV1, GenerationParameters, MapSize } from "./domain.js";
 import { CityDocumentSchema } from "./domain.js";
+import { buildDriveNetwork, type DriveNetworkValidation } from "./drive-network.js";
 import { deriveProceduralId } from "./ids.js";
 import { assignZones, createBlocks, createLots, validateLandCity } from "./land-generator.js";
 import type { PlacementAsset } from "./placement-assets.js";
@@ -27,6 +28,7 @@ import {
   subdivideLargeVoids,
   widenAvenueCorridors,
 } from "./road-mesh.js";
+import { repairRoadOpenings } from "./road-repair.js";
 import {
   CARDINALS,
   DIRECTION_DELTA,
@@ -44,10 +46,11 @@ import {
   resolveRoadTiles,
   tileMatchesNeighbors,
 } from "./road-tiles.js";
+import { resolveRoadTopology } from "./road-topology.js";
 import { createSidewalks, validateSidewalks } from "./sidewalks.js";
 import type { GenerationStage } from "./worker-protocol.js";
 
-export const GENERATOR_VERSION = "0.6.6";
+export const GENERATOR_VERSION = "0.6.7";
 
 type Direction = "north" | "east" | "south" | "west";
 
@@ -88,6 +91,10 @@ export interface RoadGenerationHooks {
   shouldCancel?: () => boolean;
   yieldControl?: () => Promise<void>;
   validateAttempt?: (document: CityDocumentV1) => readonly string[];
+  onTrafficValidation?: (
+    document: Readonly<CityDocumentV1>,
+    validation: DriveNetworkValidation,
+  ) => void;
 }
 
 export class GenerationCancelledError extends Error {
@@ -636,7 +643,7 @@ export function validateRoadCity(document: CityDocumentV1): string[] {
   for (const cell of document.roadGraph.cells) {
     if (cellIds.has(cell.id)) issues.push(`duplicate road cell ID ${cell.id}`);
     cellIds.add(cell.id);
-    if (!tileMatchesNeighbors(cell, occupied, mates)) {
+    if (!document.roadGraph.topology && !tileMatchesNeighbors(cell, occupied, mates)) {
       const logical = logicalConnections(cell.position, occupied, mates);
       const key = pointKey(cell.position);
       const neighborClass = neighborKeys(cell.position)
@@ -748,6 +755,18 @@ export async function generateRoadCity(
     );
     await checkpoint(hooks, "tiles", 70, "Resolving curves, junctions, and roundabouts");
     const document = createDocument(input, attempt, [...mask], densityField, nodes, classes);
+    repairRoadOpenings(document, input.assets);
+    document.roadGraph.topology = resolveRoadTopology(document, input.assets);
+    await checkpoint(hooks, "traffic", 73, "Validating directed lanes and vehicle clearance");
+    const drive = buildDriveNetwork(document, input.assets);
+    hooks.onTrafficValidation?.(document, drive.validation);
+    if (!drive.validation.valid) {
+      finalIssues = drive.validation.issues.map(
+        (issue) =>
+          `${issue.code} at ${issue.position.join(",")}: ${issue.message} (${issue.sectionId})`,
+      );
+      continue;
+    }
     await checkpoint(hooks, "blocks", 76, "Finding free regions and creating blocks");
     document.blocks = createBlocks(document);
     await checkpoint(hooks, "sidewalks", 80, "Laying sidewalk rings around manzanas");

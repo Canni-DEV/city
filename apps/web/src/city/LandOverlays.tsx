@@ -2,7 +2,7 @@ import { type CityDocumentV1, ZONE_TYPES, type ZoneType } from "@city/core";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three/webgpu";
 
-export type OverlayOptions = { zones: boolean; lots: boolean; grid: boolean };
+export type OverlayOptions = { zones: boolean; lots: boolean; grid: boolean; traffic?: boolean };
 const COLORS: Record<ZoneType, string> = {
   suburban: "#f1cf80",
   urban: "#93b8f0",

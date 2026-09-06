@@ -11,7 +11,7 @@
 
 - **UX-010:** Left click selects; left-drag on empty ground pans; Shift+drag performs rectangle selection.
 - **UX-011:** Right-drag orbits, wheel zooms, and Q/E rotates the camera. Default framing still shows the whole city; OrbitControls `maxZoom` is raised above 28 in M3.6 so streets and agents can be inspected. **F** toggles an optional unrestricted free camera (perspective, WASD, right-drag look, no zoom/distance clamps). Escape or **F** returns to the default city view. Free camera is inspect-only; it is not a player avatar.
-- **UX-012:** Delete removes; Ctrl/Cmd+Z undoes; Shift+Ctrl/Cmd+Z redoes; Ctrl/Cmd+D duplicates; Escape cancels.
+- **UX-012:** Delete removes; Ctrl/Cmd+Z undoes; Shift+Ctrl/Cmd+Z redoes; Ctrl/Cmd+D duplicates; Escape cancels the current editor gesture and also clears Traffic lanes diagnostic selection (UX-025).
 - **UX-013:** Continuous transforms preview live but commit as one history command.
 
 ## Feedback
@@ -22,10 +22,12 @@
 - **UX-023:** Destructive library and block-regeneration actions require explicit confirmation.
 - **UX-024:** The technical diagnostic exposes Auto/Low/Medium/High quality and active WebGPU or WebGL 2 backend.
 
-M3 implements that diagnostic in the city laboratory, including a quality selector, backend notice, frame-rate/draw-call readouts, and a textual selection status. Object editing remains M4. M3.6 adds runtime pedestrians; they are not editor selection targets. M3.6.1 keeps them on sidewalks; sidewalk tiles are not editor selection targets.
+M3 implements that diagnostic in the city laboratory, including a quality selector, backend notice, frame-rate/draw-call readouts, and a textual selection status. Object editing remains M4. M3.6 adds runtime pedestrians; they are not editor selection targets. M3.6.1 keeps them on sidewalks; sidewalk tiles are not editor selection targets. M3.6.2 adds runtime vehicles on the directed lane network; they are not editor selection targets. Traffic lanes diagnostic selection (UX-025) does not select vehicles or enable road editing.
 
 ## Layout
 
 The supported minimum is 1280×720. Panels may collapse as space narrows but the viewport, current mode, primary action, and cancellation path remain available. The city workspace is a two-column grid whose viewport track is a definite `minmax(0, 1fr)` cell so the 3D canvas has a containing block on first paint. There is no onboarding; empty states teach the next action in one sentence.
 
-Zone, lot, and grid overlays are independently toggleable and do not mutate the document. Zone meaning uses a stable color, a repeating pattern, and a legend of actual versus target area shares.
+Zone, lot, grid, and Traffic lanes overlays are independently toggleable and do not mutate the document. Zone meaning uses a stable color, a repeating pattern, and a legend of actual versus target area shares.
+
+- **UX-025:** Traffic lanes defaults off in Map overlays. Solid cyan lanes, dashed amber maneuvers/joins, purple roundabout ring, white direction arrows, gray carriageway boundaries, lime portal marks, pink crossing marks, and red invalid movements use a textual legend (not color alone). A keyboard-accessible segment selector exposes ID, class, movement, length, from/to, source tiles, successors, crossing IDs, and validation. Escape clears diagnostic selection. Selection does not edit roads or pick vehicles. No pause, step, or follow-vehicle controls.

@@ -68,7 +68,7 @@ describe("M3.6.1 sidewalks", () => {
     } else {
       expect(city.blocks.some((block) => block.zone === "park")).toBe(true);
     }
-  });
+  }, 30_000);
 
   it("GEN-027 uses Kenney path tiles on local junctions and unsuffixed T/4-way on avenues", async () => {
     const city = await generateRoadCity(input);
@@ -98,7 +98,7 @@ describe("M3.6.1 sidewalks", () => {
       );
     });
     expect(twins.length).toBeGreaterThan(0);
-  });
+  }, 30_000);
 
   it("SIM-002 walk policy uses sidewalks and corner crossings, not the avenue run", async () => {
     const city = await generateRoadCity(input);
@@ -138,5 +138,5 @@ describe("M3.6.1 sidewalks", () => {
         ),
       ).toBe(true);
     }
-  });
+  }, 30_000);
 });

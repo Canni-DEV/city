@@ -9,6 +9,7 @@
 - [ ] `pnpm check`
 - [ ] `pnpm typecheck`
 - [ ] `pnpm test`
+- [ ] `pnpm test:batch` (occupancy / generator-mesh PRs)
 - [ ] `pnpm build`
 - [ ] Chrome current at 1280×720 and 1920×1080
 - [ ] Edge current at 1280×720 and 1920×1080

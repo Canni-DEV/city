@@ -25,14 +25,16 @@
 - **FUN-024:** Overlaps are blocked with a reason. Zone incompatibility warns but permits placement.
 - **FUN-025:** Block regeneration requires confirmation and replaces every entity in that block.
 
-## Runtime agents
+## Runtime agents and vehicles
 
 - **FUN-040:** After generation, a small set of seeded pedestrians walks a reconstructible walk graph (SIM-001–010). They are not selectable editor objects.
-- **FUN-041:** Default M3.6.1 walking uses the sidewalk ring plus local `*-path` and avenue unsuffixed T/4-way crossings (real junctions only, not the dual-carriageway median), not the carriageway. Streets remain reserved for future vehicles.
+- **FUN-041:** Default M3.6.1 walking uses the sidewalk ring plus local `*-path` and avenue unsuffixed T/4-way crossings (real junctions only, not the dual-carriageway median), not the carriageway.
+- **FUN-042:** After generation, a small set of seeded vehicles drives the validated directed lane network (SIM-011–019). They are not selectable editor objects. Kenney bodies ship without wheels in M3.6.2.
+- **FUN-043:** Traffic lanes is an independent diagnostic overlay with directed lane axes, turn connections, carriageway boundaries, portals, and pedestrian crossing references. It draws the same `DriveNetwork` the mover uses. Selecting a segment inspects connectivity and validation without editing roads or selecting vehicles. Escape clears that diagnostic selection. No pause, step, or follow-vehicle controls.
 
 ## Persistence and routes
 
 - **FUN-030:** Routes are `#/`, `#/city/:cityId`, `#/credits`, and development-only `#/dev/assets`.
 - **FUN-031:** Changes autosave after one second idle and refresh the thumbnail after ten seconds idle.
 - **FUN-032:** Import accepts at most 25 MB, copies colliding IDs, migrates older versions explicitly, and rejects future versions clearly.
-- **FUN-033:** Export produces a readable `.city.json` snapshot with generation provenance and no command history.
+- **FUN-033:** Export produces a readable `.city.json` snapshot with generation provenance, without command history, runtime vehicles, reconstructed lane geometry, or diagnostic selection.

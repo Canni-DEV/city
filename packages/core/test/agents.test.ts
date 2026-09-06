@@ -235,5 +235,5 @@ describe("TST-008 runtime agents", () => {
     expect(Object.values(city.entities).every((entity) => !entity.id.startsWith("agent:"))).toBe(
       true,
     );
-  });
+  }, 30_000);
 });

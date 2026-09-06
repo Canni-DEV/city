@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { RoadTopologySchema } from "./drive-contracts.js";
 
 export const MAP_SIZES = [64, 96, 128] as const;
 export const ZONE_TYPES = ["suburban", "urban", "commercial", "industrial", "park"] as const;
@@ -148,6 +149,7 @@ export const CityDocumentSchema = z.object({
     nodes: z.array(RoadNodeSchema),
     edges: z.array(RoadEdgeSchema),
     cells: z.array(RoadCellSchema),
+    topology: RoadTopologySchema.optional(),
   }),
   sidewalks: z.array(SidewalkCellSchema),
   blocks: z.array(BlockSchema),

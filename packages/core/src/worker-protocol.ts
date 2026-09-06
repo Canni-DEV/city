@@ -8,6 +8,7 @@ export const GENERATION_STAGES = [
   "graph",
   "routing",
   "tiles",
+  "traffic",
   "blocks",
   "sidewalks",
   "lots",

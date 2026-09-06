@@ -14,4 +14,4 @@ This decision supersedes the absolute “no pedestrians / no simulation” readi
 
 ## Consequences
 
-City-kit generation, golden hashes, and export stay static. Catalog tests (TST-006) grow in M3.6 implementation to include generated protagonist GLBs and skins. Massive crowds, vehicle traffic, mesh physics, and user-controlled avatars remain out of this milestone.
+City-kit generation, golden hashes, and export stay static. Catalog tests (TST-006) grow in M3.6 implementation to include generated protagonist GLBs and skins. Massive crowds, mesh physics, and user-controlled avatars remain out of this milestone. Vehicle traffic is specified later in ADR-014 / M3.6.2.
