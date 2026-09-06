@@ -15,8 +15,7 @@ function collectMeshes(scene: THREE.Object3D): THREE.Mesh[] {
   const meshes: THREE.Mesh[] = [];
   scene.updateMatrixWorld(true);
   scene.traverse((child) => {
-    if ((child as THREE.Mesh).isMesh && !/wheel/i.test(child.name))
-      meshes.push(child as THREE.Mesh);
+    if ((child as THREE.Mesh).isMesh) meshes.push(child as THREE.Mesh);
   });
   return meshes;
 }

@@ -16,7 +16,7 @@
 
 Run `pnpm check`, `pnpm typecheck`, `pnpm test`, and `pnpm build`. TST-009 covers endpoints/tangents, early turning, body clearance, directed connectivity, portals/returns, time partitioning, determinism, reconstruction, and document immutability. Default CI does not run the 200-city TST-002/003 occupancy census; run `pnpm test:batch` on occupancy or generator-mesh pull requests (no skipped seeds). Record Chrome/Edge and WebGPU/WebGL 2 QA at 1280×720 and 1920×1080, including overlay on/off for AC-010. AC-011 proves a 128×128 city completes; it does not enforce a five-second wall-clock budget.
 
-No M4, ECS, signals, braking, wheel meshes, massive traffic, legacy circulation modes, or source asset edits. Stop for milestone review.
+No M4, ECS, signals, braking, spinning or steering wheels, massive traffic, legacy circulation modes, or source asset edits. Static child wheel meshes from each `cars:*` GLB are in scope. Stop for milestone review.
 
 ## Evidence
 

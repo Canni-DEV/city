@@ -12,7 +12,7 @@
 | Runtime agents | SIM-001–007, FUN-040, PRD-006, REN-009, TST-008 | M3.6 | TST-008, manual agent QA | Implemented |
 | Pedestrian sidewalks | SIM-002–004, SIM-007–010, GEN-022, GEN-026–027, DAT-008–009, FUN-041, TST-008 | M3.6.1 | TST-001–003, TST-008, manual sidewalk QA | Implemented |
 | Two-cell avenues | GEN-004–005, GEN-027–028, DAT-002, FUN-041, SIM-009 | M3.6.1 hotfix | TST-001–003, connector tests, dual L/T/4-way stitch, local 3×3 roundabouts, 200-city batch | Implemented |
-| Runtime vehicles and explicit lanes | SIM-011–019, GEN-029, DAT-008, DAT-010, FUN-042–043, UX-025, PRD-006, REN-010, AST-001, AST-014, TST-009 | M3.6.2 | TST-001/006/008/009 and generate smokes on default CI; TST-002/003 occupancy census via `pnpm test:batch`; overlay inspector QA, manual backend and AC-010 QA; AC-001/011 complete a 128 city without a 5 s cap | Implemented, pending review |
+| Runtime vehicles and explicit lanes | SIM-011–019, GEN-029, DAT-008, DAT-010, FUN-042–043, UX-025, PRD-006, REN-010, AST-001, AST-014, TST-009 | M3.6.2 | TST-001/006/008/009 and generate smokes on default CI; TST-002/003 occupancy census via `pnpm test:batch`; overlay inspector QA, manual backend and AC-010 QA; AC-001/011 complete a 128 city without a 5 s cap; visual QA that instanced bodies include static child wheels | Implemented, pending review |
 | NPC refactor | SIM-001–010 amended, SIM-020–026, FUN-044, UX-026, DAT-008, AST-010, REN-009/010 | M3.6.3 | TST-006/008/009, AC-010/012, manual movement/overlay QA | Implemented; static checks pass, owner manual review pending |
 | Editing | FUN-020–025, UX-010–023, EDT-001–010 | M4 | TST-004, manual input QA | Planned |
 | Persistence/library | FUN-001–003, FUN-031–033, PER-001–008 | M5 | TST-005 | Planned |

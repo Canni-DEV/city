@@ -23,4 +23,4 @@ City is a modern browser-based creative sandbox for generating a convincing stat
 
 ## Out of scope for v1
 
-Massive crowd or vehicle simulation, user-controlled avatars, walking lots/courtyards, road editing, zoning editing, bridges, ramps, multilevel networks, multiplayer, cloud sync, mobile-first controls, seasons, time of day, audio, and heavy post-processing. A bounded runtime vehicle layer (M3.6.2 / SIM-011–019) is in scope; braking, signals, parking, wheel meshes, and thousands of cars are not.
+Massive crowd or vehicle simulation, user-controlled avatars, walking lots/courtyards, road editing, zoning editing, bridges, ramps, multilevel networks, multiplayer, cloud sync, mobile-first controls, seasons, time of day, audio, and heavy post-processing. A bounded runtime vehicle layer (M3.6.2 / SIM-011–019) is in scope; braking, signals, parking, spinning or steering wheel animation, and thousands of cars are not.
