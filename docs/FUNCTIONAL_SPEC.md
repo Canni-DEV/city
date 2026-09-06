@@ -29,7 +29,7 @@
 
 - **FUN-040:** After generation, a small set of seeded pedestrians walks a reconstructible hybrid network (SIM-001–010, SIM-020–026). They are not selectable editor objects.
 - **FUN-041:** The sidewalk portion of default walking uses the sidewalk ring plus local `*-path` and avenue unsuffixed T/4-way crossings (real junctions only, not the dual-carriageway median), not the carriageway.
-- **FUN-042:** After generation, a small set of seeded vehicles drives the validated directed lane network (SIM-011–019). They are not selectable editor objects. Kenney bodies ship without wheels in M3.6.2.
+- **FUN-042:** After generation, a small set of seeded vehicles drives the validated directed lane network (SIM-011–019). They are not selectable editor objects. Kenney bodies draw the child wheel meshes already in each `cars:*` GLB as static instanced parts; loose `wheel-*` GLBs stay uncataloged. Wheels do not spin or steer.
 - **FUN-043:** Traffic lanes is an independent diagnostic overlay with directed lane axes, turn connections, carriageway boundaries, portals, and pedestrian crossing references. It draws the same `DriveNetwork` the mover uses. Selecting a segment inspects connectivity and validation without editing roads or selecting vehicles. Escape clears that diagnostic selection. No pause, step, or follow-vehicle controls.
 
 ## Persistence and routes

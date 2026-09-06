@@ -23,7 +23,7 @@ Runtime agents and vehicles are derived from `CityDocumentV1`. They are not pers
 - **SIM-018:** Every required lane has a continuation, valid terminal return, or external exit. Invalid new cities are rejected after bounded deterministic retries with location and reason; no silent exclusion of roads or maneuvers, and no partially valid city.
 - **SIM-019:** Crossing references associate the pedestrian network with traffic geometry. M3.6.3 predicts vehicles to admit safe complete pedestrian crossings (SIM-023); vehicles still ghost and do not brake or yield. Network, mobile state and rendering remain separate.
 
-Kenney City Kit scale stays native (one map cell = one world unit). Agent GLB scale starts native; if the character is disproportionate versus `commercial:building-a` (~1.3 units tall), one override factor applies to agents only. Vehicle GLB scale uses per-entry `uniformScale` so body length fits about 0.54 cells. Kenney Car Kit bodies are cataloged without wheel meshes in M3.6.2.
+Kenney City Kit scale stays native (one map cell = one world unit). Agent GLB scale starts native; if the character is disproportionate versus `commercial:building-a` (~1.3 units tall), one override factor applies to agents only. Vehicle GLB scale uses per-entry `uniformScale` so body length fits about 0.54 cells. The `cars` pack does not catalog loose Kenney wheel GLBs; runtime vehicles draw the child wheel nodes already in each body GLB as static meshes.
 
 ## M3.6.3 runtime contracts
 

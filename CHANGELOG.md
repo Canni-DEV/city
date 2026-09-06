@@ -10,9 +10,13 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 
 - Map size 256 (four external gates, same as 128) and density `very-high` for sandbox variety. The 200-city occupancy census still uses 64/96/128.
 - Runtime pedestrian and vehicle sliders (0–64) override quality defaults immediately and stay outside `CityDocumentV1`.
-- M3.6.2 runtime vehicles: seeded Kenney Car Kit bodies drive a persisted, validated directed lane network (cubic Bézier maneuvers, CCW roundabout rings, portals, and physical terminal returns) with A*, arc-length pose, and `InstancedMesh` batches. Vehicles stay outside `CityDocumentV1`. Bodies have no wheels this milestone.
+- M3.6.2 runtime vehicles: seeded Kenney Car Kit bodies drive a persisted, validated directed lane network (cubic Bézier maneuvers, CCW roundabout rings, portals, and physical terminal returns) with A*, arc-length pose, and `InstancedMesh` batches. Vehicles stay outside `CityDocumentV1`. Each body instances the child wheel nodes already in its GLB with a rigid pose; wheels do not spin or steer, and loose `wheel-*` GLBs stay uncataloged.
 - Traffic lanes overlay (off by default) and a keyboard-accessible inspector share the reconstructed `DriveNetwork` with the mover. Selection is diagnostic only.
 - Catalog `driveProfile` (measured carriageway triangles and local ports) and `vehicleBounds` (pivot-aware body envelope) for road tiles and the 11 `cars:*` entries.
+
+### Fixed
+
+- Runtime vehicles instance the child wheel meshes already present in each Kenney `cars:*` GLB (the same nodes `#/dev/assets` already showed). Wheels stay static; `vehicleBounds` still excludes them.
 
 ### Changed
 
