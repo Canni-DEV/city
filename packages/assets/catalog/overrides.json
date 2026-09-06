@@ -109,57 +109,57 @@
   },
   "cars:sedan": {
     "front": "south",
-    "uniformScale": 0.2647,
+    "uniformScale": 0.2118,
     "review": "override"
   },
   "cars:sedan-sports": {
     "front": "south",
-    "uniformScale": 0.2647,
+    "uniformScale": 0.2118,
     "review": "override"
   },
   "cars:hatchback-sports": {
     "front": "south",
-    "uniformScale": 0.2368,
+    "uniformScale": 0.1894,
     "review": "override"
   },
   "cars:suv": {
     "front": "south",
-    "uniformScale": 0.2647,
+    "uniformScale": 0.2118,
     "review": "override"
   },
   "cars:suv-luxury": {
     "front": "south",
-    "uniformScale": 0.2368,
+    "uniformScale": 0.1894,
     "review": "override"
   },
   "cars:taxi": {
     "front": "south",
-    "uniformScale": 0.2455,
+    "uniformScale": 0.1964,
     "review": "override"
   },
   "cars:van": {
     "front": "south",
-    "uniformScale": 0.2455,
+    "uniformScale": 0.1964,
     "review": "override"
   },
   "cars:police": {
     "front": "south",
-    "uniformScale": 0.2327,
+    "uniformScale": 0.1862,
     "review": "override"
   },
   "cars:ambulance": {
     "front": "south",
-    "uniformScale": 0.2077,
+    "uniformScale": 0.1662,
     "review": "override"
   },
   "cars:firetruck": {
     "front": "south",
-    "uniformScale": 0.2077,
+    "uniformScale": 0.1662,
     "review": "override"
   },
   "cars:garbage-truck": {
     "front": "south",
-    "uniformScale": 0.1957,
+    "uniformScale": 0.1566,
     "review": "override"
   },
   "roads:road-end": {

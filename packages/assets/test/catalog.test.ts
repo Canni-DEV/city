@@ -101,7 +101,7 @@ describe("asset catalog", () => {
       cars.every(
         (entry) =>
           (entry.uniformScale ?? 1) * Math.max(entry.footprint.width, entry.footprint.depth) <=
-          0.68,
+          0.55,
       ),
     ).toBe(true);
     expect(

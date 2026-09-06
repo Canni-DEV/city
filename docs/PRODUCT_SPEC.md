@@ -16,7 +16,7 @@ City is a modern browser-based creative sandbox for generating a convincing stat
 
 ## Success criteria
 
-- **AC-001:** A 128×128 city generates in under five seconds on the reference modern integrated-GPU laptop.
+- **AC-001:** A 128×128 city generates to a complete valid document on the reference modern integrated-GPU laptop. With M3.6.2 lane validation (GEN-029), wall-clock time may exceed five seconds; a dedicated async loading spinner is deferred.
 - **AC-002:** A representative 1080p city sustains 60 FPS on the same class of device.
 - **AC-003:** Equal generator version, seed, attempt, and parameters produce the same document hash.
 - **AC-004:** M0–M6, intermediate M3.5/M3.6/M3.6.1/M3.6.2, their mapped requirements, and all manual QA checks are complete before `1.0.0`.

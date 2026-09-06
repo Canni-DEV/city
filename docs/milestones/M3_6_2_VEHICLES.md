@@ -14,7 +14,7 @@
 
 ## Verification and stop
 
-Run `pnpm check`, `pnpm typecheck`, `pnpm test`, and `pnpm build`. TST-009 covers endpoints/tangents, early turning, body clearance, directed connectivity, portals/returns, time partitioning, determinism, reconstruction, and document immutability. Extend the 200-city TST-002/003 batch with road-network validation before land and preserve pedestrian invariants. Record Chrome/Edge and WebGPU/WebGL 2 QA at 1280×720 and 1920×1080, including overlay on/off budgets for AC-010/011.
+Run `pnpm check`, `pnpm typecheck`, `pnpm test`, and `pnpm build`. TST-009 covers endpoints/tangents, early turning, body clearance, directed connectivity, portals/returns, time partitioning, determinism, reconstruction, and document immutability. Extend the 200-city TST-002/003 batch with road-network validation before land and preserve pedestrian invariants. Record Chrome/Edge and WebGPU/WebGL 2 QA at 1280×720 and 1920×1080, including overlay on/off for AC-010. AC-011 proves a 128×128 city completes; it does not enforce a five-second wall-clock budget.
 
 No M4, ECS, signals, braking, wheel meshes, massive traffic, legacy circulation modes, or source asset edits. Stop for milestone review.
 

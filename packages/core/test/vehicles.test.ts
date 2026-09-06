@@ -22,7 +22,10 @@ import {
 } from "../src/index.js";
 import { TEST_ASSETS } from "./catalog-assets.js";
 
-function fixture(tiles: [number, number, string, number?][], gates: Point[]): CityDocumentV1 {
+function fixture(
+  tiles: [number, number, string, number?, ("local" | "collector" | "arterial")?][],
+  gates: Point[],
+): CityDocumentV1 {
   const d = createEmptyCityDocument({
     id: "fixture",
     name: "Fixture",
@@ -31,12 +34,12 @@ function fixture(tiles: [number, number, string, number?][], gates: Point[]): Ci
     parameters: PRESET_PARAMETERS.balanced,
   });
   d.map.boundaryMask = Array(d.map.size ** 2).fill(true);
-  d.roadGraph.cells = tiles.map(([x, z, asset, rotation = 0], i) => ({
+  d.roadGraph.cells = tiles.map(([x, z, asset, rotation = 0, roadClass = "local"], i) => ({
     id: `tile:${i}`,
     position: [x, z],
     assetId: `roads:${asset}`,
     rotation,
-    roadClass: "local",
+    roadClass,
   }));
   d.roadGraph.nodes = gates.map((position, i) => ({ id: `gate:${i}`, kind: "gate", position }));
   d.roadGraph.topology = resolveRoadTopology(d, TEST_ASSETS);
@@ -215,5 +218,25 @@ describe("TST-009 explicit runtime lanes", () => {
     expect(right).toBeDefined();
     if (!left || !right) return;
     expect(vehicleWorldPose(left, n)).toEqual(vehicleWorldPose(right, n));
+  });
+  it("returns at an internal dead-end and does not insert mid-block U-turns", () => {
+    const d = fixture(
+      [
+        [1, 4, "road-end"],
+        [2, 4, "road-straight"],
+        [3, 4, "road-straight"],
+        [4, 4, "road-straight"],
+        [5, 4, "road-straight"],
+      ],
+      [[5, 4]],
+    );
+    const n = buildDriveNetwork(d, TEST_ASSETS);
+    expect(n.validation.issues).toEqual([]);
+    expect(n.segments.some((s) => s.kind === "return")).toBe(true);
+    const end = n.topology.sections.find((s) => s.kind === "terminal");
+    expect(end).toBeDefined();
+    expect(n.topology.movements.every((m) => m.from !== m.to || m.sectionId === end?.id)).toBe(
+      true,
+    );
   });
 });

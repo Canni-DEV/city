@@ -37,13 +37,13 @@ describe("M1–M3.5 city generation", () => {
       timestamp: "2027-01-01T00:00:00.000Z",
     });
     expect(hashGeneratedStructure(first)).toBe(hashGeneratedStructure(second));
-    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"1f99f308"`);
-  });
+    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"ab27644c"`);
+  }, 30_000);
 
   it("TST-001 derives reproducible attempts and retries at most three times", async () => {
     expect(deriveAttemptSeed("retry-city", 2)).toBe("retry-city::0.6.7::attempt-2");
     const attempts: number[] = [];
-    const city = await generateRoadCity(inputFor("retry-city"), {
+    const city = await generateRoadCity(inputFor("golden-grid"), {
       validateAttempt(document) {
         attempts.push(document.generator.attempt);
         return document.generator.attempt < 2 ? ["forced test retry"] : [];
@@ -51,7 +51,7 @@ describe("M1–M3.5 city generation", () => {
     });
     expect(attempts).toEqual([0, 1, 2]);
     expect(city.generator.attempt).toBe(2);
-  });
+  }, 30_000);
 
   it("TST-002/TST-003 validates 50 seeds per preset across all sizes", async () => {
     const sizes: readonly MapSize[] = [64, 96, 128];

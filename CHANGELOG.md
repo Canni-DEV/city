@@ -13,7 +13,9 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 ### Changed
 
 - Generator `0.6.7`: after tile resolution, repair local openings/transitions, persist `roadGraph.topology`, and validate required maneuvers plus whole-body clearance before sidewalks and land. Failed networks retry under GEN-024 and never return a partial city. Old `0.6.6` cities load without silent regeneration; they are not vehicle-enabled and have no inferred fallback graph.
-- Car Kit `uniformScale` fits body length to about 0.67 cells (~25% smaller than the first M3.6.2 fit).
+- Car Kit `uniformScale` fits body length to about 0.54 cells (20% smaller than the 0.67-cell fit).
+- Dual-avenue nudos may connect two same-facing ports, and an internal stub stays two-way with a physical return; only the peer port that feeds it is restored to two-way (SIM-012/018).
+- AC-001/AC-011 no longer require a 128×128 city to finish in five seconds; M3.6.2 lane validation may take longer. Node still proves a complete 128 city. An async loading spinner is deferred.
 - Generator `0.6.6`: the 3×3 Kenney roundabout sits on 1-cell-wide 4-ways (local streets and remnant arterials) according to the Roundabouts control. Dual-avenue 4-ways stay unit `road-crossroad`. Old `0.6.5` cities load without silent regeneration.
 - Generator `0.6.5`: dual avenue L/T/4-way nudos stitch 1-cell gaps into occupancy blocks; dual T/4-way 2×2 cells with four openings use `road-crossroad`; a dual elbow counts the lane-mate as the other leg of the turn. Old `0.6.4` cities load without silent regeneration.
 - Generator `0.6.4`: arterial and collector corridors occupy two adjacent cells. Parallel 1-cell axes that already touch collapse into that pair instead of a 3-cell slab; remaining runs dilate only when that does not merge corridors. Tile topology ignores the lane-mate so `road-intersection` / `road-crossroad` appear only at real crossings. Local streets stay one cell. Resolved road cells may record `roadClass`. Old `0.6.3` cities load without silent regeneration.

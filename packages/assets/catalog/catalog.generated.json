@@ -40,7 +40,7 @@
       "decoration": false,
       "elevated": false,
       "availableInV1": true,
-      "uniformScale": 0.2077,
+      "uniformScale": 0.1662,
       "vehicleBounds": {
         "min": [
           -0.75,
@@ -90,7 +90,7 @@
       "decoration": false,
       "elevated": false,
       "availableInV1": true,
-      "uniformScale": 0.2077,
+      "uniformScale": 0.1662,
       "vehicleBounds": {
         "min": [
           -0.75,
@@ -140,7 +140,7 @@
       "decoration": false,
       "elevated": false,
       "availableInV1": true,
-      "uniformScale": 0.1957,
+      "uniformScale": 0.1566,
       "vehicleBounds": {
         "min": [
           -0.8,
@@ -190,7 +190,7 @@
       "decoration": false,
       "elevated": false,
       "availableInV1": true,
-      "uniformScale": 0.2368,
+      "uniformScale": 0.1894,
       "vehicleBounds": {
         "min": [
           -0.65,
@@ -240,7 +240,7 @@
       "decoration": false,
       "elevated": false,
       "availableInV1": true,
-      "uniformScale": 0.2327,
+      "uniformScale": 0.1862,
       "vehicleBounds": {
         "min": [
           -0.75,
@@ -290,7 +290,7 @@
       "decoration": false,
       "elevated": false,
       "availableInV1": true,
-      "uniformScale": 0.2647,
+      "uniformScale": 0.2118,
       "vehicleBounds": {
         "min": [
           -0.75,
@@ -340,7 +340,7 @@
       "decoration": false,
       "elevated": false,
       "availableInV1": true,
-      "uniformScale": 0.2647,
+      "uniformScale": 0.2118,
       "vehicleBounds": {
         "min": [
           -0.65,
@@ -390,7 +390,7 @@
       "decoration": false,
       "elevated": false,
       "availableInV1": true,
-      "uniformScale": 0.2647,
+      "uniformScale": 0.2118,
       "vehicleBounds": {
         "min": [
           -0.75,
@@ -440,7 +440,7 @@
       "decoration": false,
       "elevated": false,
       "availableInV1": true,
-      "uniformScale": 0.2368,
+      "uniformScale": 0.1894,
       "vehicleBounds": {
         "min": [
           -0.75,
@@ -490,7 +490,7 @@
       "decoration": false,
       "elevated": false,
       "availableInV1": true,
-      "uniformScale": 0.2455,
+      "uniformScale": 0.1964,
       "vehicleBounds": {
         "min": [
           -0.75,
@@ -540,7 +540,7 @@
       "decoration": false,
       "elevated": false,
       "availableInV1": true,
-      "uniformScale": 0.2455,
+      "uniformScale": 0.1964,
       "vehicleBounds": {
         "min": [
           -0.75,

@@ -15,7 +15,7 @@ Each stable entry contains pack, source/runtime/preview paths, textures, categor
 - **AST-012:** Elevated models remain visible in the catalog but have `availableInV1: false`.
 - **AST-013:** `#/dev/assets` shows the selected model, pivot, axes, footprint metadata, front, rotations, connectors, zones, variants, flags, and active backend.
 
-Regenerate city-kit metadata with `pnpm catalog`. Regenerate protagonist GLBs with `pnpm --filter @city/assets generate-characters` (reads FBX under `/assets`, writes GLB under `packages/assets/generated/characters/`). Kenney animation FBX files include a short `0.Targeting Pose` (T-pose) beside Idle/Run/Jump; export selects the named locomotion clip and rejects durations under 0.2s. Do not hand-edit `catalog.generated.json`; encode exceptions in overrides and regenerate. Agent-only dimension overrides may correct Kenney FBX scale versus `commercial:building-a`; vehicle `uniformScale` overrides fit Car Kit length to about 0.67 cells; never rescale buildings or roads.
+Regenerate city-kit metadata with `pnpm catalog`. Regenerate protagonist GLBs with `pnpm --filter @city/assets generate-characters` (reads FBX under `/assets`, writes GLB under `packages/assets/generated/characters/`). Kenney animation FBX files include a short `0.Targeting Pose` (T-pose) beside Idle/Run/Jump; export selects the named locomotion clip and rejects durations under 0.2s. Do not hand-edit `catalog.generated.json`; encode exceptions in overrides and regenerate. Agent-only dimension overrides may correct Kenney FBX scale versus `commercial:building-a`; vehicle `uniformScale` overrides fit Car Kit length to about 0.54 cells; never rescale buildings or roads.
 
 ## Licensing and credits
 

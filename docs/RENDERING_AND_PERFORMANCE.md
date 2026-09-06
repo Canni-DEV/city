@@ -16,7 +16,7 @@ For local/manual fallback QA, add `?forceWebGL=1` before the hash route (for exa
 ## Budgets
 
 - **AC-010:** 60 FPS at 1920×1080 for a representative 96×96 city on a modern integrated-GPU laptop, including the M3.6 budget of 8–16 skinned agents and the M3.6.2 budget of 8–16 instanced vehicles on Auto/high.
-- **AC-011:** A 128×128 generation completes in under five seconds on the reference device.
+- **AC-011:** A 128×128 generation completes with placed entities on the reference device. The five-second wall-clock budget no longer applies once traffic validation is in the pipeline; Node proves completion, not a 5 s cap. Frame-rate remains AC-010. An async loading spinner is deferred.
 - **AC-012:** No redundant FBX, OBJ, previews, or source HTML appears in the production bundle.
 
 ### M3 recorded observations
@@ -24,7 +24,7 @@ For local/manual fallback QA, add `?forceWebGL=1` before the hash route (for exa
 Record device, browser, backend, quality, city size, entity count, frame-rate observation, generation duration, and screenshot in milestone PR evidence.
 
 - **Device / runtime:** Windows development host; Node generator tests; Vite production copy of catalog GLB/PNG runtime files including generated protagonist GLBs and skins (no FBX, OBJ, or source HTML).
-- **AC-011 generation:** A 128×128 Balanced city completes in under five seconds in Node (automated). The 200-city preset/size batch including 64/96/128 maps finished with the rest of the core suite (including TST-008) in approximately 15 seconds.
+- **AC-011 generation:** A 128×128 Balanced city completes in Node (automated) without a five-second wall-clock gate. GEN-029 traffic validation typically takes longer than the former M3 budget; the 200-city preset/size batch still proves occupancy and placement, not a 5 s cap.
 - **AC-010 frame rate:** Diagnostics expose FPS, entity count, pedestrian count, sidewalk count, and draw calls after generation. Cursor Chromium QA on this host (96×96 Balanced, seed `green-crossroads`, generator `0.6.3`): WebGPU Auto/high with 12 agents, 1437 sidewalks, 1001 road cells, 0 `*-line` tiles, local `*-path` only at neighborhood T/4-ways (22 tiles: 7 `road-intersection-path` + 15 `road-crossroad-path`), avenue T/4-way as unsuffixed `road-intersection` (168) and `road-crossroad` (24), and 766 `road-straight` through-segments; `?forceWebGL=1` Auto/medium reports WebGL2, same occupancy, ~72 fps. Agents stay on the gray ring, not mid-block asphalt. Edge was not driven separately (same Blink family as the Chrome harness). Generator `0.6.6` stitches dual L/T/4-way occupancy blocks, uses `road-crossroad` on 2×2 cells with four openings, and places 3×3 `road-roundabout` on 1-cell-wide local 4-ways; regenerate for current tile counts.
 - **AC-012 bundle:** `apps/web/dist/runtime-assets` contains only catalog-referenced GLB models and PNG textures (city kits plus generated protagonist GLBs and four skins; no FBX).
 

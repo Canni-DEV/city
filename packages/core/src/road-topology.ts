@@ -327,13 +327,35 @@ export function resolveRoadTopology(
       }
     }
   }
+  const portals = new Set(topology.portals.flatMap((p) => p.portIds));
+  const isComplex = (kind: string) =>
+    kind === "junction" || kind === "roundabout" || kind === "curve";
+  for (const section of topology.sections) {
+    if (isComplex(section.kind)) continue;
+    const ports = topology.ports.filter((p) => p.sectionId === section.id);
+    if (new Set(ports.map((p) => p.direction)).size !== 1) continue;
+    section.kind = "terminal";
+    for (const p of ports) {
+      if (portals.has(p.id)) continue;
+      p.inbound = true;
+      p.outbound = true;
+      const peer = p.peerId ? topology.ports.find((q) => q.id === p.peerId) : undefined;
+      if (!peer || portals.has(peer.id)) continue;
+      const peerSection = topology.sections.find((s) => s.id === peer.sectionId);
+      if (!peerSection || isComplex(peerSection.kind)) continue;
+      peer.inbound = true;
+      peer.outbound = true;
+    }
+  }
   for (const section of topology.sections) {
     const ports = topology.ports.filter((p) => p.sectionId === section.id);
-    const terminal = new Set(ports.map((p) => p.direction)).size === 1;
-    if (terminal) section.kind = "terminal";
+    if (!isComplex(section.kind) && new Set(ports.map((p) => p.direction)).size === 1)
+      section.kind = "terminal";
     for (const from of ports.filter((p) => p.inbound))
       for (const to of ports.filter((p) => p.outbound)) {
-        if (from.direction === to.direction && !terminal) continue;
+        if (from === to) {
+          if (section.kind !== "terminal") continue;
+        } else if (from.direction === to.direction && section.kind !== "junction") continue;
         topology.movements.push({
           id: `movement:${from.id}>${to.id}`,
           sectionId: section.id,

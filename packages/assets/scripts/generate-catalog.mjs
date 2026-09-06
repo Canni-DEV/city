@@ -195,7 +195,7 @@ const CAR_KIT_MODELS = [
   "firetruck",
   "garbage-truck",
 ];
-const TARGET_VEHICLE_LENGTH = 0.675;
+const TARGET_VEHICLE_LENGTH = 0.54;
 for (const character of characters) {
   const filename = `${character.model}.glb`;
   const sourcePath = path.join(characterRoot, filename);
