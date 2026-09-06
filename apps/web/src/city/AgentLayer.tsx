@@ -1,5 +1,6 @@
 import {
   type AssetCatalogEntry,
+  agentFootLift,
   agentUniformScale,
   assetById,
   runtimeAssetUrl,
@@ -102,7 +103,7 @@ function AgentAvatar({
     const pose = runtime.display.get(id),
       target = group.current;
     if (!pose || !target) return;
-    target.position.set(pose.x - half, pose.y, pose.z - half);
+    target.position.set(pose.x - half, pose.y + agentFootLift(), pose.z - half);
     target.rotation.y = pose.yaw;
     const dt = runtime.animationDelta;
     const desired = Math.min(1, pose.speed / 0.12);

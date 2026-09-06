@@ -16,7 +16,7 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 
 ### Changed
 
-- NPC scale is 75% of the previous body. Seeded walking is 0.33 cells/s ±10%, with arrival pauses, smooth yaw and idle/run blending. Shared fixed ticks preserve time and surviving identities; vehicle speed and generator hashes remain unchanged.
+- NPC scale is 56.25% of the previous body (25% smaller than the 0.75 override). Avatars lift visually by the `roads:tile-low` slab so feet sit on the pavement; radius, speed and navigation stay unchanged. Seeded walking is 0.33 cells/s ±10%, with arrival pauses, smooth yaw and idle/run blending. Shared fixed ticks preserve time and surviving identities; vehicle speed and generator hashes remain unchanged.
 
 - Leftover decoration and park vegetation are roughly 2× at the same 0–100 decoration control; density `very-high` fills every lot. Generator version stays `0.6.7` so road and traffic RNG (GEN-029) do not re-roll.
 - Sandbox chrome: primary Generate uses near-black `#09100f` on the lime fill (the form sticky rule no longer paints a dark background over it); library and city routes drop product/editor marketing copy.

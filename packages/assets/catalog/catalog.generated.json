@@ -3981,7 +3981,7 @@
       "elevated": false,
       "availableInV1": true,
       "review": "override",
-      "uniformScale": 0.75
+      "uniformScale": 0.5625
     },
     {
       "id": "protagonists:idle",

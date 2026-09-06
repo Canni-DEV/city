@@ -72,7 +72,7 @@
     "review": "override"
   },
   "protagonists:character-medium": {
-    "uniformScale": 0.75,
+    "uniformScale": 0.5625,
     "dimensions": [0.3076, 0.32, 0.0891],
     "footprint": {
       "width": 0.3076,

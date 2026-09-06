@@ -8,6 +8,6 @@ NPC identity, pose, locomotion, navigation, orders, crossing state and appearanc
 
 A shared 60 Hz runtime clock advances vehicles and pedestrians, preserves frame backlog and pauses while hidden. Vehicles retain their existing speed and ghost behavior. Pedestrians wait for a predicted safe complete crossing including body clearance and exit availability, and seek an alternative after ten seconds. No traffic yielding is added.
 
-Character scale is 75% of the existing body via catalog override. Idle/run blending follows actual speed. The shared pedestrian network and runtime state drive a keyboard-accessible diagnostic with pause and single step.
+Character scale is 56.25% of the existing body via catalog override (25% smaller than the prior 0.75). Rendering lifts the avatar by the sidewalk slab height only. Idle/run blending follows actual speed. The shared pedestrian network and runtime state drive a keyboard-accessible diagnostic with pause and single step. Collision radius, speed and navigation stay unchanged.
 
 This explicitly supersedes ADR-013's rigid reservations and park exclusion, SIM-002–005/010 and ADR-014's exclusion of pedestrian coordination for this milestone. CityDocumentV1, original assets, generator version and hashes remain unchanged. Old cities without road topology do not acquire vehicles. Stop for M3.6.3 review before M4.

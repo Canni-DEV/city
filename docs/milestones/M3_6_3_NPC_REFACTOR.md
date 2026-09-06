@@ -10,7 +10,7 @@ Requirements: SIM-001–010 (amended), SIM-020–026, FUN-044, UX-026, DAT-008, 
 - Continuous collision-checked motion, smooth turns, right preference, acceleration, seeded 0.33 cell/s ±10% walking and 1–3 second arrival pauses.
 - Component collections and moveTo/wait orders with explicit outcomes. Safe crossing admission against predicted vehicles, one-second safety margin and alternate routing after ten seconds.
 - Shared fixed 1/60 s clock and interpolated rendering; preserve backlog, pause while hidden, preserve surviving identities on population changes. Vehicle speed stays 1.85/3*2.
-- Catalog character scale 0.75, idle/run blending, pedestrian network/NPC inspector and shared Pause/Resume/Step.
+- Catalog character scale 0.5625, visual foot lift by `roads:tile-low` slab height, idle/run blending, pedestrian network/NPC inspector and shared Pause/Resume/Step.
 
 ## Verification and stop
 
@@ -26,7 +26,7 @@ Before that request, the full automated suite passed (core 69, assets 8, web 13 
 
 Usar una ciudad nueva Balanced 96×96 con seed `green-crossroads`, inicialmente 12 peatones y 12 autos. Activar **Pedestrian navigation** para seleccionar un NPC y ver su recorrido; usar zoom o cámara libre **F** para observarlo cerca.
 
-1. **Escala y apoyo:** NPC al 75% del tamaño anterior junto a puertas y autos. Pies sobre acera, cruce y césped, sin hundirse ni flotar.
+1. **Escala y apoyo:** NPC al 56.25% del cuerpo original (otro 25% menos que 0.75) junto a puertas y autos. Pies sobre acera, cruce y césped, sin hundirse ni flotar. El radio de colisión 0.12 no cambia.
 2. **Movimiento:** seguir varias esquinas y una vuelta de 180°. No debe saltar de posición; la orientación debe cambiar gradualmente. Observar aceleración, frenado y llegada.
 3. **Animación:** alternar caminata y pausas. Idle/run deben mezclarse sin golpes de pose ni reiniciar el ciclo. El clip sigue siendo el run original ralentizado.
 4. **Encuentros:** aumentar peatones para observar sentidos opuestos, alcance de un NPC lento y convergencias. Deben preferir la derecha, desviarse o ceder sin atravesarse ni salir de la acera.
