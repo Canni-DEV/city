@@ -15,6 +15,7 @@
     "dev": "pnpm --filter @city/web dev",
     "format": "biome check --write .",
     "test": "pnpm -r --if-present test",
+    "test:batch": "pnpm --filter @city/core test:batch",
     "typecheck": "pnpm -r --if-present typecheck"
   },
   "devDependencies": {

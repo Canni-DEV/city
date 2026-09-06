@@ -9,7 +9,7 @@ Implement City one reviewed milestone at a time. `CityDocumentV1` is the only so
 1. Read `docs/INDEX.md`, the current milestone brief, and every specification linked by that brief.
 2. Work on `milestone/mN-description` using Conventional Commits.
 3. Keep requirement, acceptance, test, and milestone IDs intact in code, tests, and pull-request evidence.
-4. Run `pnpm check`, `pnpm typecheck`, `pnpm test`, and `pnpm build` before requesting review.
+4. Run `pnpm check`, `pnpm typecheck`, `pnpm test`, and `pnpm build` before requesting review. Run `pnpm test:batch` on occupancy or generator-mesh pull requests (200-city TST-002/003).
 5. Update the requirements matrix, milestone brief, changelog, and affected specifications.
 6. Stop after the milestone and wait for review. Do not begin the next milestone.
 

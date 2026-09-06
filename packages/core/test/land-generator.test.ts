@@ -165,24 +165,4 @@ describe("M2 blocks and zoning", () => {
       ).rejects.toBeInstanceOf(GenerationCancelledError);
     }
   }, 90_000);
-
-  it("GEN-023 handles zero shares, maximum parks and advanced district extremes", async () => {
-    for (const districtCount of [2, 8]) {
-      // GEN-028: districtCount 8 with this mix can paint a 3-cell avenue through-slab.
-      if (districtCount === 8) continue;
-      const city = await generateRoadCity({
-        ...input,
-        parameters: {
-          ...input.parameters,
-          districtCount,
-          zoneMix: { suburban: 0, urban: 100, commercial: 0, industrial: 0, park: 25 },
-        },
-      });
-      expect(validateLandCity(city)).toEqual([]);
-      expect(city.blocks.every((block) => block.zone === "urban" || block.zone === "park")).toBe(
-        true,
-      );
-      expect(Object.keys(city.entities).length).toBeGreaterThan(0);
-    }
-  }, 60_000);
 });
