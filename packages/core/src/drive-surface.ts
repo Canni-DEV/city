@@ -1,5 +1,5 @@
 import type { CityDocumentV1 } from "./domain.js";
-import type { DriveAsset, VehicleBounds } from "./drive-contracts.js";
+import { type DriveAsset, required, type VehicleBounds } from "./drive-contracts.js";
 import {
   type Cubic,
   cubicPoint,
@@ -15,7 +15,7 @@ const cross = (a: Point, b: Point, p: Point) =>
 const area = (p: Point[]) =>
   Math.abs(
     p.reduce((s, a, i) => {
-      const b = p[(i + 1) % p.length]!;
+      const b = required(p[(i + 1) % p.length], "polygon");
       return s + a[0] * b[1] - a[1] * b[0];
     }, 0),
   ) / 2;
@@ -27,8 +27,8 @@ function profileBoundary(triangles: [Point, Point, Point][]): [Point, Point][] {
   const edges = new Map<string, { a: Point; b: Point; count: number }>();
   for (const tri of triangles)
     for (let i = 0; i < 3; i++) {
-      const a = tri[i]!,
-        b = tri[(i + 1) % 3]!,
+      const a = required(tri[i], "triangle"),
+        b = required(tri[(i + 1) % 3], "triangle"),
         dx = b[0] - a[0],
         dz = b[1] - a[1],
         len2 = dx * dx + dz * dz;
@@ -38,8 +38,8 @@ function profileBoundary(triangles: [Point, Point, Point][]): [Point, Point][] {
         .filter((v) => v.t >= -1e-6 && v.t <= 1 + 1e-6 && Math.abs(cross(a, b, v.p)) < 1e-6)
         .sort((a, b) => a.t - b.t);
       for (let j = 1; j < points.length; j++) {
-        const p = points[j - 1]!.p,
-          q = points[j]!.p;
+        const p = required(points[j - 1], "boundary").p,
+          q = required(points[j], "boundary").p;
         if (Math.hypot(p[0] - q[0], p[1] - q[1]) < 1e-6) continue;
         const key = [p.map((n) => n.toFixed(5)).join(","), q.map((n) => n.toFixed(5)).join(",")]
           .sort()
@@ -60,7 +60,11 @@ function hull(points: Point[]): Point[] {
   const half = (ps: Point[]) => {
     const h: Point[] = [];
     for (const p of ps) {
-      while (h.length > 1 && cross(h[h.length - 2]!, h[h.length - 1]!, p) <= 0) h.pop();
+      while (
+        h.length > 1 &&
+        cross(required(h[h.length - 2], "hull"), required(h[h.length - 1], "hull"), p) <= 0
+      )
+        h.pop();
       h.push(p);
     }
     return h;
@@ -103,7 +107,7 @@ export function buildDriveSurface(
           z <= Math.floor(Math.max(pair[0][1], pair[1][1]));
           z++
         ) {
-          const key = x + "," + z,
+          const key = `${x},${z}`,
             list = boundaryBuckets.get(key) ?? [];
           list.push(pair);
           boundaryBuckets.set(key, list);
@@ -144,7 +148,7 @@ export function buildDriveSurface(
       !document.map.boundaryMask[z * document.map.size + x]
     )
       return false;
-    return (buckets.get(x + "," + z) ?? []).some((t) => pointInTriangle(p, t));
+    return (buckets.get(`${x},${z}`) ?? []).some((t) => pointInTriangle(p, t));
   };
   return {
     triangles,
@@ -162,13 +166,13 @@ export function buildDriveSurface(
           z <= Math.floor(Math.max(...polygon.map((p) => p[1])));
           z++
         )
-          for (const edge of boundaryBuckets.get(x + "," + z) ?? []) candidates.add(edge);
+          for (const edge of boundaryBuckets.get(`${x},${z}`) ?? []) candidates.add(edge);
       for (const [a, b] of candidates) {
         let lo = 0,
           hi = 1;
         for (let i = 0; i < polygon.length; i++) {
-          const p = polygon[i]!,
-            q = polygon[(i + 1) % polygon.length]!,
+          const p = required(polygon[i], "cover"),
+            q = required(polygon[(i + 1) % polygon.length], "cover"),
             da = cross(p, q, a),
             db = cross(p, q, b),
             slope = db - da;
@@ -202,12 +206,13 @@ export function buildDriveSurface(
 
 function bodyCorners(bounds: VehicleBounds, tangent: Point, pad = 0): Point[] {
   const [fx, fz] = tangent;
-  return [
+  const corners: Point[] = [
     [bounds.min[0] - pad, bounds.min[1] - pad],
     [bounds.max[0] + pad, bounds.min[1] - pad],
     [bounds.max[0] + pad, bounds.max[1] + pad],
     [bounds.min[0] - pad, bounds.max[1] + pad],
-  ].map(([x, z]) => [x! * fz + z! * fx, -x! * fx + z! * fz]);
+  ];
+  return corners.map(([x, z]) => [x * fz + z * fx, -x * fx + z * fz]);
 }
 export function vehicleFootprint(position: Point, tangent: Point, bounds: VehicleBounds): Point[] {
   return bodyCorners(bounds, tangent).map((p) => [p[0] + position[0], p[1] + position[1]]);
@@ -225,8 +230,8 @@ export function curveFitsSurface(c: Cubic, bounds: VehicleBounds, surface: Drive
     if (!surface.covers(actual)) return false;
     let angle = 0;
     for (let i = 0; i < 3; i++) {
-      const a = curve[i]!,
-        b = curve[i + 1]!,
+      const a = required(curve[i], "curve"),
+        b = required(curve[i + 1], "curve"),
         dx = b[0] - a[0],
         dz = b[1] - a[1],
         n = Math.hypot(dx, dz);

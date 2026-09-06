@@ -54,3 +54,8 @@ export interface DriveAsset {
 /** SIM-017: this is numerical tolerance, not permission to mount a curb. */
 export const DRIVE_TOLERANCE = 0.001;
 export const DRIVE_LANE_OFFSET = 0.16;
+
+export function required<T>(value: T | undefined, message: string): T {
+  if (value === undefined) throw new Error(message);
+  return value;
+}

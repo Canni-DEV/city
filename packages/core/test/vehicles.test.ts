@@ -85,7 +85,10 @@ describe("TST-009 explicit runtime lanes", () => {
       end = sampleDriveSegment(turn, turn.length);
     expect(start.x < 4 || start.x > 5 || start.z < 4 || start.z > 5).toBe(true);
     for (const id of turn.successors) {
-      const next = sampleDriveSegment(n.byId.get(id)!, 0);
+      const nextSegment = n.byId.get(id);
+      expect(nextSegment).toBeDefined();
+      if (!nextSegment) return;
+      const next = sampleDriveSegment(nextSegment, 0);
       expect(next.x).toBeCloseTo(end.x, 8);
       expect(next.z).toBeCloseTo(end.z, 8);
       expect(Math.cos(next.yaw - end.yaw)).toBeCloseTo(1, 8);
@@ -181,10 +184,15 @@ describe("TST-009 explicit runtime lanes", () => {
     for (let i = 0; i < 200; i++)
       split = tickVehicles(split, { seed: "steps", network: n, dt: 0.1, speed: 1 });
     for (let i = 0; i < once.length; i++) {
-      expect(once[i]!.segmentId).toBe(split[i]!.segmentId);
-      expect(once[i]!.distance).toBeCloseTo(split[i]!.distance, 8);
-      expect(once[i]!.portalCount).toBeGreaterThan(0);
-      const p = vehicleWorldPose(once[i]!, n);
+      const a = once[i];
+      const b = split[i];
+      expect(a).toBeDefined();
+      expect(b).toBeDefined();
+      if (!a || !b) return;
+      expect(a.segmentId).toBe(b.segmentId);
+      expect(a.distance).toBeCloseTo(b.distance, 8);
+      expect(a.portalCount).toBeGreaterThan(0);
+      const p = vehicleWorldPose(a, n);
       expect(Number.isFinite(p.yaw)).toBe(true);
     }
     expect(() => tickVehicles(vehicles, { seed: "x", network: n, dt: Infinity })).toThrow();
@@ -193,12 +201,19 @@ describe("TST-009 explicit runtime lanes", () => {
     expect(vehicleCountFor(96, "high")).toBe(12);
     expect(DEFAULT_VEHICLE_SPEED).toBeCloseTo((1.85 / 3) * 2);
     const n = buildDriveNetwork(straight(), TEST_ASSETS),
-      v = spawnVehicles({ seed: "ghost", network: n, count: 1 })[0]!;
+      v = spawnVehicles({ seed: "ghost", network: n, count: 1 })[0];
+    expect(v).toBeDefined();
+    if (!v) return;
     const result = tickVehicles([v, { ...v, id: "duplicate" }], {
       seed: "ghost",
       network: n,
       dt: 0.1,
     });
-    expect(vehicleWorldPose(result[0]!, n)).toEqual(vehicleWorldPose(result[1]!, n));
+    const left = result[0];
+    const right = result[1];
+    expect(left).toBeDefined();
+    expect(right).toBeDefined();
+    if (!left || !right) return;
+    expect(vehicleWorldPose(left, n)).toEqual(vehicleWorldPose(right, n));
   });
 });

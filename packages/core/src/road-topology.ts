@@ -4,6 +4,7 @@ import {
   type DriveAsset,
   type RoadPort,
   type RoadTopology,
+  required,
 } from "./drive-contracts.js";
 import { transformRoadPoint } from "./drive-geometry.js";
 import {
@@ -93,7 +94,9 @@ export function resolveRoadTopology(
       portGroups.set(portKey(position), group);
     }
   }
-  const headingByPort=new Map(topology.ports.map(p=>[p.id,headingBySection.get(p.sectionId)]));
+  const headingByPort = new Map(
+    topology.ports.map((p) => [p.id, headingBySection.get(p.sectionId)]),
+  );
   for (const group of portGroups.values())
     for (const port of group) {
       const peer = group.find(
@@ -127,7 +130,7 @@ export function resolveRoadTopology(
     const group = topology.sections.filter((s) => s.tileIds.some((id) => tileIds.has(id)));
     if (group.length < 2) continue;
     const ids = new Set(group.map((s) => s.id)),
-      id = [...ids].sort()[0]!;
+      id = required([...ids].sort()[0], "merged junction");
     const section = {
       id,
       tileIds: group.flatMap((s) => s.tileIds).sort(),
@@ -150,13 +153,19 @@ export function resolveRoadTopology(
     for (const p of topology.ports) if (ids.has(p.sectionId)) p.sectionId = id;
   }
   const complex = (id: string) => {
-    const s = topology.sections.find((s) => s.id === id)!;
+    const s = required(
+      topology.sections.find((section) => section.id === id),
+      id,
+    );
     return (
       s.kind !== "roundabout" &&
       s.kind !== "curve" &&
       s.kind !== "terminal" &&
       !s.tileIds.some((id) =>
-        document.roadGraph.cells.find((t) => t.id === id)!.assetId.includes("straight"),
+        required(
+          document.roadGraph.cells.find((t) => t.id === id),
+          id,
+        ).assetId.includes("straight"),
       )
     );
   };
@@ -171,7 +180,7 @@ export function resolveRoadTopology(
       continue;
     const group = topology.sections.filter((s) => s.id === p.sectionId || s.id === peer.sectionId),
       ids = new Set(group.map((s) => s.id)),
-      id = [...ids].sort()[0]!;
+      id = required([...ids].sort()[0], "merged junction");
     topology.sections = topology.sections.filter((s) => !ids.has(s.id));
     topology.sections.push({
       id,
@@ -195,12 +204,13 @@ export function resolveRoadTopology(
   const sectionById = new Map(topology.sections.map((s) => [s.id, s]));
   const byId = new Map(topology.ports.map((p) => [p.id, p]));
   const straight = (id: string) => {
-    const section = sectionById.get(id)!;
+    const section = required(sectionById.get(id), id);
     return (
       section.kind === "street" &&
-      document.roadGraph.cells
-        .find((t) => t.id === section.tileIds[0])!
-        .assetId.includes("straight")
+      required(
+        document.roadGraph.cells.find((t) => t.id === section.tileIds[0]),
+        section.tileIds[0] ?? id,
+      ).assetId.includes("straight")
     );
   };
   for (const p of topology.ports) {
@@ -213,7 +223,7 @@ export function resolveRoadTopology(
     peer.position = [...shifted];
   }
   // External gates terminate inside the final tile, so the whole body remains on the map.
-  const handledExternal=new Set<string>();
+  const handledExternal = new Set<string>();
   for (const gate of document.roadGraph.nodes.filter((n) => n.kind === "gate")) {
     const covered = document.roadGraph.cells.filter((tile) =>
       occupiedCellsForRoadTile(tile).some(
@@ -224,9 +234,12 @@ export function resolveRoadTopology(
     );
     const portIds: string[] = [];
     for (const tile of covered) {
-      const section = topology.sections.find((s) => s.tileIds.includes(tile.id))!;
+      const section = required(
+        topology.sections.find((s) => s.tileIds.includes(tile.id)),
+        tile.id,
+      );
       const ports = topology.ports.filter((p) => p.sectionId === section.id);
-      const disconnected = ports.filter((p) => !p.peerId&&!handledExternal.has(p.id));
+      const disconnected = ports.filter((p) => !p.peerId && !handledExternal.has(p.id));
       if (disconnected.length) {
         for (const p of disconnected) {
           handledExternal.add(p.id);
@@ -243,7 +256,7 @@ export function resolveRoadTopology(
         continue;
       }
       if (ports.length !== 1) continue;
-      const inside = ports[0]!,
+      const inside = required(ports[0], tile.id),
         direction = OPPOSITE_CARDINAL[inside.direction],
         delta = DIRECTION_DELTA[direction];
       const port: RoadPort = {
@@ -299,7 +312,10 @@ export function resolveRoadTopology(
       (p) => !p.peerId && topology.portals.some((q) => q.portIds.includes(p.id)),
     );
     if (external && ports.length === 2 && headingBySection.has(section.id)) {
-      const interior = ports.find((p) => p !== external)!;
+      const interior = required(
+        ports.find((p) => p !== external),
+        section.id,
+      );
       interior.inbound = external.outbound;
       interior.outbound = external.inbound;
       interior.offset = external.offset;

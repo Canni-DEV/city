@@ -1,4 +1,5 @@
 import { agentCountFor, DEFAULT_AGENT_SPEED } from "./agents.js";
+import { required } from "./drive-contracts.js";
 import { type DriveNetwork, findNetworkPath, sampleDriveSegment } from "./drive-network.js";
 import { SeededRandom } from "./rng.js";
 export const DEFAULT_VEHICLE_SPEED = DEFAULT_AGENT_SPEED * 2;
@@ -39,7 +40,7 @@ function assignDestination(
   const visited = new Set([vehicle.segmentId]),
     queue = [vehicle.segmentId];
   for (let i = 0; i < queue.length; i++)
-    for (const id of network.byId.get(queue[i]!)?.successors ?? [])
+    for (const id of network.byId.get(required(queue[i], "vehicle queue"))?.successors ?? [])
       if (!visited.has(id)) {
         visited.add(id);
         queue.push(id);
@@ -79,13 +80,16 @@ export function spawnVehicles(input: {
   ) {
     const rng = new SeededRandom(`${input.seed}:vehicle:${index}`);
     const slot = rng.integer(0, free.length - 1),
-      segmentId = free.splice(slot, 1)[0]!;
+      segmentId = required(free.splice(slot, 1)[0], "vehicle slot");
     const vehicle: VehicleRuntimeState = {
       id: `vehicle:${index}`,
       index,
-      assetId: VEHICLE_ASSET_IDS[rng.integer(0, VEHICLE_ASSET_IDS.length - 1)]!,
+      assetId: required(
+        VEHICLE_ASSET_IDS[rng.integer(0, VEHICLE_ASSET_IDS.length - 1)],
+        "vehicle asset",
+      ),
       segmentId,
-      distance: rng.float() * input.network.byId.get(segmentId)!.length,
+      distance: rng.float() * required(input.network.byId.get(segmentId), segmentId).length,
       route: [],
       destination: segmentId,
       destinationCount: 0,
@@ -125,9 +129,10 @@ export function tickVehicles(
         const oldPortal = input.network.topology.portals.find((p) =>
           p.portIds.includes(segment.to),
         );
-        const entries = input.network.entrances.filter(
-          (id) => !oldPortal?.portIds.includes(input.network.byId.get(id)!.from),
-        );
+        const entries = input.network.entrances.filter((id) => {
+          const entry = input.network.byId.get(id);
+          return entry ? !oldPortal?.portIds.includes(entry.from) : false;
+        });
         const rng = new SeededRandom(`${input.seed}:vehicle:${v.index}:portal:${v.portalCount++}`);
         next = entries[rng.integer(0, Math.max(0, entries.length - 1))];
         v.route = [];

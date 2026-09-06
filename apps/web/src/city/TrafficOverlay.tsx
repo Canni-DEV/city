@@ -20,8 +20,13 @@ export function TrafficOverlay({
     const selectedSegment = selected ? network.byId.get(selected) : undefined;
     const related = new Set([selected, ...(selectedSegment?.successors ?? [])]);
     const invalid = new Set(network.validation.issues.map((i) => i.segmentId));
-    const line = (a: number[], b: number[], color: string, id: string | null) => {
-      positions.push(a[0]! - half, 0.065, a[1]! - half, b[0]! - half, 0.065, b[1]! - half);
+    const line = (
+      a: readonly [number, number],
+      b: readonly [number, number],
+      color: string,
+      id: string | null,
+    ) => {
+      positions.push(a[0] - half, 0.065, a[1] - half, b[0] - half, 0.065, b[1] - half);
       const c = new THREE.Color(color);
       colors.push(c.r, c.g, c.b, c.r, c.g, c.b);
       ids.push(id);
@@ -69,7 +74,8 @@ export function TrafficOverlay({
     }
     for (const portal of network.topology.portals)
       for (const id of portal.portIds) {
-        const p = network.topology.ports.find((p) => p.id === id)!;
+        const p = network.topology.ports.find((port) => port.id === id);
+        if (!p) continue;
         line(
           [p.position[0] - 0.15, p.position[1]],
           [p.position[0] + 0.15, p.position[1]],

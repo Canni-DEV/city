@@ -1,5 +1,10 @@
 import type { CityDocumentV1 } from "./domain.js";
-import type { DriveAsset, RoadTopology, VehicleBounds } from "./drive-contracts.js";
+import {
+  type DriveAsset,
+  type RoadTopology,
+  required,
+  type VehicleBounds,
+} from "./drive-contracts.js";
 import {
   type Cubic,
   createDriveCurve,
@@ -58,12 +63,16 @@ export function buildDriveNetwork(
   const ports = new Map(topology.ports.map((p) => [p.id, p]));
   const sections = new Map(topology.sections.map((s) => [s.id, s]));
   const portalPorts = new Set(topology.portals.flatMap((p) => p.portIds));
-  const bodies = assets
-    .filter((a) => a.vehicleBounds)
-    .map((a) => ({
-      min: a.vehicleBounds!.min.map((n) => n * (a.uniformScale ?? 1)) as Point,
-      max: a.vehicleBounds!.max.map((n) => n * (a.uniformScale ?? 1)) as Point,
-    }));
+  const bodies = assets.flatMap((a) =>
+    a.vehicleBounds
+      ? [
+          {
+            min: a.vehicleBounds.min.map((n) => n * (a.uniformScale ?? 1)) as Point,
+            max: a.vehicleBounds.max.map((n) => n * (a.uniformScale ?? 1)) as Point,
+          },
+        ]
+      : [],
+  );
   // One envelope contains every catalog body, including asymmetric pivots.
   const body: VehicleBounds = {
     min: [Math.min(...bodies.map((b) => b.min[0])), Math.min(...bodies.map((b) => b.min[1]))],
@@ -116,7 +125,7 @@ export function buildDriveNetwork(
         code: "BODY_OUTSIDE_CALZADA",
         sectionId,
         segmentId: id,
-        position: controls[0]![0],
+        position: required(controls[0], id)[0],
         message: "Swept catalog body leaves the measured carriageway",
       });
     segments.push(segment);
@@ -140,7 +149,10 @@ export function buildDriveNetwork(
   };
   // A roundabout has one shared CCW ring, not an independent spline per destination.
   for (const section of topology.sections.filter((s) => s.kind === "roundabout")) {
-    const tile = document.roadGraph.cells.find((t) => section.tileIds.includes(t.id))!;
+    const tile = required(
+      document.roadGraph.cells.find((t) => section.tileIds.includes(t.id)),
+      section.id,
+    );
     const center: Point = [tile.position[0] + 1.5, tile.position[1] + 1.5];
     const ps = topology.ports.filter((p) => p.sectionId === section.id);
     const ringPoints = ps
@@ -165,7 +177,7 @@ export function buildDriveNetwork(
     ];
     const tangent = (angle: number): Point => [Math.cos(angle), -Math.sin(angle)];
     for (const [i, r] of ringPoints.entries()) {
-      const next = ringPoints[(i + 1) % ringPoints.length]!;
+      const next = required(ringPoints[(i + 1) % ringPoints.length], "roundabout ring");
       const sweep = (next.angle - r.angle + Math.PI * 2) % (Math.PI * 2),
         h = (4 / 3) * Math.tan(sweep / 4) * radius;
       addSegment(`ring:${r.id}`, section.id, "ring", r.id, next.id, [
@@ -207,10 +219,10 @@ export function buildDriveNetwork(
     }
   }
   for (const movement of topology.movements) {
-    const section = sections.get(movement.sectionId)!;
+    const section = required(sections.get(movement.sectionId), movement.sectionId);
     if (section.kind === "roundabout") continue;
-    const from = ports.get(movement.from)!,
-      to = ports.get(movement.to)!;
+    const from = required(ports.get(movement.from), movement.from),
+      to = required(ports.get(movement.to), movement.to);
     const a = lanePortPosition(from, true),
       b = lanePortPosition(to, false),
       ta = negate(DIRECTION_DELTA[from.direction]),
@@ -236,11 +248,23 @@ export function buildDriveNetwork(
           );
           routers.set(section.id, router);
         }
-        let routed=router({ point: a, tangent: ta }, { point: b, tangent: tb });
-        if(!routed) {
-          const key=`${section.id}:dense`;let dense=routers.get(key);
-          if(!dense){dense=createJunctionRouter(document.roadGraph.cells.filter(t=>section.tileIds.includes(t.id)).map(t=>t.position),body,surface,fits,true);routers.set(key,dense);}
-          routed=dense({point:a,tangent:ta},{point:b,tangent:tb});
+        let routed = router({ point: a, tangent: ta }, { point: b, tangent: tb });
+        if (!routed) {
+          const key = `${section.id}:dense`;
+          let dense = routers.get(key);
+          if (!dense) {
+            dense = createJunctionRouter(
+              document.roadGraph.cells
+                .filter((t) => section.tileIds.includes(t.id))
+                .map((t) => t.position),
+              body,
+              surface,
+              fits,
+              true,
+            );
+            routers.set(key, dense);
+          }
+          routed = dense({ point: a, tangent: ta }, { point: b, tangent: tb });
         }
         controls = routed ?? controls;
       }
@@ -273,7 +297,7 @@ export function buildDriveNetwork(
         code: "TRAPPED_LANE",
         sectionId: segment.sectionId,
         segmentId: segment.id,
-        position: segment.curves.at(-1)!.controls[3],
+        position: required(segment.curves.at(-1), segment.id).controls[3],
         message: "Lane has no continuation or external exit",
       });
   }
@@ -285,13 +309,11 @@ export function buildDriveNetwork(
         position: p.position,
         message: `No matching road connector for ${p.id}`,
       });
-  const crossingZones = [...crossingCellSet(document)]
-    .sort()
-    .map((key) => ({
-      id: `crossing:${key}`,
-      cell: key.split(",").map(Number) as Point,
-      segmentIds: [] as string[],
-    }));
+  const crossingZones = [...crossingCellSet(document)].sort().map((key) => ({
+    id: `crossing:${key}`,
+    cell: key.split(",").map(Number) as Point,
+    segmentIds: [] as string[],
+  }));
   const crossingByCell = new Map(crossingZones.map((z) => [z.cell.join(","), z]));
   for (const s of segments)
     for (const c of s.curves)
@@ -322,7 +344,7 @@ export function sampleDriveSegment(segment: DriveSegment, distance: number) {
     if (remaining <= curve.length) return sampleDriveCurve(curve, remaining);
     remaining -= curve.length;
   }
-  const last = segment.curves.at(-1)!;
+  const last = required(segment.curves.at(-1), segment.id);
   return sampleDriveCurve(last, last.length);
 }
 
@@ -337,19 +359,21 @@ export function findNetworkPath(
     parent = new Map<string, string>(),
     open = [start];
   while (open.length) {
-    open.sort((a, b) => cost.get(a)! - cost.get(b)! || a.localeCompare(b));
-    const current = open.shift()!;
+    open.sort((a, b) => required(cost.get(a), a) - required(cost.get(b), b) || a.localeCompare(b));
+    const current = open.shift();
+    if (current === undefined) break;
     if (current === goal) {
       const path = [goal];
       let c = goal;
       while (parent.has(c)) {
-        c = parent.get(c)!;
+        c = required(parent.get(c), c);
         path.unshift(c);
       }
       return path;
     }
-    for (const id of network.byId.get(current)!.successors) {
-      const next = cost.get(current)! + network.byId.get(id)!.length;
+    const currentSegment = required(network.byId.get(current), current);
+    for (const id of currentSegment.successors) {
+      const next = required(cost.get(current), current) + required(network.byId.get(id), id).length;
       if (next >= (cost.get(id) ?? Infinity)) continue;
       cost.set(id, next);
       parent.set(id, current);

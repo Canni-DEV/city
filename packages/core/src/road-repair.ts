@@ -7,8 +7,8 @@ import {
   DIRECTION_DELTA,
   isAvenueClass,
   OPPOSITE_CARDINAL,
-  occupiedRoadSet,
   occupiedCellsForRoadTile,
+  occupiedRoadSet,
   type Point,
   ROAD_TILE_CONNECTORS,
   resolveUnitTile,
@@ -48,7 +48,8 @@ export function repairRoadOpenings(document: CityDocumentV1, assets: readonly Dr
         const filled = square.filter((p) => isAvenueClass(original.get(p.join(","))?.roadClass));
         const missing = square.filter((p) => !occupied.has(p.join(",")));
         if (filled.length !== 3 || missing.length !== 1) continue;
-        const p = missing[0]!;
+        const p = missing[0];
+        if (!p) continue;
         if (
           p[0] < 0 ||
           p[1] < 0 ||
@@ -61,14 +62,20 @@ export function repairRoadOpenings(document: CityDocumentV1, assets: readonly Dr
         for (const q of square) affected.add(q.join(","));
       }
   }
-  const classes=new Map(document.roadGraph.cells.flatMap(t=>occupiedCellsForRoadTile(t).map(p=>[p.join(","),t.roadClass??"local"] as const)));
-  for(const key of additions.keys())classes.set(key,"arterial");
-  stitchAvenueJunctions(classes,size,document.map.boundaryMask);
-  for(const key of classes.keys())if(!occupied.has(key)&&!additions.has(key)) {
-    const p=key.split(",").map(Number) as Point;additions.set(key,p);
-    for(const d of Object.values(DIRECTION_DELTA))affected.add(`${p[0]+d[0]},${p[1]+d[1]}`);
-    affected.add(key);
-  }
+  const classes = new Map(
+    document.roadGraph.cells.flatMap((t) =>
+      occupiedCellsForRoadTile(t).map((p) => [p.join(","), t.roadClass ?? "local"] as const),
+    ),
+  );
+  for (const key of additions.keys()) classes.set(key, "arterial");
+  stitchAvenueJunctions(classes, size, document.map.boundaryMask);
+  for (const key of classes.keys())
+    if (!occupied.has(key) && !additions.has(key)) {
+      const p = key.split(",").map(Number) as Point;
+      additions.set(key, p);
+      for (const d of Object.values(DIRECTION_DELTA)) affected.add(`${p[0] + d[0]},${p[1] + d[1]}`);
+      affected.add(key);
+    }
   for (const [key, position] of [...additions].sort(([a], [b]) => a.localeCompare(b))) {
     occupied.add(key);
     document.roadGraph.cells.push({

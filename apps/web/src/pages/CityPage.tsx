@@ -53,7 +53,7 @@ export function CityPage() {
     [generatedCity],
   );
   useEffect(() => {
-    if(generatedCity) setSelectedDriveId(null);
+    if (generatedCity) setSelectedDriveId(null);
   }, [generatedCity]);
   const quality = useMemo(
     () =>

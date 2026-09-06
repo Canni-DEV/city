@@ -116,18 +116,18 @@ describe("asset catalog", () => {
   });
 
   it("AST-014 measures carriageway separately from the footprint and keeps vehicle pivots", () => {
-    const straight=assetCatalog.entries.find(e=>e.id==="roads:road-straight");
-    const points=straight?.driveProfile?.triangles.flat()??[];
+    const straight = assetCatalog.entries.find((e) => e.id === "roads:road-straight");
+    const points = straight?.driveProfile?.triangles.flat() ?? [];
     expect(points.length).toBeGreaterThan(0);
-    expect(Math.max(...points.map(p=>p[1]))).toBeCloseTo(0.4,5);
-    expect(Math.min(...points.map(p=>p[1]))).toBeCloseTo(-0.4,5);
+    expect(Math.max(...points.map((p) => p[1]))).toBeCloseTo(0.4, 5);
+    expect(Math.min(...points.map((p) => p[1]))).toBeCloseTo(-0.4, 5);
     expect(straight?.footprint.depth).toBe(1);
-    const sedan=assetCatalog.entries.find(e=>e.id==="cars:sedan");
-    expect(sedan?.vehicleBounds?.min[1]).toBeCloseTo(-1.3,5);
-    expect(sedan?.vehicleBounds?.max[1]).toBeCloseTo(1.25,5);
-    for(const car of assetCatalog.entries.filter(e=>e.pack==="cars")) {
+    const sedan = assetCatalog.entries.find((e) => e.id === "cars:sedan");
+    expect(sedan?.vehicleBounds?.min[1]).toBeCloseTo(-1.3, 5);
+    expect(sedan?.vehicleBounds?.max[1]).toBeCloseTo(1.25, 5);
+    for (const car of assetCatalog.entries.filter((e) => e.pack === "cars")) {
       expect(car.vehicleBounds).toBeDefined();
-      expect(car.vehicleBounds?.max[0]).toBeGreaterThan(car.vehicleBounds?.min[0]??Infinity);
+      expect(car.vehicleBounds?.max[0]).toBeGreaterThan(car.vehicleBounds?.min[0] ?? Infinity);
     }
   });
 

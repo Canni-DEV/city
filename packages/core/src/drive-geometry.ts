@@ -1,4 +1,4 @@
-import { DRIVE_TOLERANCE } from "./drive-contracts.js";
+import { DRIVE_TOLERANCE, required } from "./drive-contracts.js";
 import type { Point } from "./road-tiles.js";
 
 export type Cubic = [Point, Point, Point, Point];
@@ -12,24 +12,23 @@ export interface DriveCurve {
   samples: CurveSample[];
   length: number;
 }
+const axis = (p: Point, i: 0 | 1): number => p[i];
 export function cubicPoint(c: Cubic, t: number): Point {
   const u = 1 - t;
-  return [0, 1].map(
-    (i) =>
-      u * u * u * c[0][i]! +
-      3 * u * u * t * c[1][i]! +
-      3 * u * t * t * c[2][i]! +
-      t * t * t * c[3][i]!,
-  ) as Point;
+  const blend = (i: 0 | 1) =>
+    u * u * u * axis(c[0], i) +
+    3 * u * u * t * axis(c[1], i) +
+    3 * u * t * t * axis(c[2], i) +
+    t * t * t * axis(c[3], i);
+  return [blend(0), blend(1)];
 }
 export function cubicTangent(c: Cubic, t: number): Point {
   const u = 1 - t;
-  const v = [0, 1].map(
-    (i) =>
-      3 * u * u * (c[1][i]! - c[0][i]!) +
-      6 * u * t * (c[2][i]! - c[1][i]!) +
-      3 * t * t * (c[3][i]! - c[2][i]!),
-  ) as Point;
+  const delta = (i: 0 | 1) =>
+    3 * u * u * (axis(c[1], i) - axis(c[0], i)) +
+    6 * u * t * (axis(c[2], i) - axis(c[1], i)) +
+    3 * t * t * (axis(c[3], i) - axis(c[2], i));
+  const v: Point = [delta(0), delta(1)];
   const n = Math.hypot(...v);
   return n > 1e-12 ? [v[0] / n, v[1] / n] : [0, 0];
 }
@@ -73,11 +72,11 @@ export function sampleDriveCurve(curve: DriveCurve, distance: number) {
     hi = curve.samples.length - 1;
   while (hi - lo > 1) {
     const m = (lo + hi) >> 1;
-    if (curve.samples[m]!.distance < s) lo = m;
+    if (required(curve.samples[m], "drive sample").distance < s) lo = m;
     else hi = m;
   }
-  const a = curve.samples[lo]!,
-    b = curve.samples[hi]!;
+  const a = required(curve.samples[lo], "drive sample"),
+    b = required(curve.samples[hi], "drive sample");
   const t = a.t + ((b.t - a.t) * (s - a.distance)) / Math.max(1e-12, b.distance - a.distance);
   const point = cubicPoint(curve.controls, t),
     tangent = cubicTangent(curve.controls, t);
@@ -100,7 +99,7 @@ export function transformRoadPoint(
 }
 export function pointInTriangle(p: Point, triangle: readonly Point[], epsilon = 1e-8): boolean {
   const signs = triangle.map((a, i) => {
-    const b = triangle[(i + 1) % 3]!;
+    const b = required(triangle[(i + 1) % 3], "triangle");
     return (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0]);
   });
   return signs.every((n) => n >= -epsilon) || signs.every((n) => n <= epsilon);
