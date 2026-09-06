@@ -20,6 +20,9 @@ import { AgentLayer } from "./AgentLayer";
 import { FreeFlightControls } from "./FreeFlightControls";
 import { InstancedAssetBatch } from "./InstancedAssetBatch";
 import { LandOverlays, type OverlayOptions } from "./LandOverlays";
+import { PedestrianOverlay } from "./PedestrianOverlay";
+import { SimulationLayer } from "./SimulationLayer";
+import type { SimulationRuntime } from "./simulation-runtime";
 import { TrafficOverlay } from "./TrafficOverlay";
 import { VehicleLayer } from "./VehicleLayer";
 
@@ -163,6 +166,8 @@ function CityScene({
   overlays,
   driveNetwork,
   selectedDriveId,
+  simulation,
+  selectedNpcId,
   onSelectDrive,
   quality,
   selectedEntityId,
@@ -174,6 +179,8 @@ function CityScene({
   overlays: OverlayOptions;
   driveNetwork: DriveNetwork | null;
   selectedDriveId: string | null;
+  simulation: SimulationRuntime | null;
+  selectedNpcId: string | null;
   onSelectDrive: (id: string | null) => void;
   quality: ResolvedQuality;
   selectedEntityId: string | null;
@@ -241,6 +248,16 @@ function CityScene({
         shadow-camera-bottom={-quality.shadowSpan}
       />
       <FrameStats onStats={onStats} />
+      {simulation && (
+        <SimulationLayer
+          runtime={simulation}
+          agents={quality.agentCount}
+          vehicles={quality.vehicleCount}
+        />
+      )}
+      {simulation && overlays.pedestrians && (
+        <PedestrianOverlay runtime={simulation} selected={selectedNpcId} />
+      )}
       <mesh position={[0, -0.22, 0]} receiveShadow>
         <boxGeometry args={[size + 4, 0.24, size + 4]} />
         <meshBasicMaterial color="#17241f" />
@@ -274,9 +291,9 @@ function CityScene({
           />
         ))}
         <SelectionProxy document={document} entityId={selectedEntityId} />
-        <AgentLayer document={document} count={quality.agentCount} />
-        {driveNetwork && (
-          <VehicleLayer document={document} count={quality.vehicleCount} network={driveNetwork} />
+        {simulation && <AgentLayer runtime={simulation} count={quality.agentCount} />}
+        {simulation && driveNetwork && (
+          <VehicleLayer runtime={simulation} count={quality.vehicleCount} />
         )}
       </Suspense>
       {freeCamera ? null : (
@@ -298,6 +315,8 @@ export function CityCanvas({
   overlays,
   driveNetwork,
   selectedDriveId,
+  simulation,
+  selectedNpcId,
   onSelectDrive,
   quality,
   selectedEntityId,
@@ -310,6 +329,8 @@ export function CityCanvas({
   overlays: OverlayOptions;
   driveNetwork: DriveNetwork | null;
   selectedDriveId: string | null;
+  simulation: SimulationRuntime | null;
+  selectedNpcId: string | null;
   onSelectDrive: (id: string | null) => void;
   quality: ResolvedQuality;
   selectedEntityId: string | null;
@@ -346,6 +367,8 @@ export function CityCanvas({
           document={document}
           overlays={overlays}
           driveNetwork={driveNetwork}
+          simulation={simulation}
+          selectedNpcId={selectedNpcId}
           selectedDriveId={selectedDriveId}
           onSelectDrive={onSelectDrive}
           quality={quality}

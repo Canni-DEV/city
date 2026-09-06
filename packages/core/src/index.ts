@@ -6,6 +6,8 @@ export * from "./drive-geometry.js";
 export * from "./drive-network.js";
 export * from "./ids.js";
 export * from "./land-generator.js";
+export * from "./npc-world.js";
+export * from "./pedestrian-network.js";
 export * from "./placement-assets.js";
 export * from "./placement-generator.js";
 export * from "./presets.js";

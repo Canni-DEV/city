@@ -1,8 +1,8 @@
-import { agentCountFor, DEFAULT_AGENT_SPEED } from "./agents.js";
+import { agentCountFor } from "./agents.js";
 import { required } from "./drive-contracts.js";
 import { type DriveNetwork, findNetworkPath, sampleDriveSegment } from "./drive-network.js";
 import { SeededRandom } from "./rng.js";
-export const DEFAULT_VEHICLE_SPEED = DEFAULT_AGENT_SPEED * 2;
+export const DEFAULT_VEHICLE_SPEED = (1.85 / 3) * 2;
 export const vehicleCountFor = agentCountFor;
 export const VEHICLE_ASSET_IDS = [
   "cars:sedan",

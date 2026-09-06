@@ -29,3 +29,7 @@ Record device, browser, backend, quality, city size, entity count, frame-rate ob
 - **AC-012 bundle:** `apps/web/dist/runtime-assets` contains only catalog-referenced GLB models and PNG textures (city kits plus generated protagonist GLBs and four skins; no FBX).
 
 The M3.6.2 Traffic lanes diagnostic draws grouped line geometry directly from `DriveNetwork`, including sampled Bézier lanes, direction arrows, surface boundaries, portal marks, and pedestrian crossing references. Selection highlights connected segments. Geometry is released on overlay unmount. Vehicles use the same arc-length geometry and exclude wheel nodes. Record generation and overlay on/off performance for generator `0.6.7` in the milestone PR; earlier `0.6.3`/`0.6.6` timings do not establish the new budgets.
+
+M3.6.3 replaces separate layer ticks with a shared fixed-step runtime owner. Pedestrian poses, yaw and vehicle poses interpolate between ticks (portal recycle does not interpolate across the city). Idle/run weights blend over 0.2 s; playback follows speed. The scale override is 0.75. Pedestrian navigation uses grouped lines and sample marks; disabling it disposes diagnostic geometry. Counts retain SIM-006/016 and AC-010. Manual evidence is recorded in the M3.6.3 brief; no unmeasured FPS claim is implied.
+
+M3.6.3 owner handoff: visual QA, backend parity, close-up recordings and AC-010/64+64 measurements are explicitly delegated to the owner at their request. See the manual checklist in milestones/M3_6_3_NPC_REFACTOR.md. Static checks do not establish those acceptance criteria.

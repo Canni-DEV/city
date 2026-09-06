@@ -43,6 +43,12 @@ function animationDurations(buffer: Buffer): Record<string, number> {
   return durations;
 }
 
+it("TST-006 / M3.6.3 applies the reviewed 75% character scale", () => {
+  const body = assetCatalog.entries.find((entry) => entry.id === "protagonists:character-medium");
+  expect(body?.uniformScale).toBe(0.75);
+  expect((body?.dimensions[1] ?? 0) * (body?.uniformScale ?? 1)).toBeCloseTo(0.24);
+});
+
 describe("asset catalog", () => {
   it("TST-006 keeps exactly 213 unique city-kit GLB entries", () => {
     const cityKit = assetCatalog.entries.filter(isCityKitEntry);

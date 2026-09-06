@@ -7,7 +7,7 @@
 - **DAT-005:** Procedural IDs derive from generator version, seed, stage, and stable index. Manual IDs use `crypto.randomUUID()` and a `user:` prefix.
 - **DAT-006:** Stored timestamps are ISO-8601 UTC. Name max is 80 characters; seed max is 64.
 - **DAT-007:** JSON Schema is generated from the Zod source contract and committed for non-TypeScript consumers.
-- **DAT-008:** Runtime agents and vehicles are not document fields. Agents are derived from seed plus the sidewalk/crossing graph; vehicles from seed plus reconstructed `DriveNetwork` geometry. Counts default from map size and quality and may be overridden in the city panel (0–64) without persistence. Neither appears in `CityEntity` collections or exports. Diagnostic overlay selection is also runtime-only.
+- **DAT-008:** Runtime agents and vehicles are not document fields. Agents are derived from seed plus the sidewalk/crossing/park network; vehicles from seed plus reconstructed `DriveNetwork` geometry. Counts default from map size and quality and may be overridden in the city panel (0–64) without persistence. Neither appears in `CityEntity` collections or exports. Diagnostic overlay selection is also runtime-only.
 - **DAT-009:** `sidewalks` is a document collection of renderable 1×1 pavement cells (`id`, `blockId`, `position`, `assetId`, `rotation`), sister to `roadGraph.cells`, not mixed into building entities. Sidewalk IDs are procedural (DAT-005). The structural hash includes this collection.
 
 ## Referential invariants
@@ -19,3 +19,5 @@ Road edges reference existing nodes; road cells, sidewalks, and entities referen
 Requests are `generate` and `cancel`. Responses are `progress`, `complete`, `cancelled`, and `error`. Every message carries `requestId`; progress additionally carries a named stage, 0–100 percent, and human-readable status. The UI ignores stale responses. M3 stages are `placement` and `decoration` after the M2 land stages and before `validation`. M3.6.1 inserts `sidewalks` between `blocks` and `lots`. M3.6.2 inserts `traffic` between `tiles` and `blocks`.
 
 - **DAT-010 (M3.6.2):** `roadGraph.topology` contains versioned sections (`street`, `junction`, `curve`, `roundabout`, `terminal`), tile ID references, directional ports, lane pairs, required movements, and portals with deterministic IDs. It is required for generated `0.6.7` cities and included in structural hashes via `roadGraph`; empty documents may omit it. Curves, arc-length tables, geometry indexes, crossing associations, vehicles, caches, and inspector selection remain derived. There is no inferred `(cell, heading)` fallback and no migration that synthesizes topology for older generators.
+
+M3.6.3 adds no schema fields or migrations. NPC component maps, orders, prediction clones, fixed-clock backlog, routes, park subgrid and inspector state are all disposable runtime data. Older documents with sidewalks can use the new pedestrian runtime; absent RoadTopology continues to mean no vehicles.

@@ -17,6 +17,8 @@ import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { CityCanvas } from "../city/CityCanvas";
 import { GenerationControls } from "../city/GenerationControls";
 import { isEditableTarget } from "../city/keyboard";
+import { PedestrianInspector } from "../city/PedestrianInspector";
+import { createSimulationRuntime } from "../city/simulation-runtime";
 import { suggestCityName } from "../city/suggest-city-name";
 import { TrafficInspector } from "../city/TrafficInspector";
 import { QUALITY_PROFILES, resolveQuality } from "../rendering/quality";
@@ -36,6 +38,7 @@ export function CityPage() {
     lots: false,
     grid: false,
     traffic: false,
+    pedestrians: false,
   });
   const [freeCamera, setFreeCamera] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -46,6 +49,7 @@ export function CityPage() {
   const store = useCityStore();
   const generatedCity = store.document;
   const [selectedDriveId, setSelectedDriveId] = useState<string | null>(null);
+  const [selectedNpcId, setSelectedNpcId] = useState<string | null>(null);
   const driveNetwork = useMemo(
     () =>
       generatedCity?.roadGraph.topology
@@ -56,6 +60,10 @@ export function CityPage() {
   useEffect(() => {
     if (generatedCity) setSelectedDriveId(null);
   }, [generatedCity]);
+  const simulation = useMemo(
+    () => (generatedCity ? createSimulationRuntime(generatedCity, driveNetwork) : null),
+    [generatedCity, driveNetwork],
+  );
   const qualityBase = useMemo(
     () =>
       resolveQuality(
@@ -85,6 +93,7 @@ export function CityPage() {
       if (isEditableTarget(event.target)) return;
       if (event.key === "Escape") {
         setSelectedDriveId(null);
+        setSelectedNpcId(null);
         if (freeCamera) {
           setFreeCamera(false);
           return;
@@ -342,6 +351,7 @@ export function CityPage() {
                 ["lots", "Lot edges"],
                 ["grid", "Cell grid"],
                 ["traffic", "Traffic lanes"],
+                ["pedestrians", "Pedestrian navigation"],
               ] as const
             ).map(([overlay, label]) => (
               <label key={overlay}>
@@ -367,6 +377,13 @@ export function CityPage() {
               ))}
             </ul>
           </fieldset>
+        )}
+        {overlays.pedestrians && simulation && (
+          <PedestrianInspector
+            runtime={simulation}
+            selected={selectedNpcId}
+            onSelect={setSelectedNpcId}
+          />
         )}
         {overlays.traffic && driveNetwork && (
           <TrafficInspector
@@ -470,6 +487,8 @@ export function CityPage() {
       </aside>
       <section className="city-viewport" aria-label="Generated city viewport">
         <CityCanvas
+          simulation={simulation}
+          selectedNpcId={selectedNpcId}
           driveNetwork={driveNetwork}
           selectedDriveId={selectedDriveId}
           onSelectDrive={setSelectedDriveId}

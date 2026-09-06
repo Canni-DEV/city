@@ -4,18 +4,12 @@ import {
   assetUniformScale,
   runtimeAssetUrl,
 } from "@city/assets";
-import {
-  type CityDocumentV1,
-  type DriveNetwork,
-  spawnVehicles,
-  tickVehicles,
-  type VehicleRuntimeState,
-  vehicleWorldPose,
-} from "@city/core";
+import type { VehicleRuntimeState } from "@city/core";
 import { useGLTF } from "@react-three/drei";
 import { useFrame, useLoader } from "@react-three/fiber";
 import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three/webgpu";
+import type { SimulationRuntime } from "./simulation-runtime";
 
 function collectMeshes(scene: THREE.Object3D): THREE.Mesh[] {
   const meshes: THREE.Mesh[] = [];
@@ -31,13 +25,13 @@ function VehicleBatch({
   entry,
   indices,
   vehiclesRef,
-  network,
+  runtime,
   half,
 }: {
   entry: AssetCatalogEntry;
   indices: readonly number[];
   vehiclesRef: { current: VehicleRuntimeState[] };
-  network: DriveNetwork;
+  runtime: SimulationRuntime;
   half: number;
 }) {
   const { scene } = useGLTF(runtimeAssetUrl(entry.runtimePath, import.meta.env.BASE_URL));
@@ -87,7 +81,8 @@ function VehicleBatch({
           target.setMatrixAt(instanceId, new THREE.Matrix4().makeScale(0, 0, 0));
           return;
         }
-        const pose = vehicleWorldPose(vehicle, network);
+        const pose = runtime.vehicleDisplay.get(vehicle.id);
+        if (!pose) return;
         position.set(pose.x - half, pose.y, pose.z - half);
         quaternion.setFromEuler(new THREE.Euler(0, pose.yaw, 0));
         scaleVec.set(scale, scale, scale);
@@ -132,38 +127,9 @@ function VehicleBatch({
   );
 }
 
-export function VehicleLayer({
-  document,
-  count,
-  network,
-}: {
-  document: CityDocumentV1;
-  count: number;
-  network: DriveNetwork;
-}) {
-  const spawned = useMemo(
-    () =>
-      spawnVehicles({
-        seed: document.generator.seed,
-        network,
-        count,
-      }),
-    [count, document.generator.seed, network],
-  );
-  const vehiclesRef = useRef(spawned);
-
-  useLayoutEffect(() => {
-    vehiclesRef.current = spawned;
-  }, [spawned]);
-
-  useFrame((_, delta) => {
-    vehiclesRef.current = tickVehicles(vehiclesRef.current, {
-      network,
-      dt: delta,
-      seed: document.generator.seed,
-    });
-  });
-
+export function VehicleLayer({ runtime, count }: { runtime: SimulationRuntime; count: number }) {
+  const vehiclesRef = runtime.vehicles;
+  const spawned = vehiclesRef.current.slice(0, count);
   const groups = useMemo(() => {
     const next = new Map<string, number[]>();
     for (const [index, vehicle] of spawned.entries()) {
@@ -174,7 +140,7 @@ export function VehicleLayer({
     return next;
   }, [spawned]);
 
-  const half = document.map.size / 2;
+  const half = runtime.city.map.size / 2;
   return (
     <>
       {[...groups.entries()].map(([assetId, indices]) => {
@@ -182,11 +148,11 @@ export function VehicleLayer({
         if (!entry) return null;
         return (
           <VehicleBatch
-            key={`${document.id}:${assetId}`}
+            key={`${runtime.city.id}:${assetId}`}
             entry={entry}
             indices={indices}
             vehiclesRef={vehiclesRef}
-            network={network}
+            runtime={runtime}
             half={half}
           />
         );

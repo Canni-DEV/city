@@ -3980,7 +3980,8 @@
       "decoration": false,
       "elevated": false,
       "availableInV1": true,
-      "review": "override"
+      "review": "override",
+      "uniformScale": 0.75
     },
     {
       "id": "protagonists:idle",
