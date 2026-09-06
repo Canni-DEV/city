@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { CityDocumentSchema, createEmptyCityDocument, PRESET_PARAMETERS } from "../src";
+import {
+  CityDocumentSchema,
+  createEmptyCityDocument,
+  GenerationParametersSchema,
+  MAP_SIZES,
+  PRESET_PARAMETERS,
+} from "../src";
 
 describe("CityDocumentV1", () => {
   it("creates a schema-valid empty document", () => {
@@ -12,5 +18,16 @@ describe("CityDocumentV1", () => {
     });
     expect(CityDocumentSchema.parse(city)).toEqual(city);
     expect(city.map.boundaryMask).toHaveLength(96 * 96);
+  });
+
+  it("accepts map size 256 and density very-high", () => {
+    expect(MAP_SIZES).toEqual([64, 96, 128, 256]);
+    const parameters = GenerationParametersSchema.parse({
+      ...PRESET_PARAMETERS.balanced,
+      size: 256,
+      density: "very-high",
+    });
+    expect(parameters.size).toBe(256);
+    expect(parameters.density).toBe("very-high");
   });
 });

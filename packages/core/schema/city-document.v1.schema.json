@@ -58,6 +58,10 @@
                 {
                   "type": "number",
                   "const": 128
+                },
+                {
+                  "type": "number",
+                  "const": 256
                 }
               ]
             },
@@ -75,7 +79,8 @@
               "enum": [
                 "low",
                 "medium",
-                "high"
+                "high",
+                "very-high"
               ]
             },
             "districtCount": {
@@ -180,6 +185,10 @@
             {
               "type": "number",
               "const": 128
+            },
+            {
+              "type": "number",
+              "const": 256
             }
           ]
         },

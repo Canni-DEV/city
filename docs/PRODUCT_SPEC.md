@@ -6,7 +6,7 @@ City is a modern browser-based creative sandbox for generating a convincing stat
 
 ## Requirements
 
-- **PRD-001:** Users can generate a new city from a name, text seed, preset, map size, and optional advanced controls.
+- **PRD-001:** Operators can generate a new city from a name, text seed, preset, map size (64, 96, 128, or 256), density including `very-high`, and optional advanced controls. Runtime pedestrian and vehicle counts are independent 0–64 sliders and are not stored on the document.
 - **PRD-002:** Users can edit generated buildings, vegetation, street furniture, and decoration without editing roads or zoning in v1.
 - **PRD-003:** Users can manage multiple cities entirely in local browser storage and exchange readable `.city.json` files.
 - **PRD-004:** The experience targets current Chrome and Edge on desktop at a minimum 1280×720 viewport.

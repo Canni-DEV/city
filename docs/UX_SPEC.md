@@ -2,7 +2,7 @@
 
 ## Structure
 
-- **UX-001:** The library is the entry point; the city route combines a dominant 3D viewport with generator/editor controls.
+- **UX-001:** The library is the entry point; the city route combines a dominant 3D viewport with generation and diagnostic controls. Visible chrome uses laboratory labels (Generate, Parameters, Seed, Size), not product marketing or editor voice.
 - **UX-002:** The credits page names Kenney, the five packs (four City Kits plus Animated Characters Protagonists), their links, CC0, and the MIT code license.
 - **UX-003:** The asset viewer is discoverable only in development builds.
 - **UX-004:** Status messages use plain language and identify actionable validation failures.
@@ -20,7 +20,7 @@
 - **UX-021:** Invalid placement keeps the last valid transform and explains the collision or boundary constraint.
 - **UX-022:** Zone incompatibility is a non-blocking warning.
 - **UX-023:** Destructive library and block-regeneration actions require explicit confirmation.
-- **UX-024:** The technical diagnostic exposes Auto/Low/Medium/High quality and active WebGPU or WebGL 2 backend.
+- **UX-024:** The technical diagnostic exposes Auto/Low/Medium/High quality and active WebGPU or WebGL 2 backend. Pedestrian and vehicle sliders (0–64) override the quality-derived defaults immediately without mutating the document. The primary Generate control uses near-black text on the lime accent fill.
 
 M3 implements that diagnostic in the city laboratory, including a quality selector, backend notice, frame-rate/draw-call readouts, and a textual selection status. Object editing remains M4. M3.6 adds runtime pedestrians; they are not editor selection targets. M3.6.1 keeps them on sidewalks; sidewalk tiles are not editor selection targets. M3.6.2 adds runtime vehicles on the directed lane network; they are not editor selection targets. Traffic lanes diagnostic selection (UX-025) does not select vehicles or enable road editing.
 

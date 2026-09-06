@@ -1,4 +1,8 @@
-import { agentCountFor, type MapSize, vehicleCountFor } from "@city/core";
+import { agentCountFor, MAP_SIZES, type MapSize, vehicleCountFor } from "@city/core";
+
+function asMapSize(mapSize: number): MapSize {
+  return (MAP_SIZES as readonly number[]).includes(mapSize) ? (mapSize as MapSize) : 96;
+}
 
 export const QUALITY_PROFILES = ["auto", "low", "medium", "high"] as const;
 export type QualityProfile = (typeof QUALITY_PROFILES)[number];
@@ -37,7 +41,7 @@ export function resolveQuality(
   deviceMemory?: number,
 ): ResolvedQuality {
   const resolved = resolveQualityLevel(profile, backend, deviceMemory);
-  const map: MapSize = mapSize === 64 || mapSize === 128 ? mapSize : 96;
+  const map = asMapSize(mapSize);
   const agentCount = agentCountFor(map, resolved);
   const vehicleCount = vehicleCountFor(map, resolved);
   if (resolved === "low") {

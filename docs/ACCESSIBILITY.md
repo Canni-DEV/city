@@ -2,7 +2,7 @@
 
 - **ACC-001:** All actions have semantic accessible names and work with keyboard alone.
 - **ACC-002:** Focus is visible, logical, not trapped outside modal dialogs, and restored after dialogs close.
-- **ACC-003:** Text and controls target WCAG 2.2 AA contrast; status is never communicated by color alone.
+- **ACC-003:** Text and controls target WCAG 2.2 AA contrast; status is never communicated by color alone. Primary buttons use near-black `#09100f` on the lime accent so the label stays distinguishable.
 - **ACC-004:** Zone overlays pair stable colors with distinguishable patterns and a legend.
 
 M2 generator overlays already implement those color-plus-pattern fills and a textual legend of actual versus target zone shares. M3.6.2 Traffic lanes pairs color with stroke style (solid vs dashed) and a textual legend. M6 still owns the full contrast, keyboard, and 1280×720 accessibility QA.

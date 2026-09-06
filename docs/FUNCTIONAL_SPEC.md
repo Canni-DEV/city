@@ -8,13 +8,13 @@
 
 ## Generation form
 
-- **FUN-010:** Map size is 64, 96, or 128; default is 96.
+- **FUN-010:** Map size is 64, 96, 128, or 256; default is 96.
 - **FUN-011:** Name is editable, suggested automatically, required after trimming, and limited to 80 characters.
 - **FUN-012:** Text seed is required after trimming and limited to 64 characters.
 - **FUN-013:** Presets are Balanced, Suburban, Commercial Core, and Industrial City.
-- **FUN-014:** Advanced controls expose zone mix, park share, 2–8 districts, and 0–100 road regularity (organic manzanas → orthogonal grid), roundabouts, and decoration plus a theme.
+- **FUN-014:** Advanced controls expose zone mix, park share, density (`low` / `medium` / `high` / `very-high`), 2–8 districts, and 0–100 road regularity (organic manzanas → orthogonal grid), roundabouts, and decoration plus a theme.
 - **FUN-015:** Zone weights normalize when generation is confirmed; park input is constrained to 0–25%.
-- **FUN-016:** Progress reports stage, percent, and status; cancel leaves no partial city.
+- **FUN-016:** Progress reports stage, percent, and status; cancel leaves no partial city. Pedestrian and vehicle counts are runtime sliders (0–64) that respawn immediately and never write to `CityDocumentV1`.
 
 ## Editor
 

@@ -9,8 +9,7 @@ export function GenerationControls({
 }) {
   return (
     <details className="advanced-controls">
-      <summary>Advanced controls</summary>
-      <p>Zone weights share the land left after parks. Percentages normalize when you generate.</p>
+      <summary>Advanced</summary>
       <div className="advanced-fields">
         {ZONE_TYPES.map((zone) => (
           <label key={zone}>
@@ -65,7 +64,7 @@ export function GenerationControls({
         </label>
         {(
           [
-            ["roadRegularity", "Road regularity (organic → grid)"],
+            ["roadRegularity", "Road regularity"],
             ["roundaboutFrequency", "Roundabouts"],
             ["decorationDensity", "Decoration"],
           ] as const
@@ -93,7 +92,6 @@ export function GenerationControls({
           </select>
         </label>
       </div>
-      <p>Density, decoration, and theme change how buildings and props are placed.</p>
     </details>
   );
 }

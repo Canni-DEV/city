@@ -1,13 +1,13 @@
 # Data model
 
-- **DAT-001:** `CityDocumentV1` is a complete schema-versioned snapshot with ID, name, UTC timestamps, generator version, seed, deterministic attempt, preset parameters, map size, one-unit cells, irregular boundary mask, and normalized per-cell density field.
+- **DAT-001:** `CityDocumentV1` is a complete schema-versioned snapshot with ID, name, UTC timestamps, generator version, seed, deterministic attempt, preset parameters (map size 64/96/128/256, density `low`/`medium`/`high`/`very-high`), one-unit cells, irregular boundary mask, and normalized per-cell density field.
 - **DAT-002:** It contains districts, road graph nodes/edges/resolved cells, optional resolved road topology, sidewalks, blocks, lots, zones, and an entity registry. Resolved road cells are renderable tiles; occupied ground cells are the tile origin plus the catalog footprint (so a 2×2 curve occupies four unit cells and a 3×3 roundabout occupies nine). Arterial and collector carriageways occupy two adjacent unit cells (GEN-028); local streets occupy one. Graph nodes may be gates, district centers, or junctions. Edges record `arterial`, `collector`, or `local` class. Resolved cells may record the same class so lane-mates reconstruct without treating a mixed edge as all-avenue. Generator `0.6.7` cities also store `roadGraph.topology` (DAT-010).
 - **DAT-003:** Every entity records asset ID, transform, footprint, origin (`procedural` or `user`), edit state, optional district/block/lot/zone, and compatibility warning.
 - **DAT-004:** Each block has enough identity and regeneration index to reproduce replacement generation.
 - **DAT-005:** Procedural IDs derive from generator version, seed, stage, and stable index. Manual IDs use `crypto.randomUUID()` and a `user:` prefix.
 - **DAT-006:** Stored timestamps are ISO-8601 UTC. Name max is 80 characters; seed max is 64.
 - **DAT-007:** JSON Schema is generated from the Zod source contract and committed for non-TypeScript consumers.
-- **DAT-008:** Runtime agents and vehicles are not document fields. Agents are derived from seed plus the sidewalk/crossing graph; vehicles from seed plus reconstructed `DriveNetwork` geometry. Neither appears in `CityEntity` collections or exports. Diagnostic overlay selection is also runtime-only.
+- **DAT-008:** Runtime agents and vehicles are not document fields. Agents are derived from seed plus the sidewalk/crossing graph; vehicles from seed plus reconstructed `DriveNetwork` geometry. Counts default from map size and quality and may be overridden in the city panel (0–64) without persistence. Neither appears in `CityEntity` collections or exports. Diagnostic overlay selection is also runtime-only.
 - **DAT-009:** `sidewalks` is a document collection of renderable 1×1 pavement cells (`id`, `blockId`, `position`, `assetId`, `rotation`), sister to `roadGraph.cells`, not mixed into building entities. Sidewalk IDs are procedural (DAT-005). The structural hash includes this collection.
 
 ## Referential invariants

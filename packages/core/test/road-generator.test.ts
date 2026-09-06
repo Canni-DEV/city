@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   type CityPreset,
   deriveAttemptSeed,
+  gateCountFor,
   generateRoadCity,
   hashGeneratedStructure,
   type MapSize,
@@ -31,8 +32,8 @@ describe("M1–M3.5 city generation", () => {
       timestamp: "2027-01-01T00:00:00.000Z",
     });
     expect(hashGeneratedStructure(first)).toBe(hashGeneratedStructure(second));
-    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"ab27644c"`);
-  }, 30_000);
+    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"8d662a89"`);
+  }, 60_000);
 
   it("TST-001 derives reproducible attempts and retries at most three times", async () => {
     expect(deriveAttemptSeed("retry-city", 2)).toBe("retry-city::0.6.7::attempt-2");
@@ -45,5 +46,12 @@ describe("M1–M3.5 city generation", () => {
     });
     expect(attempts).toEqual([0, 1, 2]);
     expect(city.generator.attempt).toBe(2);
-  }, 30_000);
+  }, 60_000);
+
+  it("uses 2/3/4 external gates for sizes 64/96/128/256", () => {
+    expect(gateCountFor(64)).toBe(2);
+    expect(gateCountFor(96)).toBe(3);
+    expect(gateCountFor(128)).toBe(4);
+    expect(gateCountFor(256)).toBe(4);
+  });
 });

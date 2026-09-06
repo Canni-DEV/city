@@ -39,9 +39,11 @@ The M3.6.1 avenue hotfix implements GEN-028 using generator version `0.6.6`. Art
 
 M3.6.2 implements GEN-029 using generator version `0.6.7`. After GEN-005 tile resolution, local opening and avenue-transition repairs run, then directed topology is resolved and validated against measured carriageways and catalog body clearance **before** GEN-006. The worker reports this as the `traffic` stage. Old `0.6.6` documents remain loadable without silent regeneration; they have no topology and are not vehicle-enabled.
 
+Generator `0.6.7` cities keep their road and traffic RNG. Leftover decoration fill is `0.07 + d×0.22` of free cells and park vegetation chance is `0.55 + d/250` (about 2× the previous coefficients at the same 0–100 control). Density `very-high` fills every lot. Map size 256 uses four external gates (same count as 128) so dual-avenue width stays within GEN-028. Old `0.6.7` documents remain loadable; new generations of the same seed place more decoration than before this change.
+
 ## Invariants and recovery
 
-- **GEN-020:** All roads form one connected component of occupied cells (catalog footprints included). External gates count is 2, 3, and 4 for sizes 64, 96, and 128.
+- **GEN-020:** All roads form one connected component of occupied cells (catalog footprints included). External gates count is 2, 3, and 4 for sizes 64, 96, and 128; size 256 also uses 4 gates so dual-avenue corridors keep GEN-028 width.
 - **GEN-021:** Dead ends occur only in suburban zones. Elevated assets remain cataloged but unavailable. The morphology generator prunes internal degree-1 cells so surviving stubs are gates.
 - **GEN-022:** Every buildable lot has frontage on sidewalk cells that are 4-adjacent to occupied road cells; procedural buildings neither overlap nor leave valid cells.
 - **GEN-023:** Actual zone area stays within ±5 percentage points of normalized targets. Pocket-park remnant area is excluded from that comparison.

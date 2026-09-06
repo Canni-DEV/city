@@ -96,21 +96,36 @@ function frontCells(
   return cells;
 }
 
-function occupancyRate(density: DensityLevel): number {
+export function occupancyRate(density: DensityLevel): number {
   if (density === "low") return 0.64;
   if (density === "high") return 0.98;
+  if (density === "very-high") return 1;
   return 0.86;
 }
 
-function placementWeight(asset: PlacementAsset, zone: ZoneType, density: DensityLevel): number {
+export function parkVegetationChance(decorationDensity: number): number {
+  return 0.55 + decorationDensity / 250;
+}
+
+export function decorationFillRate(decorationDensity: number): number {
+  return 0.07 + (decorationDensity / 100) * 0.22;
+}
+
+export function placementWeight(
+  asset: PlacementAsset,
+  zone: ZoneType,
+  density: DensityLevel,
+): number {
   let weight = asset.proceduralWeight;
   const skyscraper = asset.id.includes("skyscraper");
   if (skyscraper) {
-    if (density === "high" && (zone === "commercial" || zone === "urban")) weight *= 3.2;
+    if (density === "very-high" && (zone === "commercial" || zone === "urban")) weight *= 4.8;
+    else if (density === "high" && (zone === "commercial" || zone === "urban")) weight *= 3.2;
     else if (density === "low") weight *= 0.12;
     else weight *= 0.65;
   }
-  if (asset.pack === "suburban" && density === "high" && zone === "urban") weight *= 0.4;
+  if (asset.pack === "suburban" && density === "very-high" && zone === "urban") weight *= 0.2;
+  else if (asset.pack === "suburban" && density === "high" && zone === "urban") weight *= 0.4;
   if (asset.pack === "commercial" && density === "low") weight *= 0.5;
   return weight;
 }
@@ -269,7 +284,7 @@ export function placeBuildingsAndParks(
     const owned = lotCellSet(lot);
 
     if (block.zone === "park") {
-      const chance = 0.42 + document.generator.parameters.decorationDensity / 400;
+      const chance = parkVegetationChance(document.generator.parameters.decorationDensity);
       for (const cell of lot.cells) {
         if (hash.has(cell) || random.float() > chance) continue;
         const tree = pickAsset(trees, random, (asset) => asset.proceduralWeight);
@@ -303,7 +318,7 @@ export function placeBuildingsAndParks(
   for (const block of document.blocks) {
     if (block.zone !== "park") continue;
     if (document.lots.some((lot) => lot.blockId === block.id)) continue;
-    const chance = 0.42 + document.generator.parameters.decorationDensity / 400;
+    const chance = parkVegetationChance(document.generator.parameters.decorationDensity);
     const refs = {
       districtId: block.districtId,
       blockId: block.id,
@@ -387,8 +402,9 @@ export function placeDecoration(
       if (!hash.has(cell)) candidates.push(cell);
     }
   }
-  const density = document.generator.parameters.decorationDensity / 100;
-  const target = Math.round(candidates.length * (0.035 + density * 0.11));
+  const target = Math.round(
+    candidates.length * decorationFillRate(document.generator.parameters.decorationDensity),
+  );
   const entities: CityEntity[] = [];
   for (const cell of shuffled(candidates, random)) {
     if (entities.length >= target) break;

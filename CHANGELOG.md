@@ -6,12 +6,16 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 
 ### Added
 
+- Map size 256 (four external gates, same as 128) and density `very-high` for sandbox variety. The 200-city occupancy census still uses 64/96/128.
+- Runtime pedestrian and vehicle sliders (0–64) override quality defaults immediately and stay outside `CityDocumentV1`.
 - M3.6.2 runtime vehicles: seeded Kenney Car Kit bodies drive a persisted, validated directed lane network (cubic Bézier maneuvers, CCW roundabout rings, portals, and physical terminal returns) with A*, arc-length pose, and `InstancedMesh` batches. Vehicles stay outside `CityDocumentV1`. Bodies have no wheels this milestone.
 - Traffic lanes overlay (off by default) and a keyboard-accessible inspector share the reconstructed `DriveNetwork` with the mover. Selection is diagnostic only.
 - Catalog `driveProfile` (measured carriageway triangles and local ports) and `vehicleBounds` (pivot-aware body envelope) for road tiles and the 11 `cars:*` entries.
 
 ### Changed
 
+- Leftover decoration and park vegetation are roughly 2× at the same 0–100 decoration control; density `very-high` fills every lot. Generator version stays `0.6.7` so road and traffic RNG (GEN-029) do not re-roll.
+- Sandbox chrome: primary Generate uses near-black `#09100f` on the lime fill (the form sticky rule no longer paints a dark background over it); library and city routes drop product/editor marketing copy.
 - Generator `0.6.7`: after tile resolution, repair local openings/transitions, persist `roadGraph.topology`, and validate required maneuvers plus whole-body clearance before sidewalks and land. Failed networks retry under GEN-024 and never return a partial city. Old `0.6.6` cities load without silent regeneration; they are not vehicle-enabled and have no inferred fallback graph.
 - Car Kit `uniformScale` fits body length to about 0.54 cells (20% smaller than the 0.67-cell fit).
 - Dual-avenue nudos may connect two same-facing ports, and an internal stub stays two-way with a physical return; only the peer port that feeds it is restored to two-way (SIM-012/018).

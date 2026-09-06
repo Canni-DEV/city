@@ -132,7 +132,7 @@ function distanceSquared(left: Point, right: Point): number {
   return x * x + y * y;
 }
 
-function gateCountFor(size: MapSize): number {
+export function gateCountFor(size: MapSize): number {
   if (size === 64) return 2;
   if (size === 96) return 3;
   return 4;

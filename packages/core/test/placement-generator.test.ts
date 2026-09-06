@@ -2,11 +2,15 @@ import { describe, expect, it } from "vitest";
 import {
   applyDistrictThemes,
   cellSpan,
+  decorationFillRate,
   generateRoadCity,
   hashGeneratedStructure,
+  occupancyRate,
   occupiedCellsFor,
   occupiedRoadSet,
   PRESET_PARAMETERS,
+  parkVegetationChance,
+  placementWeight,
   validatePlacedCity,
 } from "../src/index.js";
 import { TEST_ASSETS } from "./catalog-assets.js";
@@ -116,6 +120,31 @@ describe("M3 placement", () => {
     expect(cellSpan(1.3)).toBe(1);
     expect(cellSpan(1.64)).toBe(2);
     expect(cellSpan(2.08)).toBe(2);
+  });
+
+  it("very-high density fills every lot and prefers taller commercial assets", () => {
+    expect(occupancyRate("low")).toBe(0.64);
+    expect(occupancyRate("medium")).toBe(0.86);
+    expect(occupancyRate("high")).toBe(0.98);
+    expect(occupancyRate("very-high")).toBe(1);
+    const skyscraper = TEST_ASSETS.find((asset) => asset.id.includes("skyscraper"));
+    const suburban = TEST_ASSETS.find((asset) => asset.pack === "suburban");
+    expect(skyscraper).toBeDefined();
+    expect(suburban).toBeDefined();
+    if (!skyscraper || !suburban) return;
+    expect(placementWeight(skyscraper, "commercial", "very-high")).toBeGreaterThan(
+      placementWeight(skyscraper, "commercial", "high"),
+    );
+    expect(placementWeight(suburban, "urban", "very-high")).toBeLessThan(
+      placementWeight(suburban, "urban", "high"),
+    );
+  });
+
+  it("places about twice as much leftover decoration at the same 0–100 control", () => {
+    expect(decorationFillRate(0)).toBeCloseTo(0.07);
+    expect(decorationFillRate(100)).toBeCloseTo(0.29);
+    expect(decorationFillRate(100) / (0.035 + 1 * 0.11)).toBeCloseTo(2);
+    expect(parkVegetationChance(100)).toBeCloseTo(0.95);
   });
 
   it("AC-011 generates a 128×128 city with entities in Node", async () => {
