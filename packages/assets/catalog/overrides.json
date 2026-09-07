@@ -287,5 +287,40 @@
         }
       ]
     }
+  },
+  "roads:traffic-light": {
+    "front": "west",
+    "review": "override"
+  },
+  "roads:road-sign-stop": {
+    "front": "west",
+    "review": "override"
+  },
+  "roads:road-sign-street": {
+    "review": "override"
+  },
+  "roads:road-sign-warning": {
+    "front": "west",
+    "review": "override"
+  },
+  "roads:sign-highway": {
+    "front": "west",
+    "review": "override"
+  },
+  "roads:sign-highway-detailed": {
+    "front": "west",
+    "review": "override"
+  },
+  "roads:sign-highway-wide": {
+    "front": "west",
+    "review": "override"
+  },
+  "roads:light-curved": {
+    "front": "south",
+    "review": "override"
+  },
+  "roads:light-square": {
+    "front": "south",
+    "review": "override"
   }
 }

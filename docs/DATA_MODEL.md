@@ -16,8 +16,10 @@ Road edges reference existing nodes; road cells, sidewalks, and entities referen
 
 ## Worker messages
 
-Requests are `generate` and `cancel`. Responses are `progress`, `complete`, `cancelled`, and `error`. Every message carries `requestId`; progress additionally carries a named stage, 0–100 percent, and human-readable status. The UI ignores stale responses. M3 stages are `placement` and `decoration` after the M2 land stages and before `validation`. M3.6.1 inserts `sidewalks` between `blocks` and `lots`. M3.6.2 inserts `traffic` between `tiles` and `blocks`.
+Requests are `generate` and `cancel`. Responses are `progress`, `complete`, `cancelled`, and `error`. Every message carries `requestId`; progress additionally carries a named stage, 0–100 percent, and human-readable status. The UI ignores stale responses. M3 stages are `placement` and `decoration` after the M2 land stages and before `validation`. M3.6.1 inserts `sidewalks` between `blocks` and `lots`. M3.6.2 inserts `traffic` between `tiles` and `blocks`. M3.7.1 inserts `streetFurniture` between `decoration` and `validation`.
 
 - **DAT-010 (M3.6.2):** `roadGraph.topology` contains versioned sections (`street`, `junction`, `curve`, `roundabout`, `terminal`), tile ID references, directional ports, lane pairs, required movements, and portals with deterministic IDs. It is required for generated `0.6.7` cities and included in structural hashes via `roadGraph`; empty documents may omit it. Curves, arc-length tables, geometry indexes, crossing associations, vehicles, caches, and inspector selection remain derived. There is no inferred `(cell, heading)` fallback and no migration that synthesizes topology for older generators.
 
 M3.6.3 adds no schema fields or migrations. NPC component maps, orders, prediction clones, fixed-clock backlog, routes, park subgrid and inspector state are all disposable runtime data. Older documents with sidewalks can use the new pedestrian runtime; absent RoadTopology continues to mean no vehicles.
+
+M3.7.1 adds no schema fields. Curb furniture is ordinary `CityEntity` records (DAT-003) distinguished by catalog category and asset ID. Sub-cell transforms are valid. Generator `0.7.0` cities include them in the structural hash via `entities`. Old `0.6.7` cities remain loadable without silent regeneration and simply lack this furniture.

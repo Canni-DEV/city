@@ -153,6 +153,7 @@ describe("M2 blocks and zoning", () => {
       "zones",
       "placement",
       "decoration",
+      "streetFurniture",
     ] as const) {
       let cancelled = false;
       await expect(

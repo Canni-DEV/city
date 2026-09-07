@@ -40,3 +40,4 @@
 - **FUN-033:** Export produces a readable `.city.json` snapshot with generation provenance, without command history, runtime vehicles, reconstructed lane geometry, or diagnostic selection.
 
 - **FUN-044:** M3.6.3 pedestrians wander on sidewalks and reachable parks, wait for safe traffic gaps, avoid other pedestrians and expose a Pedestrian navigation overlay with NPC/network inspection and shared Pause/Resume/Step. No editor selection or user-issued travel UI.
+- **FUN-045:** Generator `0.7.0` cities include deterministic curb street furniture (GEN-030/031) as ordinary entities. There is no dedicated furniture UI in this milestone; M4 edits them like other decorations. Traffic lights do not control vehicles.

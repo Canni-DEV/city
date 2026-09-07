@@ -2,6 +2,7 @@ import type { CityDocumentV1 } from "./domain.js";
 import type { DriveNetwork } from "./drive-network.js";
 import type { Point } from "./road-tiles.js";
 import { pedestrianWalkableSet, sidewalkKeySet } from "./sidewalks.js";
+import { isCurbClassNonObstacle } from "./street-furniture.js";
 
 /** SIM-020: reconstructible hybrid navigation, in world coordinates. */
 export const NPC_RADIUS = 0.12;
@@ -62,15 +63,17 @@ export function buildPedestrianNetwork(document: CityDocumentV1): PedestrianNetw
       .flatMap((b) => b.cells.map((p) => key(...p)))
       .filter((k) => !walkable.has(k)),
   );
-  const obstacles: PedestrianObstacle[] = Object.values(document.entities).map((e) => ({
-    id: e.id,
-    center: [e.transform.position[0], e.transform.position[2]],
-    half: [
-      (e.footprint.width * Math.abs(e.transform.scale[0])) / 2,
-      (e.footprint.depth * Math.abs(e.transform.scale[2])) / 2,
-    ],
-    yaw: -(e.transform.rotation[1] * Math.PI) / 180,
-  }));
+  const obstacles: PedestrianObstacle[] = Object.values(document.entities)
+    .filter((e) => !isCurbClassNonObstacle(e))
+    .map((e) => ({
+      id: e.id,
+      center: [e.transform.position[0], e.transform.position[2]],
+      half: [
+        (e.footprint.width * Math.abs(e.transform.scale[0])) / 2,
+        (e.footprint.depth * Math.abs(e.transform.scale[2])) / 2,
+      ],
+      yaw: -(e.transform.rotation[1] * Math.PI) / 180,
+    }));
   const obstacleIndex = new Map<string, PedestrianObstacle[]>();
   for (const o of obstacles) {
     const r = Math.hypot(...o.half) + STATIC_RADIUS;

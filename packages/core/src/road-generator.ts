@@ -48,9 +48,12 @@ import {
 } from "./road-tiles.js";
 import { resolveRoadTopology } from "./road-topology.js";
 import { createSidewalks, validateSidewalks } from "./sidewalks.js";
+import { placeStreetFurniture } from "./street-furniture.js";
 import type { GenerationStage } from "./worker-protocol.js";
 
-export const GENERATOR_VERSION = "0.6.7";
+export const GENERATOR_VERSION = "0.7.0";
+/** Road, traffic, placement, and leftover decoration keep 0.6.7 streams (GEN-029). */
+const ROAD_RNG_VERSION = "0.6.7";
 
 type Direction = "north" | "east" | "south" | "west";
 
@@ -115,11 +118,16 @@ export class RoadGenerationError extends Error {
 }
 
 function randomFor(seed: string, attempt: number, stage: string): SeededRandom {
-  return new SeededRandom(`${GENERATOR_VERSION}:${seed}:${attempt}:${stage}`);
+  const version = stage === "streetFurniture" ? GENERATOR_VERSION : ROAD_RNG_VERSION;
+  return new SeededRandom(`${version}:${seed}:${attempt}:${stage}`);
 }
 
 export function deriveAttemptSeed(seed: string, attempt: number): string {
   return `${seed}::${GENERATOR_VERSION}::attempt-${attempt}`;
+}
+
+function roadAttemptSeed(seed: string, attempt: number): string {
+  return `${seed}::${ROAD_RNG_VERSION}::attempt-${attempt}`;
 }
 
 function indexOf(size: number, x: number, y: number): number {
@@ -480,7 +488,7 @@ function createDocument(
   const tiles = resolveRoadTiles(
     classes,
     input.parameters.size,
-    deriveAttemptSeed(input.seed, attempt),
+    roadAttemptSeed(input.seed, attempt),
     input.parameters.roundaboutFrequency,
     mask,
     mates,
@@ -726,7 +734,7 @@ export async function generateRoadCity(
   input = { ...input, parameters: normalizeGenerationParameters(input.parameters) };
   let finalIssues: readonly string[] = [];
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    const attemptSeed = deriveAttemptSeed(input.seed, attempt);
+    const attemptSeed = roadAttemptSeed(input.seed, attempt);
     await checkpoint(hooks, "mask", 5, `Creating the urban boundary (attempt ${attempt + 1}/3)`);
     const { mask, densityField } = createMask(
       input.parameters.size,
@@ -792,8 +800,15 @@ export async function generateRoadCity(
       occupancy,
       placed.length,
     );
+    await checkpoint(hooks, "streetFurniture", 97, "Placing curb signs, lights, and furniture");
+    const furniture = placeStreetFurniture(
+      document,
+      input.assets,
+      randomFor(attemptSeed, attempt, "streetFurniture"),
+      placed.length + decorated.length,
+    );
     document.entities = Object.fromEntries(
-      [...placed, ...decorated]
+      [...placed, ...decorated, ...furniture]
         .sort((left, right) => left.id.localeCompare(right.id))
         .map((entity) => [entity.id, entity]),
     );

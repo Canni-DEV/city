@@ -4,6 +4,11 @@ import { assetFitsZone, type PlacementAsset, usablePlacementAssets } from "./pla
 import type { SeededRandom } from "./rng.js";
 import { pointKey as cellKey, occupiedCellsForRoadTile, occupiedRoadSet } from "./road-tiles.js";
 import { type GridPoint, SpatialHash } from "./spatial-hash.js";
+import {
+  curbFurnitureAabb,
+  furnitureAabbsOverlap,
+  isCurbFurnitureAsset,
+} from "./street-furniture.js";
 
 type Point = [number, number];
 type Lot = CityDocumentV1["lots"][number];
@@ -387,7 +392,7 @@ export function placeDecoration(
 ): CityEntity[] {
   const usable = usablePlacementAssets(assets).filter(isStandaloneProp);
   const vegetation = usable.filter((asset) => asset.category === "vegetation");
-  const furniture = usable.filter((asset) => asset.category === "street-furniture");
+  const furniture: PlacementAsset[] = [];
   const industrial = usable.filter((asset) => asset.pack === "industrial");
   const suburban = usable.filter((asset) => asset.pack === "suburban" && asset.decoration);
   const commercial = usable.filter((asset) => asset.pack === "commercial" && asset.decoration);
@@ -467,8 +472,10 @@ export function validatePlacedCity(
   const blocks = new Set(document.blocks.map((block) => block.id));
   const lots = new Set(document.lots.map((lot) => lot.id));
   const roads = occupiedRoadSet(document.roadGraph.cells);
+  const sidewalks = new Set(document.sidewalks.map((cell) => cellKey(cell.position)));
   const hash = occupancyFromRoads(document);
   const seen = new Set<string>();
+  const curbAabbs: ReturnType<typeof curbFurnitureAabb>[] = [];
 
   for (const cell of document.roadGraph.cells) {
     if (!catalogIds.has(cell.assetId)) issues.push(`road cell ${cell.id} has missing asset`);
@@ -499,6 +506,20 @@ export function validatePlacedCity(
       !entity.zoneCompatibilityWarning
     ) {
       issues.push(`entity ${entity.id} is incompatible with its zone`);
+    }
+    if (isCurbFurnitureAsset(entity.assetId)) {
+      const x = entity.transform.position[0] ?? 0;
+      const z = entity.transform.position[2] ?? 0;
+      const cell: Point = [Math.floor(x), Math.floor(z)];
+      if (!inMask(document, cell) || roads.has(cellKey(cell)) || !sidewalks.has(cellKey(cell))) {
+        issues.push(`entity ${entity.id} leaves the valid mask`);
+      }
+      const aabb = curbFurnitureAabb(entity);
+      if (curbAabbs.some((other) => furnitureAabbsOverlap(aabb, other))) {
+        issues.push(`overlapping procedural occupancy at ${cellKey(cell)}`);
+      }
+      curbAabbs.push(aabb);
+      continue;
     }
     for (const cell of occupiedCellsFor(entity)) {
       if (!inMask(document, cell) || roads.has(cellKey(cell))) {
