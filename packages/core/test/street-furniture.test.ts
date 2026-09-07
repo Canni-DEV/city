@@ -342,11 +342,11 @@ describe("TST-010 curb street furniture", () => {
     }
   }, 30_000);
 
-  it("TST-001 golden hash stays stable for generator 0.7.0", async () => {
+  it("TST-001 golden hash stays stable for generator 0.8.0", async () => {
     const first = await generateRoadCity(input);
     const second = await generateRoadCity({ ...input, id: "city-streets-b" });
     expect(hashGeneratedStructure(first)).toBe(hashGeneratedStructure(second));
-    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"70de520f"`);
+    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"aaa413b8"`);
   }, 30_000);
 });
 

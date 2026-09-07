@@ -21,6 +21,7 @@ describe("M2 generation worker protocol", () => {
       "placement",
       "decoration",
       "streetFurniture",
+      "parkInterior",
       "validation",
     ]);
     expect(GenerationWorkerRequestSchema.parse({ type: "cancel", requestId: "req-1" }).type).toBe(

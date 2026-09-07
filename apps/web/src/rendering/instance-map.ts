@@ -1,4 +1,4 @@
-import { type AssetCatalogEntry, assetById } from "@city/assets";
+import { type AssetCatalogEntry, assetById, assetUniformScale } from "@city/assets";
 import type { CityDocumentV1, CityEntity } from "@city/core";
 
 export interface RenderItem {
@@ -81,11 +81,14 @@ export function buildEntityBatches(
       const items = group.entities.map((entity, instanceId) => {
         entityToInstance.set(entity.id, { key, instanceId });
         instanceToEntity.set(`${key}:${instanceId}`, entity.id);
+        const catalogEntry = assetById.get(entity.assetId);
+        const uniform = catalogEntry ? assetUniformScale(catalogEntry) : 1;
+        const [sx, sy, sz] = entity.transform.scale;
         return {
           id: entity.id,
           position: entity.transform.position,
           rotation: entity.transform.rotation,
-          scale: entity.transform.scale,
+          scale: [sx * uniform, sy * uniform, sz * uniform] as [number, number, number],
         };
       });
       return {

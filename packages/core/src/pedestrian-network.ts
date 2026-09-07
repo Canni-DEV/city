@@ -1,8 +1,8 @@
 import type { CityDocumentV1 } from "./domain.js";
 import type { DriveNetwork } from "./drive-network.js";
+import { isPedestrianNonObstacle } from "./park-interior.js";
 import type { Point } from "./road-tiles.js";
 import { pedestrianWalkableSet, sidewalkKeySet } from "./sidewalks.js";
-import { isCurbClassNonObstacle } from "./street-furniture.js";
 
 /** SIM-020: reconstructible hybrid navigation, in world coordinates. */
 export const NPC_RADIUS = 0.12;
@@ -64,7 +64,7 @@ export function buildPedestrianNetwork(document: CityDocumentV1): PedestrianNetw
       .filter((k) => !walkable.has(k)),
   );
   const obstacles: PedestrianObstacle[] = Object.values(document.entities)
-    .filter((e) => !isCurbClassNonObstacle(e))
+    .filter((e) => !isPedestrianNonObstacle(e))
     .map((e) => ({
       id: e.id,
       center: [e.transform.position[0], e.transform.position[2]],

@@ -37,15 +37,17 @@ for (const entry of catalog.entries) {
             "assets/kenney_animated-characters-protagonists/Skins",
             textureName,
           )
-        : textureName === "colormap.png"
-          ? path.join(
-              repositoryRoot,
-              "assets",
-              packDirectory,
-              "Models/GLB format/Textures",
-              textureName,
-            )
-          : path.join(repositoryRoot, "assets", packDirectory, "Models/Textures", textureName);
+        : entry.pack === "nature"
+          ? path.join(repositoryRoot, "assets/kenney_nature-kit/Preview.png")
+          : textureName === "colormap.png"
+            ? path.join(
+                repositoryRoot,
+                "assets",
+                packDirectory,
+                "Models/GLB format/Textures",
+                textureName,
+              )
+            : path.join(repositoryRoot, "assets", packDirectory, "Models/Textures", textureName);
     const textureDestination = path.join(repositoryRoot, "apps/web/public", runtimeTexture);
     await mkdir(path.dirname(textureDestination), { recursive: true });
     await cp(sourceTexture, textureDestination);

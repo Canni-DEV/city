@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "generatedAt": "2026-09-04T00:00:00.000Z",
-  "sourceDigest": "ed438a454d5995e7318a02488ab682e63932d595ead960282fa06b6e5bae6292",
+  "sourceDigest": "1d798b3fd914edd4f64c675c85cdf4484d09982b3b907db3940344affa91117d",
   "entries": [
     {
       "id": "cars:ambulance",
@@ -3939,6 +3939,1523 @@
       "elevated": false,
       "availableInV1": true,
       "review": "override"
+    },
+    {
+      "id": "nature:flower_purpleA",
+      "pack": "nature",
+      "model": "flower_purpleA",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/flower_purpleA.glb",
+      "runtimePath": "runtime-assets/nature/flower_purpleA.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "flower",
+      "dimensions": [
+        0.1591,
+        0.2425,
+        0.1811
+      ],
+      "footprint": {
+        "width": 0.0715,
+        "depth": 0.0813
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:flower_purpleB",
+      "pack": "nature",
+      "model": "flower_purpleB",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/flower_purpleB.glb",
+      "runtimePath": "runtime-assets/nature/flower_purpleB.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "flower",
+      "dimensions": [
+        0.2073,
+        0.2085,
+        0.2392
+      ],
+      "footprint": {
+        "width": 0.0931,
+        "depth": 0.1074
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:flower_purpleC",
+      "pack": "nature",
+      "model": "flower_purpleC",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/flower_purpleC.glb",
+      "runtimePath": "runtime-assets/nature/flower_purpleC.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "flower",
+      "dimensions": [
+        0.1806,
+        0.1825,
+        0.1811
+      ],
+      "footprint": {
+        "width": 0.0811,
+        "depth": 0.0813
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:flower_redA",
+      "pack": "nature",
+      "model": "flower_redA",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/flower_redA.glb",
+      "runtimePath": "runtime-assets/nature/flower_redA.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "flower",
+      "dimensions": [
+        0.1591,
+        0.2925,
+        0.1811
+      ],
+      "footprint": {
+        "width": 0.0715,
+        "depth": 0.0813
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:flower_redB",
+      "pack": "nature",
+      "model": "flower_redB",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/flower_redB.glb",
+      "runtimePath": "runtime-assets/nature/flower_redB.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "flower",
+      "dimensions": [
+        0.2073,
+        0.2585,
+        0.2392
+      ],
+      "footprint": {
+        "width": 0.0931,
+        "depth": 0.1074
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:flower_redC",
+      "pack": "nature",
+      "model": "flower_redC",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/flower_redC.glb",
+      "runtimePath": "runtime-assets/nature/flower_redC.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "flower",
+      "dimensions": [
+        0.1806,
+        0.2325,
+        0.1811
+      ],
+      "footprint": {
+        "width": 0.0811,
+        "depth": 0.0813
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:flower_yellowA",
+      "pack": "nature",
+      "model": "flower_yellowA",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/flower_yellowA.glb",
+      "runtimePath": "runtime-assets/nature/flower_yellowA.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "flower",
+      "dimensions": [
+        0.1591,
+        0.1925,
+        0.1811
+      ],
+      "footprint": {
+        "width": 0.0715,
+        "depth": 0.0813
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:flower_yellowB",
+      "pack": "nature",
+      "model": "flower_yellowB",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/flower_yellowB.glb",
+      "runtimePath": "runtime-assets/nature/flower_yellowB.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "flower",
+      "dimensions": [
+        0.2073,
+        0.1585,
+        0.2392
+      ],
+      "footprint": {
+        "width": 0.0931,
+        "depth": 0.1074
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:flower_yellowC",
+      "pack": "nature",
+      "model": "flower_yellowC",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/flower_yellowC.glb",
+      "runtimePath": "runtime-assets/nature/flower_yellowC.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "flower",
+      "dimensions": [
+        0.1806,
+        0.1325,
+        0.1811
+      ],
+      "footprint": {
+        "width": 0.0811,
+        "depth": 0.0813
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:grass",
+      "pack": "nature",
+      "model": "grass",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/grass.glb",
+      "runtimePath": "runtime-assets/nature/grass.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "grass",
+      "dimensions": [
+        0.3811,
+        0.254,
+        0.3922
+      ],
+      "footprint": {
+        "width": 0.1712,
+        "depth": 0.1761
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:grass_large",
+      "pack": "nature",
+      "model": "grass_large",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/grass_large.glb",
+      "runtimePath": "runtime-assets/nature/grass_large.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "grass",
+      "dimensions": [
+        0.409,
+        0.254,
+        0.4079
+      ],
+      "footprint": {
+        "width": 0.1837,
+        "depth": 0.1832
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:grass_leafs",
+      "pack": "nature",
+      "model": "grass_leafs",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/grass_leafs.glb",
+      "runtimePath": "runtime-assets/nature/grass_leafs.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "grass",
+      "dimensions": [
+        0.2345,
+        0.1425,
+        0.2573
+      ],
+      "footprint": {
+        "width": 0.1053,
+        "depth": 0.1156
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:grass_leafsLarge",
+      "pack": "nature",
+      "model": "grass_leafsLarge",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/grass_leafsLarge.glb",
+      "runtimePath": "runtime-assets/nature/grass_leafsLarge.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "grass",
+      "dimensions": [
+        0.4759,
+        0.1425,
+        0.4873
+      ],
+      "footprint": {
+        "width": 0.2137,
+        "depth": 0.2188
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:plant_bush",
+      "pack": "nature",
+      "model": "plant_bush",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/plant_bush.glb",
+      "runtimePath": "runtime-assets/nature/plant_bush.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "bush",
+      "dimensions": [
+        0.396,
+        0.2444,
+        0.396
+      ],
+      "footprint": {
+        "width": 0.1778,
+        "depth": 0.1778
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:plant_bushDetailed",
+      "pack": "nature",
+      "model": "plant_bushDetailed",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/plant_bushDetailed.glb",
+      "runtimePath": "runtime-assets/nature/plant_bushDetailed.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "bush",
+      "dimensions": [
+        0.6025,
+        0.3604,
+        0.6025
+      ],
+      "footprint": {
+        "width": 0.2706,
+        "depth": 0.2706
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:plant_bushLarge",
+      "pack": "nature",
+      "model": "plant_bushLarge",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/plant_bushLarge.glb",
+      "runtimePath": "runtime-assets/nature/plant_bushLarge.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "bush",
+      "dimensions": [
+        0.3743,
+        0.2429,
+        0.3357
+      ],
+      "footprint": {
+        "width": 0.1681,
+        "depth": 0.1508
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:plant_bushSmall",
+      "pack": "nature",
+      "model": "plant_bushSmall",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/plant_bushSmall.glb",
+      "runtimePath": "runtime-assets/nature/plant_bushSmall.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "bush",
+      "dimensions": [
+        0.383,
+        0.2073,
+        0.3363
+      ],
+      "footprint": {
+        "width": 0.172,
+        "depth": 0.151
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:plant_bushTriangle",
+      "pack": "nature",
+      "model": "plant_bushTriangle",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/plant_bushTriangle.glb",
+      "runtimePath": "runtime-assets/nature/plant_bushTriangle.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "bush",
+      "dimensions": [
+        0.3644,
+        0.2955,
+        0.4136
+      ],
+      "footprint": {
+        "width": 0.1637,
+        "depth": 0.1857
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:plant_flatShort",
+      "pack": "nature",
+      "model": "plant_flatShort",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/plant_flatShort.glb",
+      "runtimePath": "runtime-assets/nature/plant_flatShort.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "bush",
+      "dimensions": [
+        0.2776,
+        0.2351,
+        0.2776
+      ],
+      "footprint": {
+        "width": 0.1247,
+        "depth": 0.1247
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:plant_flatTall",
+      "pack": "nature",
+      "model": "plant_flatTall",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/plant_flatTall.glb",
+      "runtimePath": "runtime-assets/nature/plant_flatTall.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "bush",
+      "dimensions": [
+        0.2717,
+        0.2843,
+        0.2717
+      ],
+      "footprint": {
+        "width": 0.122,
+        "depth": 0.122
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:pot_large",
+      "pack": "nature",
+      "model": "pot_large",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/pot_large.glb",
+      "runtimePath": "runtime-assets/nature/pot_large.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "decoration",
+      "subcategory": "planter",
+      "dimensions": [
+        0.5636,
+        0.2,
+        0.4881
+      ],
+      "footprint": {
+        "width": 0.2531,
+        "depth": 0.2192
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:pot_small",
+      "pack": "nature",
+      "model": "pot_small",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/pot_small.glb",
+      "runtimePath": "runtime-assets/nature/pot_small.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "decoration",
+      "subcategory": "planter",
+      "dimensions": [
+        0.3234,
+        0.268,
+        0.2801
+      ],
+      "footprint": {
+        "width": 0.1452,
+        "depth": 0.1258
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:sign",
+      "pack": "nature",
+      "model": "sign",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/sign.glb",
+      "runtimePath": "runtime-assets/nature/sign.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "decoration",
+      "subcategory": "park-sign",
+      "dimensions": [
+        0.3,
+        0.4088,
+        0.07
+      ],
+      "footprint": {
+        "width": 0.1347,
+        "depth": 0.0314
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:statue_block",
+      "pack": "nature",
+      "model": "statue_block",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/statue_block.glb",
+      "runtimePath": "runtime-assets/nature/statue_block.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "decoration",
+      "subcategory": "monument",
+      "dimensions": [
+        0.4,
+        0.4,
+        0.4
+      ],
+      "footprint": {
+        "width": 0.1796,
+        "depth": 0.1796
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:statue_column",
+      "pack": "nature",
+      "model": "statue_column",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/statue_column.glb",
+      "runtimePath": "runtime-assets/nature/statue_column.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "decoration",
+      "subcategory": "monument",
+      "dimensions": [
+        0.3,
+        1,
+        0.3
+      ],
+      "footprint": {
+        "width": 0.1347,
+        "depth": 0.1347
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:statue_head",
+      "pack": "nature",
+      "model": "statue_head",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/statue_head.glb",
+      "runtimePath": "runtime-assets/nature/statue_head.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "decoration",
+      "subcategory": "monument",
+      "dimensions": [
+        0.726,
+        1,
+        0.5544
+      ],
+      "footprint": {
+        "width": 0.326,
+        "depth": 0.249
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:statue_obelisk",
+      "pack": "nature",
+      "model": "statue_obelisk",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/statue_obelisk.glb",
+      "runtimePath": "runtime-assets/nature/statue_obelisk.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "decoration",
+      "subcategory": "monument",
+      "dimensions": [
+        0.307,
+        0.8754,
+        0.307
+      ],
+      "footprint": {
+        "width": 0.1379,
+        "depth": 0.1379
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:statue_ring",
+      "pack": "nature",
+      "model": "statue_ring",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/statue_ring.glb",
+      "runtimePath": "runtime-assets/nature/statue_ring.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "decoration",
+      "subcategory": "monument",
+      "dimensions": [
+        0.6,
+        0.7964,
+        0.4
+      ],
+      "footprint": {
+        "width": 0.2695,
+        "depth": 0.1796
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:tree_cone",
+      "pack": "nature",
+      "model": "tree_cone",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/tree_cone.glb",
+      "runtimePath": "runtime-assets/nature/tree_cone.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "tree",
+      "dimensions": [
+        0.5297,
+        1.4303,
+        0.5297
+      ],
+      "footprint": {
+        "width": 0.2379,
+        "depth": 0.2379
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:tree_default",
+      "pack": "nature",
+      "model": "tree_default",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/tree_default.glb",
+      "runtimePath": "runtime-assets/nature/tree_default.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "tree",
+      "dimensions": [
+        0.755,
+        1.7079,
+        0.6538
+      ],
+      "footprint": {
+        "width": 0.3391,
+        "depth": 0.2936
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:tree_detailed",
+      "pack": "nature",
+      "model": "tree_detailed",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/tree_detailed.glb",
+      "runtimePath": "runtime-assets/nature/tree_detailed.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "tree",
+      "dimensions": [
+        0.8471,
+        1.3324,
+        0.7616
+      ],
+      "footprint": {
+        "width": 0.3804,
+        "depth": 0.342
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:tree_fat",
+      "pack": "nature",
+      "model": "tree_fat",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/tree_fat.glb",
+      "runtimePath": "runtime-assets/nature/tree_fat.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "tree",
+      "dimensions": [
+        0.755,
+        1.1504,
+        0.6538
+      ],
+      "footprint": {
+        "width": 0.3391,
+        "depth": 0.2936
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:tree_oak",
+      "pack": "nature",
+      "model": "tree_oak",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/tree_oak.glb",
+      "runtimePath": "runtime-assets/nature/tree_oak.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "tree",
+      "dimensions": [
+        0.6406,
+        1.2262,
+        0.7396
+      ],
+      "footprint": {
+        "width": 0.2877,
+        "depth": 0.3322
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:tree_pineDefaultA",
+      "pack": "nature",
+      "model": "tree_pineDefaultA",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/tree_pineDefaultA.glb",
+      "runtimePath": "runtime-assets/nature/tree_pineDefaultA.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "tree",
+      "dimensions": [
+        0.532,
+        1.5458,
+        0.532
+      ],
+      "footprint": {
+        "width": 0.2389,
+        "depth": 0.2389
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:tree_pineRoundA",
+      "pack": "nature",
+      "model": "tree_pineRoundA",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/tree_pineRoundA.glb",
+      "runtimePath": "runtime-assets/nature/tree_pineRoundA.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "tree",
+      "dimensions": [
+        0.617,
+        1.3664,
+        0.7125
+      ],
+      "footprint": {
+        "width": 0.2771,
+        "depth": 0.32
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:tree_pineSmallA",
+      "pack": "nature",
+      "model": "tree_pineSmallA",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/tree_pineSmallA.glb",
+      "runtimePath": "runtime-assets/nature/tree_pineSmallA.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "tree",
+      "dimensions": [
+        0.5,
+        0.9672,
+        0.5
+      ],
+      "footprint": {
+        "width": 0.2245,
+        "depth": 0.2245
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:tree_pineTallA",
+      "pack": "nature",
+      "model": "tree_pineTallA",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/tree_pineTallA.glb",
+      "runtimePath": "runtime-assets/nature/tree_pineTallA.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "tree",
+      "dimensions": [
+        0.3863,
+        1.5296,
+        0.392
+      ],
+      "footprint": {
+        "width": 0.1735,
+        "depth": 0.176
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:tree_simple",
+      "pack": "nature",
+      "model": "tree_simple",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/tree_simple.glb",
+      "runtimePath": "runtime-assets/nature/tree_simple.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "tree",
+      "dimensions": [
+        0.3546,
+        1.5194,
+        0.4095
+      ],
+      "footprint": {
+        "width": 0.1593,
+        "depth": 0.1839
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:tree_small",
+      "pack": "nature",
+      "model": "tree_small",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/tree_small.glb",
+      "runtimePath": "runtime-assets/nature/tree_small.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "tree",
+      "dimensions": [
+        0.3546,
+        1.11,
+        0.4095
+      ],
+      "footprint": {
+        "width": 0.1593,
+        "depth": 0.1839
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:tree_tall",
+      "pack": "nature",
+      "model": "tree_tall",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/tree_tall.glb",
+      "runtimePath": "runtime-assets/nature/tree_tall.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "tree",
+      "dimensions": [
+        0.3996,
+        1.6877,
+        0.4614
+      ],
+      "footprint": {
+        "width": 0.1795,
+        "depth": 0.2072
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
+    },
+    {
+      "id": "nature:tree_thin",
+      "pack": "nature",
+      "model": "tree_thin",
+      "sourceFile": "assets/kenney_nature-kit/Models/GLTF format/tree_thin.glb",
+      "runtimePath": "runtime-assets/nature/tree_thin.glb",
+      "previewFile": "assets/kenney_nature-kit/Preview.png",
+      "texturePaths": [
+        "runtime-assets/nature/Preview.png"
+      ],
+      "category": "vegetation",
+      "subcategory": "tree",
+      "dimensions": [
+        0.6804,
+        1.4903,
+        0.6165
+      ],
+      "footprint": {
+        "width": 0.3056,
+        "depth": 0.2769
+      },
+      "verticalOffset": 0,
+      "front": "omnidirectional",
+      "allowedRotations": "free",
+      "compatibleZones": [
+        "park"
+      ],
+      "proceduralWeight": 0,
+      "connectors": [],
+      "instancing": true,
+      "lodModelId": null,
+      "decoration": true,
+      "elevated": false,
+      "availableInV1": true,
+      "uniformScale": 0.4491,
+      "review": "heuristic"
     },
     {
       "id": "protagonists:character-medium",
@@ -33905,7 +35422,8 @@
       "allowedRotations": "free",
       "compatibleZones": [
         "suburban",
-        "urban"
+        "urban",
+        "park"
       ],
       "proceduralWeight": 1,
       "connectors": [],
@@ -33914,7 +35432,7 @@
       "decoration": true,
       "elevated": false,
       "availableInV1": true,
-      "review": "heuristic"
+      "review": "override"
     },
     {
       "id": "suburban:path-stones-long",
@@ -33985,7 +35503,8 @@
       "allowedRotations": "free",
       "compatibleZones": [
         "suburban",
-        "urban"
+        "urban",
+        "park"
       ],
       "proceduralWeight": 1,
       "connectors": [],
@@ -33994,7 +35513,7 @@
       "decoration": true,
       "elevated": false,
       "availableInV1": true,
-      "review": "heuristic"
+      "review": "override"
     },
     {
       "id": "suburban:path-stones-short",
@@ -34025,7 +35544,8 @@
       "allowedRotations": "free",
       "compatibleZones": [
         "suburban",
-        "urban"
+        "urban",
+        "park"
       ],
       "proceduralWeight": 1,
       "connectors": [],
@@ -34034,7 +35554,7 @@
       "decoration": true,
       "elevated": false,
       "availableInV1": true,
-      "review": "heuristic"
+      "review": "override"
     },
     {
       "id": "suburban:planter",
@@ -34065,7 +35585,8 @@
       "allowedRotations": "free",
       "compatibleZones": [
         "suburban",
-        "urban"
+        "urban",
+        "park"
       ],
       "proceduralWeight": 1,
       "connectors": [],
@@ -34074,7 +35595,7 @@
       "decoration": true,
       "elevated": false,
       "availableInV1": true,
-      "review": "heuristic"
+      "review": "override"
     },
     {
       "id": "suburban:tree-large",

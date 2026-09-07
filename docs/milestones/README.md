@@ -13,6 +13,7 @@ Each brief is an execution contract. Complete only its scope, attach its require
 - [M3.6.3 — NPC refactor](M3_6_3_NPC_REFACTOR.md)
 - [M3.7 — Zone detail (program)](M3_7_ZONE_DETAIL.md)
 - [M3.7.1 — Streets](M3_7_1_STREETS.md)
+- [M3.7.2 — Parks](M3_7_2_PARKS.md)
 - [M4 — Editor](M4_EDITOR.md)
 - [M5 — Local library](M5_LOCAL_LIBRARY.md)
 - [M6 — Hardening and 1.0](M6_HARDENING.md)

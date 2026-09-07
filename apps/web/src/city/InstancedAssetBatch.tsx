@@ -117,12 +117,16 @@ export function InstancedAssetBatch({
       }),
     [meshes, scene],
   );
+  const keepEmbedded = entry.pack === "nature";
   const materials = useMemo(() => {
+    if (keepEmbedded) {
+      return meshes.map((mesh) => (mesh.material as THREE.Material).clone());
+    }
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.flipY = false;
     texture.needsUpdate = true;
     return meshes.map((mesh) => applyVariantMap(mesh.material as THREE.Material, texture));
-  }, [meshes, texture]);
+  }, [keepEmbedded, meshes, texture]);
 
   if (!batch.items.length) return null;
   return (

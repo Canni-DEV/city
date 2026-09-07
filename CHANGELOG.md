@@ -6,6 +6,7 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 
 ### Added
 
+- M3.7 / M3.7.2: structured park interiors (civic plaza vs pocket grove) as `CityEntity` records, Kenney Nature Kit allowlist (`nature:*`), and walkable plaza path strips that are not pedestrian obstacles.
 - M3.7 / M3.7.1: deterministic curb street furniture (traffic lights, stop and street-name signs, highway signs at gates, street lamps, avenue poles, sparse dumpsters) as `CityEntity` records on sidewalks. Traffic lights are visual only.
 - M3.6.3: hybrid pedestrian navigation through sidewalks, complete crossings and reachable parks; component-based moveTo/wait orders, collision-checked continuous movement, safe traffic-gap prediction, and Pedestrian navigation diagnostics with shared Pause/Resume/Step.
 
@@ -21,6 +22,7 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 
 ### Changed
 
+- Generator `0.8.0`: `parkInterior` stage after curb furniture (GEN-032). Road/traffic/building RNG stays keyed with `0.6.7`; curb furniture stays on the `0.7.0` stream. GEN-009 no longer scatter-places park trees (dummy RNG). GEN-010 skips park-zone leftover cells. Old `0.7.0` cities load without silent regeneration.
 - Generator `0.7.0`: `streetFurniture` stage after leftover decoration (GEN-030/031). Road/traffic/placement RNG stays keyed with `0.6.7`. GEN-010 no longer samples road-pack street furniture. Street-lamp arms face the carriageway; one street-name post sits on the north-east corner of each T/4-way; STOP marks only local approaches into an avenue; gate highway signs face inbound traffic. Old `0.6.7` cities load without silent regeneration.
 - NPC scale is 56.25% of the previous body (25% smaller than the 0.75 override). Avatars lift visually by the `roads:tile-low` slab so feet sit on the pavement; radius, speed and navigation stay unchanged. Seeded walking is 0.33 cells/s ±10%, with arrival pauses, smooth yaw and idle/run blending. Shared fixed ticks preserve time and surviving identities; vehicle speed and generator hashes remain unchanged.
 
