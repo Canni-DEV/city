@@ -153,7 +153,6 @@ describe("M2 blocks and zoning", () => {
       "zones",
       "placement",
       "decoration",
-      "streetFurniture",
     ] as const) {
       let cancelled = false;
       await expect(
@@ -166,4 +165,16 @@ describe("M2 blocks and zoning", () => {
       ).rejects.toBeInstanceOf(GenerationCancelledError);
     }
   }, 90_000);
+
+  it("FUN-016 cancels during streetFurniture without returning a partial city", async () => {
+    let cancelled = false;
+    await expect(
+      generateRoadCity(input, {
+        onProgress(progress) {
+          if (progress.stage === "streetFurniture") cancelled = true;
+        },
+        shouldCancel: () => cancelled,
+      }),
+    ).rejects.toBeInstanceOf(GenerationCancelledError);
+  }, 60_000);
 });
