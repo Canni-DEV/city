@@ -17,3 +17,4 @@ Accepted decisions are immutable historical records. Supersede them with a new A
 13. [Sidewalk pedestrian network](0013-sidewalk-pedestrian-network.md)
 14. [Explicit runtime vehicle network](0014-runtime-vehicles.md)
 15. [Continuous component-based runtime pedestrians](0015-npc-refactor.md)
+16. [Sub-cell curb street furniture](0016-curb-street-furniture.md)

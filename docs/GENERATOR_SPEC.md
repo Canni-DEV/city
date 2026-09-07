@@ -22,8 +22,9 @@ Values are suburban/urban/commercial/industrial/park, then density, districts, r
 7. **GEN-007:** Subdivide a rectangular frontage ring (depth 3–4) inside each block **inward of the sidewalk**; leftover interior cells remain a courtyard.
 8. **GEN-008:** Assign zones from centrality, access, periphery, block size, and normalized quotas.
 9. **GEN-009:** Place compatible catalog assets using footprints and a spatial hash.
-10. **GEN-010:** Add decoration and district themes.
-11. **GEN-011:** Validate connectivity, overlaps, quotas, references, gates, and road combinations.
+10. **GEN-010:** Add leftover decoration (excluding road-pack street furniture) and district themes.
+11. **GEN-030:** Place deterministic curb street furniture on sidewalks (M3.7.1).
+12. **GEN-011:** Validate connectivity, overlaps, quotas, references, gates, and road combinations.
 
 M1 implements GEN-001–005 using generator version `0.2.0`. Delaunay edges express organic straight-line intent; deterministic cardinal A* rasterizes that intent onto the v1 ground-level Kenney road set. Consequently, diagonal intent is represented by alternating cardinal segments and curves rather than unsupported 45-degree asset rotations.
 
@@ -41,11 +42,13 @@ M3.6.2 implements GEN-029 using generator version `0.6.7`. After GEN-005 tile re
 
 Generator `0.6.7` cities keep their road and traffic RNG. Leftover decoration fill is `0.07 + d×0.22` of free cells and park vegetation chance is `0.55 + d/250` (about 2× the previous coefficients at the same 0–100 control). Density `very-high` fills every lot. Map size 256 uses four external gates (same count as 128) so dual-avenue width stays within GEN-028. Old `0.6.7` documents remain loadable; new generations of the same seed place more decoration than before this change.
 
+M3.7.1 implements GEN-030–031 using generator version `0.7.0`. After GEN-010, a `streetFurniture` worker stage places Kenney curb props on sidewalk cells with sub-cell offsets (ADR-0016). Leftover decoration no longer samples `street-furniture` or road-pack signs and lights. Road, traffic, placement, and leftover-decoration RNG stay keyed with `0.6.7` so GEN-029 networks do not re-roll; only the `streetFurniture` stream uses `0.7.0`. Structural hashes change; old `0.6.7` documents remain loadable without silent regeneration.
+
 ## Invariants and recovery
 
 - **GEN-020:** All roads form one connected component of occupied cells (catalog footprints included). External gates count is 2, 3, and 4 for sizes 64, 96, and 128; size 256 also uses 4 gates so dual-avenue corridors keep GEN-028 width.
 - **GEN-021:** Dead ends occur only in suburban zones. Elevated assets remain cataloged but unavailable. The morphology generator prunes internal degree-1 cells so surviving stubs are gates.
-- **GEN-022:** Every buildable lot has frontage on sidewalk cells that are 4-adjacent to occupied road cells; procedural buildings neither overlap nor leave valid cells.
+- **GEN-022:** Every buildable lot has frontage on sidewalk cells that are 4-adjacent to occupied road cells; procedural buildings neither overlap nor leave valid cells. Curb furniture (GEN-030) may share a sidewalk cell without unique-hash occupancy versus that sidewalk; it must stay in-mask, off occupied road cells, and without overlapping furniture AABBs (ADR-0016).
 - **GEN-023:** Actual zone area stays within ±5 percentage points of normalized targets. Pocket-park remnant area is excluded from that comparison.
 - **GEN-024:** Failed validation retries at most twice after the initial attempt, deriving each attempt deterministically.
 - **GEN-025:** Same version, input, and attempt produce byte-equivalent canonical content and hash.
@@ -56,3 +59,5 @@ Generator `0.6.7` cities keep their road and traffic RNG. Leftover decoration fi
 The structural hash excludes library identity, display name, and timestamps. It covers generator inputs plus the generated map, districts, graph (including `roadGraph.topology`), resolved road cells, sidewalks, blocks, lots, and entities, making it suitable for golden determinism tests.
 
 - **GEN-029 (M3.6.2):** Generator `0.6.7` resolves and persists directed road topology after tile resolution, before sidewalks/land. It repairs missing reciprocal openings and incomplete avenue transitions using the existing catalog, preferring the fewest changed cells with a stable tie-break, then validates required maneuvers against measured carriageway and whole catalog body clearance. Unresolvable geometry or connectivity rejects the attempt under GEN-024 with location and reason; no decorative road is left without circulation and no required turn is dropped to pass. The `traffic` worker stage reports this validation. External gates use portals; internal terminals require physical returns. Resolved topology supersedes `(cell, heading)` inference for runtime navigation.
+- **GEN-030 (M3.7.1):** Generator `0.7.0` places catalog curb furniture as `CityEntity` records on sidewalks after leftover decoration. Positions use sub-cell curb/corner offsets. The `streetFurniture` worker stage reports this pass. RNG is the `streetFurniture` stream. Allowlisted complete-pole Kenney meshes only (no `*-object-*`, `*-hanging*`, or `electricity-wires*`). Street lamps and dumpsters may scale with the decoration control; traffic lights, stop signs, street-name posts, and gate highway signs do not.
+- **GEN-031 (M3.7.1):** Intersection control is visual only. Arterial and collector T/4-way approaches receive `roads:traffic-light` (right-hand curb facing incoming traffic). Local approaches into an arterial or collector junction receive `roads:road-sign-stop`. Local-only T and 4-way junctions take neither stop nor light. Roundabouts and external gates take neither stop nor light. Each T/4-way receives one `roads:road-sign-street` on the north-east sidewalk corner (lowest z, then highest x). Street lamps yaw so the arm faces the carriageway. External gates receive a `roads:sign-highway*` facing inbound. A single approach never mixes a traffic light and a stop. Props must not sit on carriageway cells.

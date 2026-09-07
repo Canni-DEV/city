@@ -18,5 +18,6 @@ export * from "./road-repair.js";
 export * from "./road-tiles.js";
 export * from "./road-topology.js";
 export * from "./sidewalks.js";
+export * from "./street-furniture.js";
 export * from "./vehicles.js";
 export * from "./worker-protocol.js";

@@ -5,6 +5,7 @@ import {
   decorationFillRate,
   generateRoadCity,
   hashGeneratedStructure,
+  isCurbFurnitureAsset,
   occupancyRate,
   occupiedCellsFor,
   occupiedRoadSet,
@@ -33,6 +34,17 @@ describe("M3 placement", () => {
     for (const entity of Object.values(city.entities)) {
       expect(entity.origin).toBe("procedural");
       expect(TEST_ASSETS.some((asset) => asset.id === entity.assetId)).toBe(true);
+      if (isCurbFurnitureAsset(entity.assetId)) {
+        const x = entity.transform.position[0] ?? 0;
+        const z = entity.transform.position[2] ?? 0;
+        expect(
+          city.sidewalks.some(
+            (cell) => cell.position[0] === Math.floor(x) && cell.position[1] === Math.floor(z),
+          ),
+        ).toBe(true);
+        expect(roads.has(`${Math.floor(x)},${Math.floor(z)}`)).toBe(false);
+        continue;
+      }
       for (const [x, y] of occupiedCellsFor(entity)) {
         const key = `${x},${y}`;
         expect(Number.isInteger(x)).toBe(true);

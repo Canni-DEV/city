@@ -15,6 +15,7 @@ export const GENERATION_STAGES = [
   "zones",
   "placement",
   "decoration",
+  "streetFurniture",
   "validation",
 ] as const;
 export const GenerationStageSchema = z.enum(GENERATION_STAGES);

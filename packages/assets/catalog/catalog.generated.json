@@ -4785,7 +4785,7 @@
         "depth": 0.225
       },
       "verticalOffset": 0,
-      "front": "not-applicable",
+      "front": "south",
       "allowedRotations": [
         0,
         90,
@@ -4806,7 +4806,7 @@
       "decoration": false,
       "elevated": false,
       "availableInV1": true,
-      "review": "heuristic"
+      "review": "override"
     },
     {
       "id": "roads:light-curved-cross",
@@ -4923,7 +4923,7 @@
         "depth": 0.2375
       },
       "verticalOffset": 0,
-      "front": "not-applicable",
+      "front": "south",
       "allowedRotations": [
         0,
         90,
@@ -4944,7 +4944,7 @@
       "decoration": false,
       "elevated": false,
       "availableInV1": true,
-      "review": "heuristic"
+      "review": "override"
     },
     {
       "id": "roads:light-square-cross",
@@ -30926,7 +30926,7 @@
         "depth": 0.1382
       },
       "verticalOffset": 0,
-      "front": "omnidirectional",
+      "front": "west",
       "allowedRotations": "free",
       "compatibleZones": [
         "suburban",
@@ -30942,7 +30942,7 @@
       "decoration": true,
       "elevated": false,
       "availableInV1": true,
-      "review": "heuristic"
+      "review": "override"
     },
     {
       "id": "roads:road-sign-street",
@@ -30983,7 +30983,7 @@
       "decoration": true,
       "elevated": false,
       "availableInV1": true,
-      "review": "heuristic"
+      "review": "override"
     },
     {
       "id": "roads:road-sign-warning",
@@ -31008,7 +31008,7 @@
         "depth": 0.1472
       },
       "verticalOffset": 0,
-      "front": "omnidirectional",
+      "front": "west",
       "allowedRotations": "free",
       "compatibleZones": [
         "suburban",
@@ -31024,7 +31024,7 @@
       "decoration": true,
       "elevated": false,
       "availableInV1": true,
-      "review": "heuristic"
+      "review": "override"
     },
     {
       "id": "roads:road-slant",
@@ -31986,7 +31986,7 @@
         "depth": 1
       },
       "verticalOffset": 0,
-      "front": "omnidirectional",
+      "front": "west",
       "allowedRotations": "free",
       "compatibleZones": [
         "suburban",
@@ -32002,7 +32002,7 @@
       "decoration": true,
       "elevated": true,
       "availableInV1": false,
-      "review": "heuristic"
+      "review": "override"
     },
     {
       "id": "roads:sign-highway-detailed",
@@ -32027,7 +32027,7 @@
         "depth": 1
       },
       "verticalOffset": 0,
-      "front": "omnidirectional",
+      "front": "west",
       "allowedRotations": "free",
       "compatibleZones": [
         "suburban",
@@ -32043,7 +32043,7 @@
       "decoration": true,
       "elevated": true,
       "availableInV1": false,
-      "review": "heuristic"
+      "review": "override"
     },
     {
       "id": "roads:sign-highway-wide",
@@ -32068,7 +32068,7 @@
         "depth": 1
       },
       "verticalOffset": 0,
-      "front": "omnidirectional",
+      "front": "west",
       "allowedRotations": "free",
       "compatibleZones": [
         "suburban",
@@ -32084,7 +32084,7 @@
       "decoration": true,
       "elevated": true,
       "availableInV1": false,
-      "review": "heuristic"
+      "review": "override"
     },
     {
       "id": "roads:tile-high",
@@ -32269,7 +32269,7 @@
         "depth": 0.09
       },
       "verticalOffset": 0,
-      "front": "omnidirectional",
+      "front": "west",
       "allowedRotations": "free",
       "compatibleZones": [
         "suburban",
@@ -32285,7 +32285,7 @@
       "decoration": true,
       "elevated": false,
       "availableInV1": true,
-      "review": "heuristic"
+      "review": "override"
     },
     {
       "id": "roads:traffic-light-hanging",
