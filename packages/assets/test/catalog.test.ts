@@ -9,6 +9,8 @@ import {
   CAR_KIT_MODELS,
   CITY_KIT_ENTRY_COUNT,
   isCityKitEntry,
+  NATURE_KIT_ENTRY_COUNT,
+  NATURE_KIT_MODELS,
 } from "../src";
 
 const charactersRoot = path.resolve(
@@ -117,6 +119,26 @@ describe("asset catalog", () => {
     expect(
       assetCatalog.entries.some((entry) => /kart|debris|wheel|tractor|race/.test(entry.id)),
     ).toBe(false);
+  });
+
+  it("TST-006 catalogs 41 Kenney Nature Kit models without wilderness leftovers", () => {
+    const nature = assetCatalog.entries.filter((entry) => entry.pack === "nature");
+    expect(nature).toHaveLength(NATURE_KIT_ENTRY_COUNT);
+    expect(nature.map((entry) => entry.model).sort()).toEqual([...NATURE_KIT_MODELS].sort());
+    expect(nature.every((entry) => entry.sourceFile.startsWith("assets/kenney_nature-kit/"))).toBe(
+      true,
+    );
+    expect(nature.every((entry) => entry.runtimePath.endsWith(".glb"))).toBe(true);
+    expect(nature.every((entry) => entry.proceduralWeight === 0)).toBe(true);
+    expect(nature.every((entry) => entry.compatibleZones.join(",") === "park")).toBe(true);
+    expect(nature.every((entry) => (entry.uniformScale ?? 1) <= 1)).toBe(true);
+    const tree = nature.find((entry) => entry.id === "nature:tree_default");
+    expect((tree?.dimensions[1] ?? 0) * (tree?.uniformScale ?? 1)).toBeCloseTo(0.767, 2);
+    expect(
+      nature.some((entry) => /fall|palm|cactus|crop|tent|campfire|mushroom/.test(entry.id)),
+    ).toBe(false);
+    const planter = assetCatalog.entries.find((entry) => entry.id === "suburban:planter");
+    expect(planter?.compatibleZones).toEqual(["suburban", "urban", "park"]);
   });
 
   it("provides connectors for every road tile", () => {

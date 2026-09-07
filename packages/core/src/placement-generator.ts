@@ -1,5 +1,6 @@
 import type { CityDocumentV1, CityEntity, DensityLevel, ZoneType } from "./domain.js";
 import { deriveProceduralId } from "./ids.js";
+import { isParkSharedCellAsset } from "./park-interior.js";
 import { assetFitsZone, type PlacementAsset, usablePlacementAssets } from "./placement-assets.js";
 import type { SeededRandom } from "./rng.js";
 import { pointKey as cellKey, occupiedCellsForRoadTile, occupiedRoadSet } from "./road-tiles.js";
@@ -292,8 +293,7 @@ export function placeBuildingsAndParks(
       const chance = parkVegetationChance(document.generator.parameters.decorationDensity);
       for (const cell of lot.cells) {
         if (hash.has(cell) || random.float() > chance) continue;
-        const tree = pickAsset(trees, random, (asset) => asset.proceduralWeight);
-        if (tree) tryPlace(document, hash, entities, tree, [cell], 0, refs);
+        pickAsset(trees, random, (asset) => asset.proceduralWeight);
       }
       continue;
     }
@@ -324,24 +324,14 @@ export function placeBuildingsAndParks(
     if (block.zone !== "park") continue;
     if (document.lots.some((lot) => lot.blockId === block.id)) continue;
     const chance = parkVegetationChance(document.generator.parameters.decorationDensity);
-    const refs = {
-      districtId: block.districtId,
-      blockId: block.id,
-      lotId: null,
-      zone: block.zone,
-    };
     let planted = 0;
     for (const cell of block.cells) {
       if (hash.has(cell) || random.float() > chance) continue;
-      const tree = pickAsset(trees, random, (asset) => asset.proceduralWeight);
-      if (tree && tryPlace(document, hash, entities, tree, [cell], 0, refs)) planted += 1;
+      pickAsset(trees, random, (asset) => asset.proceduralWeight);
+      planted += 1;
     }
     if (planted === 0) {
-      const tree = pickAsset(trees, random, (asset) => asset.proceduralWeight);
-      for (const cell of block.cells) {
-        if (!tree) break;
-        if (tryPlace(document, hash, entities, tree, [cell], 0, refs)) break;
-      }
+      pickAsset(trees, random, (asset) => asset.proceduralWeight);
     }
   }
   return entities;
@@ -403,6 +393,7 @@ export function placeDecoration(
   }
   const candidates: Point[] = [];
   for (const block of document.blocks) {
+    if (block.zone === "park") continue;
     for (const cell of block.cells) {
       if (!hash.has(cell)) candidates.push(cell);
     }
@@ -473,6 +464,11 @@ export function validatePlacedCity(
   const lots = new Set(document.lots.map((lot) => lot.id));
   const roads = occupiedRoadSet(document.roadGraph.cells);
   const sidewalks = new Set(document.sidewalks.map((cell) => cellKey(cell.position)));
+  const parkCells = new Set(
+    document.blocks
+      .filter((block) => block.zone === "park")
+      .flatMap((block) => block.cells.map((cell) => cellKey(cell))),
+  );
   const hash = occupancyFromRoads(document);
   const seen = new Set<string>();
   const curbAabbs: ReturnType<typeof curbFurnitureAabb>[] = [];
@@ -519,6 +515,20 @@ export function validatePlacedCity(
         issues.push(`overlapping procedural occupancy at ${cellKey(cell)}`);
       }
       curbAabbs.push(aabb);
+      continue;
+    }
+    if (isParkSharedCellAsset(entity.assetId, entity.zone)) {
+      const x = entity.transform.position[0] ?? 0;
+      const z = entity.transform.position[2] ?? 0;
+      const cell: Point = [Math.floor(x), Math.floor(z)];
+      if (
+        !inMask(document, cell) ||
+        roads.has(cellKey(cell)) ||
+        sidewalks.has(cellKey(cell)) ||
+        !parkCells.has(cellKey(cell))
+      ) {
+        issues.push(`entity ${entity.id} leaves the valid mask`);
+      }
       continue;
     }
     for (const cell of occupiedCellsFor(entity)) {

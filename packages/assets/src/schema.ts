@@ -4,7 +4,7 @@ import { z } from "zod";
 const CompatibleZoneSchema = z.enum(["suburban", "urban", "commercial", "industrial", "park"]);
 
 export const CITY_KIT_PACKS = ["commercial", "industrial", "roads", "suburban"] as const;
-export const AssetPackSchema = z.enum([...CITY_KIT_PACKS, "protagonists", "cars"]);
+export const AssetPackSchema = z.enum([...CITY_KIT_PACKS, "protagonists", "cars", "nature"]);
 export const AssetCategorySchema = z.enum([
   "building",
   "lod",
@@ -92,6 +92,50 @@ export const CAR_KIT_MODELS = [
   "garbage-truck",
 ] as const;
 export const CAR_KIT_ENTRY_COUNT = CAR_KIT_MODELS.length;
+export const NATURE_KIT_MODELS = [
+  "tree_default",
+  "tree_oak",
+  "tree_simple",
+  "tree_tall",
+  "tree_small",
+  "tree_thin",
+  "tree_fat",
+  "tree_cone",
+  "tree_detailed",
+  "tree_pineDefaultA",
+  "tree_pineRoundA",
+  "tree_pineSmallA",
+  "tree_pineTallA",
+  "plant_bush",
+  "plant_bushLarge",
+  "plant_bushSmall",
+  "plant_bushDetailed",
+  "plant_bushTriangle",
+  "plant_flatShort",
+  "plant_flatTall",
+  "flower_redA",
+  "flower_redB",
+  "flower_redC",
+  "flower_yellowA",
+  "flower_yellowB",
+  "flower_yellowC",
+  "flower_purpleA",
+  "flower_purpleB",
+  "flower_purpleC",
+  "grass",
+  "grass_large",
+  "grass_leafs",
+  "grass_leafsLarge",
+  "statue_obelisk",
+  "statue_column",
+  "statue_ring",
+  "statue_head",
+  "statue_block",
+  "pot_small",
+  "pot_large",
+  "sign",
+] as const;
+export const NATURE_KIT_ENTRY_COUNT = NATURE_KIT_MODELS.length;
 
 export const AssetCatalogSchema = z.object({
   schemaVersion: z.literal(1),

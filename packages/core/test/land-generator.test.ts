@@ -177,4 +177,16 @@ describe("M2 blocks and zoning", () => {
       }),
     ).rejects.toBeInstanceOf(GenerationCancelledError);
   }, 60_000);
+
+  it("FUN-016 cancels during parkInterior without returning a partial city", async () => {
+    let cancelled = false;
+    await expect(
+      generateRoadCity(input, {
+        onProgress(progress) {
+          if (progress.stage === "parkInterior") cancelled = true;
+        },
+        shouldCancel: () => cancelled,
+      }),
+    ).rejects.toBeInstanceOf(GenerationCancelledError);
+  }, 60_000);
 });

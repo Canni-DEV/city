@@ -322,5 +322,21 @@
   "roads:light-square": {
     "front": "south",
     "review": "override"
+  },
+  "suburban:path-short": {
+    "compatibleZones": ["suburban", "urban", "park"],
+    "review": "override"
+  },
+  "suburban:path-stones-short": {
+    "compatibleZones": ["suburban", "urban", "park"],
+    "review": "override"
+  },
+  "suburban:path-stones-messy": {
+    "compatibleZones": ["suburban", "urban", "park"],
+    "review": "override"
+  },
+  "suburban:planter": {
+    "compatibleZones": ["suburban", "urban", "park"],
+    "review": "override"
   }
 }

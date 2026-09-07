@@ -6,6 +6,7 @@ import {
   generateRoadCity,
   hashGeneratedStructure,
   isCurbFurnitureAsset,
+  isParkSharedCellAsset,
   occupancyRate,
   occupiedCellsFor,
   occupiedRoadSet,
@@ -43,6 +44,17 @@ describe("M3 placement", () => {
           ),
         ).toBe(true);
         expect(roads.has(`${Math.floor(x)},${Math.floor(z)}`)).toBe(false);
+        continue;
+      }
+      if (isParkSharedCellAsset(entity.assetId, entity.zone)) {
+        const x = Math.floor(entity.transform.position[0] ?? 0);
+        const z = Math.floor(entity.transform.position[2] ?? 0);
+        expect(entity.zone).toBe("park");
+        expect(
+          city.sidewalks.some((cell) => cell.position[0] === x && cell.position[1] === z),
+        ).toBe(false);
+        expect(roads.has(`${x},${z}`)).toBe(false);
+        expect(city.map.boundaryMask[z * city.map.size + x]).toBe(true);
         continue;
       }
       for (const [x, y] of occupiedCellsFor(entity)) {
@@ -108,8 +120,13 @@ describe("M3 placement", () => {
       copy.entities = {};
     }, "no entities");
     mutate((copy) => {
-      const entity = Object.values(copy.entities)[0];
-      const other = Object.values(copy.entities)[1];
+      const occupying = Object.values(copy.entities).filter(
+        (entity) =>
+          !isCurbFurnitureAsset(entity.assetId) &&
+          !isParkSharedCellAsset(entity.assetId, entity.zone),
+      );
+      const entity = occupying[0];
+      const other = occupying[1];
       if (entity && other) copy.entities[other.id] = { ...entity, id: other.id };
     }, "overlapping procedural occupancy");
   }, 30_000);

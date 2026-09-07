@@ -277,9 +277,112 @@ for (const model of CAR_KIT_MODELS) {
   });
 }
 
+const NATURE_KIT_MODELS = [
+  "tree_default",
+  "tree_oak",
+  "tree_simple",
+  "tree_tall",
+  "tree_small",
+  "tree_thin",
+  "tree_fat",
+  "tree_cone",
+  "tree_detailed",
+  "tree_pineDefaultA",
+  "tree_pineRoundA",
+  "tree_pineSmallA",
+  "tree_pineTallA",
+  "plant_bush",
+  "plant_bushLarge",
+  "plant_bushSmall",
+  "plant_bushDetailed",
+  "plant_bushTriangle",
+  "plant_flatShort",
+  "plant_flatTall",
+  "flower_redA",
+  "flower_redB",
+  "flower_redC",
+  "flower_yellowA",
+  "flower_yellowB",
+  "flower_yellowC",
+  "flower_purpleA",
+  "flower_purpleB",
+  "flower_purpleC",
+  "grass",
+  "grass_large",
+  "grass_leafs",
+  "grass_leafsLarge",
+  "statue_obelisk",
+  "statue_column",
+  "statue_ring",
+  "statue_head",
+  "statue_block",
+  "pot_small",
+  "pot_large",
+  "sign",
+];
+const TARGET_TREE_HEIGHT = 0.767;
+const natureRoot = path.join(sourceRoot, "kenney_nature-kit", "Models/GLTF format");
+const naturePreview = posix(path.join("assets", "kenney_nature-kit", "Preview.png"));
+const natureTextures = ["runtime-assets/nature/Preview.png"];
+const referenceTree = await readFile(path.join(natureRoot, "tree_default.glb"));
+const referenceHeight = Math.max(parseBounds(referenceTree).dimensions[1], 0.0001);
+const natureScale = Number(Math.min(1, TARGET_TREE_HEIGHT / referenceHeight).toFixed(4));
+
+function classifyNature(model) {
+  if (model.startsWith("tree_")) return ["vegetation", "tree"];
+  if (model.startsWith("plant_")) return ["vegetation", "bush"];
+  if (model.startsWith("flower_")) return ["vegetation", "flower"];
+  if (model.startsWith("grass")) return ["vegetation", "grass"];
+  if (model.startsWith("statue_")) return ["decoration", "monument"];
+  if (model.startsWith("pot_")) return ["decoration", "planter"];
+  return ["decoration", "park-sign"];
+}
+
+for (const model of NATURE_KIT_MODELS) {
+  const filename = `${model}.glb`;
+  const sourcePath = path.join(natureRoot, filename);
+  const buffer = await readFile(sourcePath);
+  digest.update("nature").update(model).update(buffer);
+  const bounds = parseBounds(buffer);
+  const [category, subcategory] = classifyNature(model);
+  const id = `nature:${model}`;
+  const scaledWidth = Math.max(bounds.dimensions[0] * natureScale, 0.0001);
+  const scaledDepth = Math.max(bounds.dimensions[2] * natureScale, 0.0001);
+  entries.push({
+    id,
+    pack: "nature",
+    model,
+    sourceFile: posix(path.relative(repositoryRoot, sourcePath)),
+    runtimePath: `runtime-assets/nature/${filename}`,
+    previewFile: naturePreview,
+    texturePaths: natureTextures,
+    category,
+    subcategory,
+    dimensions: bounds.dimensions.map((value) => Math.max(value, 0.0001)),
+    footprint: {
+      width: Number(scaledWidth.toFixed(4)),
+      depth: Number(scaledDepth.toFixed(4)),
+    },
+    verticalOffset: Number((-bounds.minimum[1] * natureScale).toFixed(4)),
+    front: "omnidirectional",
+    allowedRotations: "free",
+    compatibleZones: ["park"],
+    proceduralWeight: 0,
+    connectors: [],
+    instancing: true,
+    lodModelId: null,
+    decoration: true,
+    elevated: false,
+    availableInV1: true,
+    uniformScale: natureScale,
+    review: "heuristic",
+    ...(overrides[id] ?? {}),
+  });
+}
+
 entries.sort((left, right) => left.id.localeCompare(right.id));
 const cityKitCount = entries.filter(
-  (entry) => entry.pack !== "protagonists" && entry.pack !== "cars",
+  (entry) => entry.pack !== "protagonists" && entry.pack !== "cars" && entry.pack !== "nature",
 ).length;
 if (cityKitCount !== CITY_KIT_COUNT) {
   throw new Error(`Expected ${CITY_KIT_COUNT} city-kit catalog entries, found ${cityKitCount}`);
@@ -291,6 +394,10 @@ if (protagonistCount !== characters.length) {
 const carCount = entries.filter((entry) => entry.pack === "cars").length;
 if (carCount !== CAR_KIT_MODELS.length) {
   throw new Error(`Expected ${CAR_KIT_MODELS.length} car entries, found ${carCount}`);
+}
+const natureCount = entries.filter((entry) => entry.pack === "nature").length;
+if (natureCount !== NATURE_KIT_MODELS.length) {
+  throw new Error(`Expected ${NATURE_KIT_MODELS.length} nature entries, found ${natureCount}`);
 }
 const entryIds = new Set(entries.map((entry) => entry.id));
 if (entryIds.size !== entries.length) throw new Error("Catalog contains duplicate IDs");

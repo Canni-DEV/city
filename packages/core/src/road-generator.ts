@@ -4,6 +4,7 @@ import { CityDocumentSchema } from "./domain.js";
 import { buildDriveNetwork, type DriveNetworkValidation } from "./drive-network.js";
 import { deriveProceduralId } from "./ids.js";
 import { assignZones, createBlocks, createLots, validateLandCity } from "./land-generator.js";
+import { placeParkInteriors } from "./park-interior.js";
 import type { PlacementAsset } from "./placement-assets.js";
 import {
   applyDistrictThemes,
@@ -51,9 +52,11 @@ import { createSidewalks, validateSidewalks } from "./sidewalks.js";
 import { placeStreetFurniture } from "./street-furniture.js";
 import type { GenerationStage } from "./worker-protocol.js";
 
-export const GENERATOR_VERSION = "0.7.0";
+export const GENERATOR_VERSION = "0.8.0";
 /** Road, traffic, placement, and leftover decoration keep 0.6.7 streams (GEN-029). */
 const ROAD_RNG_VERSION = "0.6.7";
+/** Curb furniture keeps the M3.7.1 stream so GEN-031 does not re-roll. */
+const STREET_FURNITURE_RNG_VERSION = "0.7.0";
 
 type Direction = "north" | "east" | "south" | "west";
 
@@ -118,7 +121,12 @@ export class RoadGenerationError extends Error {
 }
 
 function randomFor(seed: string, attempt: number, stage: string): SeededRandom {
-  const version = stage === "streetFurniture" ? GENERATOR_VERSION : ROAD_RNG_VERSION;
+  const version =
+    stage === "parkInterior"
+      ? GENERATOR_VERSION
+      : stage === "streetFurniture"
+        ? STREET_FURNITURE_RNG_VERSION
+        : ROAD_RNG_VERSION;
   return new SeededRandom(`${version}:${seed}:${attempt}:${stage}`);
 }
 
@@ -800,15 +808,23 @@ export async function generateRoadCity(
       occupancy,
       placed.length,
     );
-    await checkpoint(hooks, "streetFurniture", 97, "Placing curb signs, lights, and furniture");
+    await checkpoint(hooks, "streetFurniture", 96, "Placing curb signs, lights, and furniture");
     const furniture = placeStreetFurniture(
       document,
       input.assets,
       randomFor(attemptSeed, attempt, "streetFurniture"),
       placed.length + decorated.length,
     );
+    await checkpoint(hooks, "parkInterior", 97, "Composing park plazas and pocket groves");
+    const parks = placeParkInteriors(
+      document,
+      input.assets,
+      randomFor(attemptSeed, attempt, "parkInterior"),
+      occupancy,
+      placed.length + decorated.length + furniture.length,
+    );
     document.entities = Object.fromEntries(
-      [...placed, ...decorated, ...furniture]
+      [...placed, ...decorated, ...furniture, ...parks]
         .sort((left, right) => left.id.localeCompare(right.id))
         .map((entity) => [entity.id, entity]),
     );

@@ -30,5 +30,6 @@ City is specified through stable requirement (`PRD`, `FUN`, `UX`, `ARC`, `DAT`, 
 - [Executable milestone briefs](milestones/)
 - [M3.7 zone-detail program](milestones/M3_7_ZONE_DETAIL.md)
 - [M3.7.1 streets](milestones/M3_7_1_STREETS.md)
+- [M3.7.2 parks](milestones/M3_7_2_PARKS.md)
 
 Specifications are authoritative. If code, a brief, and a specification conflict, stop and resolve the conflict through a documented decision before implementation.
