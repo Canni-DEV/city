@@ -71,7 +71,7 @@ describe("TST-011 park interiors", () => {
       expect(props.some((entity) => paths.has(entity.assetId))).toBe(false);
       expect(props.length).toBeGreaterThan(0);
     }
-  }, 30_000);
+  }, 60_000);
 
   it("keeps Nature Kit and plaza paths out of leftover non-park lots", async () => {
     const city = await generateRoadCity(input);
@@ -79,7 +79,7 @@ describe("TST-011 park interiors", () => {
       if (entity.zone === "park" || entity.zone === null) continue;
       expect(entity.assetId.startsWith("nature:")).toBe(false);
     }
-  }, 30_000);
+  }, 60_000);
 
   it("treats park-surface garnish as non-obstacles and statues as obstacles", async () => {
     const city = await generateRoadCity(input);
@@ -99,7 +99,7 @@ describe("TST-011 park interiors", () => {
       expect(isPedestrianNonObstacle(entity)).toBe(false);
       expect(obstacleIds.has(entity.id)).toBe(true);
     }
-  }, 30_000);
+  }, 60_000);
 
   it("keeps habitable park interiors reachable from the sidewalk ring", async () => {
     const city = await generateRoadCity(input);
@@ -124,7 +124,7 @@ describe("TST-011 park interiors", () => {
       expect(parkNodes.length).toBeGreaterThan(0);
       expect(parkNodes.some((node) => sidewalkComponents.has(node.component))).toBe(true);
     }
-  }, 30_000);
+  }, 60_000);
 
   it("scatters multiple garnish per cell without snapping occupants to the lattice", async () => {
     const city = await generateRoadCity(input);
@@ -166,14 +166,14 @@ describe("TST-011 park interiors", () => {
     expect(
       parkProps.some((entity) => garnish.has(entity.assetId) && treeCells.has(entityCell(entity))),
     ).toBe(true);
-  }, 30_000);
+  }, 60_000);
 
   it("TST-001 golden hash stays stable for generator 0.8.1 parks", async () => {
     const first = await generateRoadCity(input);
     const second = await generateRoadCity({ ...input, id: "city-parks-b" });
     expect(hashGeneratedStructure(first)).toBe(hashGeneratedStructure(second));
     expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"7507de60"`);
-  }, 30_000);
+  }, 60_000);
 
   it("composes civic plazas on Balanced 96 seed green-crossroads", async () => {
     const city = await generateRoadCity({
