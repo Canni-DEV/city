@@ -32,11 +32,11 @@ describe("M1–M3.5 city generation", () => {
       timestamp: "2027-01-01T00:00:00.000Z",
     });
     expect(hashGeneratedStructure(first)).toBe(hashGeneratedStructure(second));
-    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"aea6c523"`);
+    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"f3a18e4a"`);
   }, 60_000);
 
   it("TST-001 derives reproducible attempts and retries at most three times", async () => {
-    expect(deriveAttemptSeed("retry-city", 2)).toBe("retry-city::0.8.1::attempt-2");
+    expect(deriveAttemptSeed("retry-city", 2)).toBe("retry-city::0.9.0::attempt-2");
     const attempts: number[] = [];
     const city = await generateRoadCity(inputFor("golden-grid"), {
       validateAttempt(document) {

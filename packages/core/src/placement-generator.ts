@@ -1,3 +1,4 @@
+import { isLotYardDumpster, isYardZone, YARD_ALLOWLIST } from "./block-yards.js";
 import type { CityDocumentV1, CityEntity, DensityLevel, ZoneType } from "./domain.js";
 import { deriveProceduralId } from "./ids.js";
 import { isParkSharedCellAsset } from "./park-interior.js";
@@ -15,12 +16,22 @@ type Point = [number, number];
 type Lot = CityDocumentV1["lots"][number];
 type Block = CityDocumentV1["blocks"][number];
 
-const FRONTAGE_YAW = {
+export const FRONTAGE_YAW = {
   south: 0,
   west: 90,
   north: 180,
   east: 270,
 } as const;
+
+const CARDINAL_FRONTS = new Set(["north", "east", "south", "west"]);
+
+/** Yaw that turns catalog `front` toward the lot sidewalk. Renderer later negates Y. */
+export function yawForLotFrontage(frontage: Lot["frontage"], assetFront: string): number {
+  const nativeFront = CARDINAL_FRONTS.has(assetFront) ? (assetFront as Lot["frontage"]) : "south";
+  const target = FRONTAGE_YAW[frontage];
+  const native = FRONTAGE_YAW[nativeFront];
+  return (((target - native) % 360) + 360) % 360;
+}
 
 const DISTRICT_THEME_PALETTES: Record<string, readonly string[]> = {
   district: ["colormap", "variation-a", "variation-b"],
@@ -299,10 +310,11 @@ export function placeBuildingsAndParks(
     }
 
     if (random.float() > fill) continue;
-    const yaw = FRONTAGE_YAW[lot.frontage];
+    const yawFor = (asset: PlacementAsset) => yawForLotFrontage(lot.frontage, asset.front);
     const fitting = (pool: readonly PlacementAsset[]) =>
       pool.filter((asset) => {
         if (!assetFitsZone(asset, block.zone)) return false;
+        const yaw = yawFor(asset);
         const span = orientedSpan(asset.footprint.width, asset.footprint.depth, yaw);
         const cells = frontCells(bounds, lot.frontage, span.alongX, span.alongZ);
         return Boolean(cells?.every((cell) => owned.has(cellKey(cell)) && !hash.has(cell)));
@@ -315,6 +327,7 @@ export function placeBuildingsAndParks(
         ? pickAsset(fitting(industrialProps), random, (asset) => asset.proceduralWeight)
         : undefined);
     if (!chosen) continue;
+    const yaw = yawFor(chosen);
     const span = orientedSpan(chosen.footprint.width, chosen.footprint.depth, yaw);
     const cells = frontCells(bounds, lot.frontage, span.alongX, span.alongZ);
     if (cells) tryPlace(document, hash, entities, chosen, cells, yaw, refs);
@@ -393,7 +406,7 @@ export function placeDecoration(
   }
   const candidates: Point[] = [];
   for (const block of document.blocks) {
-    if (block.zone === "park") continue;
+    if (block.zone === "park" || block.zone === "suburban" || block.zone === "urban") continue;
     for (const cell of block.cells) {
       if (!hash.has(cell)) candidates.push(cell);
     }
@@ -462,6 +475,17 @@ export function validatePlacedCity(
   const districts = new Set(document.districts.map((district) => district.id));
   const blocks = new Set(document.blocks.map((block) => block.id));
   const lots = new Set(document.lots.map((lot) => lot.id));
+  const blocksById = new Map(document.blocks.map((block) => [block.id, block]));
+  const lotsById = new Map(document.lots.map((lot) => [lot.id, lot]));
+  const blockCellsById = new Map(
+    document.blocks.map((block) => [block.id, new Set(block.cells.map((cell) => cellKey(cell)))]),
+  );
+  const lotCellsById = new Map(
+    document.lots.map((lot) => [lot.id, new Set(lot.cells.map((cell) => cellKey(cell)))]),
+  );
+  const lotIdByCell = new Map(
+    document.lots.flatMap((lot) => lot.cells.map((cell) => [cellKey(cell), lot.id] as const)),
+  );
   const roads = occupiedRoadSet(document.roadGraph.cells);
   const sidewalks = new Set(document.sidewalks.map((cell) => cellKey(cell.position)));
   const parkCells = new Set(
@@ -503,7 +527,7 @@ export function validatePlacedCity(
     ) {
       issues.push(`entity ${entity.id} is incompatible with its zone`);
     }
-    if (isCurbFurnitureAsset(entity.assetId)) {
+    if (isCurbFurnitureAsset(entity.assetId) && !isLotYardDumpster(entity, sidewalks)) {
       const x = entity.transform.position[0] ?? 0;
       const z = entity.transform.position[2] ?? 0;
       const cell: Point = [Math.floor(x), Math.floor(z)];
@@ -530,6 +554,27 @@ export function validatePlacedCity(
         issues.push(`entity ${entity.id} leaves the valid mask`);
       }
       continue;
+    }
+    if (isYardZone(entity.zone) && YARD_ALLOWLIST.has(entity.assetId)) {
+      const x = Math.floor(entity.transform.position[0] ?? 0);
+      const z = Math.floor(entity.transform.position[2] ?? 0);
+      const entityCell = cellKey([x, z]);
+      const block = entity.blockId ? blocksById.get(entity.blockId) : undefined;
+      const insideBlock = entity.blockId
+        ? (blockCellsById.get(entity.blockId)?.has(entityCell) ?? false)
+        : false;
+      if (!block || block.zone !== entity.zone || !insideBlock || sidewalks.has(entityCell)) {
+        issues.push(`entity ${entity.id} leaves its suburban/urban block`);
+      }
+      if (entity.lotId) {
+        const lot = lotsById.get(entity.lotId);
+        const insideLot = lotCellsById.get(entity.lotId)?.has(entityCell) ?? false;
+        if (!lot || lot.blockId !== entity.blockId || !insideLot) {
+          issues.push(`entity ${entity.id} leaves its yard lot`);
+        }
+      } else if (lotIdByCell.has(entityCell)) {
+        issues.push(`entity ${entity.id} has missing yard lot ownership`);
+      }
     }
     for (const cell of occupiedCellsFor(entity)) {
       if (!inMask(document, cell) || roads.has(cellKey(cell))) {

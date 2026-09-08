@@ -38,13 +38,14 @@ describe("M3 placement", () => {
       if (isCurbFurnitureAsset(entity.assetId)) {
         const x = entity.transform.position[0] ?? 0;
         const z = entity.transform.position[2] ?? 0;
-        expect(
-          city.sidewalks.some(
-            (cell) => cell.position[0] === Math.floor(x) && cell.position[1] === Math.floor(z),
-          ),
-        ).toBe(true);
-        expect(roads.has(`${Math.floor(x)},${Math.floor(z)}`)).toBe(false);
-        continue;
+        const onSidewalk = city.sidewalks.some(
+          (cell) => cell.position[0] === Math.floor(x) && cell.position[1] === Math.floor(z),
+        );
+        if (entity.assetId !== "roads:dumpster" || onSidewalk) {
+          expect(onSidewalk).toBe(true);
+          expect(roads.has(`${Math.floor(x)},${Math.floor(z)}`)).toBe(false);
+          continue;
+        }
       }
       if (isParkSharedCellAsset(entity.assetId, entity.zone)) {
         const x = Math.floor(entity.transform.position[0] ?? 0);

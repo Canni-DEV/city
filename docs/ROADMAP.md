@@ -2,7 +2,7 @@
 
 ```mermaid
 flowchart LR
-  M0["M0 Foundation"] --> M1["M1 Road slice"] --> M2["M2 Blocks and zoning"] --> M3["M3 Placement and rendering"] --> M35["M3.5 Urban morphology"] --> M36["M3.6 Animated agents"] --> M361["M3.6.1 Sidewalks"] --> M361A["M3.6.1 Avenues"] --> M362["M3.6.2 Vehicles"] --> M363["M3.6.3 NPC refactor"] --> M371["M3.7.1 Streets"] --> M372["M3.7.2 Parks"] --> M4["M4 Editor"] --> M5["M5 Local library"] --> M6["M6 Hardening / 1.0"]
+  M0["M0 Foundation"] --> M1["M1 Road slice"] --> M2["M2 Blocks and zoning"] --> M3["M3 Placement and rendering"] --> M35["M3.5 Urban morphology"] --> M36["M3.6 Animated agents"] --> M361["M3.6.1 Sidewalks"] --> M361A["M3.6.1 Avenues"] --> M362["M3.6.2 Vehicles"] --> M363["M3.6.3 NPC refactor"] --> M371["M3.7.1 Streets"] --> M372["M3.7.2 Parks"] --> M373["M3.7.3 Urban blocks"] --> M4["M4 Editor"] --> M5["M5 Local library"] --> M6["M6 Hardening / 1.0"]
 ```
 
 | Milestone | Outcome | Review gate |
@@ -20,8 +20,9 @@ flowchart LR
 | M3.7 | Zone-detail program (streets, parks, urban blocks, industrial, commercial) | Each sub-phase review; do not skip ahead |
 | M3.7.1 | Deterministic curb furniture: lights, stop/street signs, highway gates, lamps, poles | TST-010, 200-city batch, pedestrian connectivity, overlay QA |
 | M3.7.2 | Structured park interiors: civic plazas, pocket groves, Nature Kit allowlist | TST-011, 200-city batch, pedestrian connectivity, overlay QA |
+| M3.7.3 | Suburban/urban yards: sidewalk facing, courtyard greens/groves, lot dumpsters | TST-012, 200-city batch, pedestrian connectivity, overlay QA |
 | M4 | Full object editor, commands, selection, placement, block regeneration | Exact undo/redo and input QA pass |
 | M5 | Dexie library, autosave, thumbnails, import/export, migrations | Persistence recovery and migration QA pass |
 | M6 | Accessibility, performance, final QA/docs/release | All requirements accepted; `1.0.0` may ship |
 
-Each milestone uses its brief in `docs/milestones`, a dedicated branch and PR, and stops for review before the next begins. M3.5 (morphology), M3.6 (runtime agents), M3.6.1 (sidewalks), the M3.6.1 avenue hotfix, M3.6.2 (vehicles), M3.6.3 (NPC refactor), M3.7.1 (streets), and M3.7.2 (parks) are intermediate patches; they do not replace M4.
+Each milestone uses its brief in `docs/milestones`, a dedicated branch and PR, and stops for review before the next begins. M3.5 (morphology), M3.6 (runtime agents), M3.6.1 (sidewalks), the M3.6.1 avenue hotfix, M3.6.2 (vehicles), M3.6.3 (NPC refactor), M3.7.1 (streets), M3.7.2 (parks), and M3.7.3 (urban blocks) are intermediate patches; they do not replace M4.
