@@ -10,6 +10,18 @@ import {
   type Point,
   pointKey,
 } from "./road-tiles.js";
+import {
+  aabbFor,
+  cellCenter,
+  clusterCount,
+  freeYaw,
+  occupantJitter,
+  type ScatterAabb,
+  type ScatterSample,
+  SPARSE_CHANCE,
+  scatterRadius,
+  tryScatterPoint,
+} from "./scatter-cell.js";
 import { isPocketParkBlock, sidewalkKeySet } from "./sidewalks.js";
 import type { SpatialHash } from "./spatial-hash.js";
 import { isCurbClassNonObstacle } from "./street-furniture.js";
@@ -49,7 +61,7 @@ export const PARK_PATH_ASSETS = [
   "suburban:path-stones-messy",
 ] as const;
 
-export const PARK_GARNISH_ASSETS = [
+export const PARK_CLUSTER_ASSETS = [
   "nature:flower_redA",
   "nature:flower_redB",
   "nature:flower_redC",
@@ -63,11 +75,13 @@ export const PARK_GARNISH_ASSETS = [
   "nature:grass_large",
   "nature:grass_leafs",
   "nature:grass_leafsLarge",
-  "nature:pot_small",
-  "nature:sign",
   "nature:plant_bushSmall",
   "nature:plant_flatShort",
 ] as const;
+
+export const PARK_SPARSE_ASSETS = ["nature:pot_small", "nature:sign"] as const;
+
+export const PARK_GARNISH_ASSETS = [...PARK_CLUSTER_ASSETS, ...PARK_SPARSE_ASSETS] as const;
 
 export const PARK_PLANTER_ASSETS = ["suburban:planter", "nature:pot_large"] as const;
 
@@ -165,6 +179,7 @@ interface ParkPlacer {
   sidewalks: ReadonlySet<string>;
   roads: ReadonlySet<string>;
   lotsByCell: Map<string, string>;
+  occupants: Map<string, ScatterAabb>;
 }
 
 function refsFor(placer: ParkPlacer, block: CityDocumentV1["blocks"][number], cell: Point) {
@@ -174,10 +189,6 @@ function refsFor(placer: ParkPlacer, block: CityDocumentV1["blocks"][number], ce
     lotId: placer.lotsByCell.get(key(cell)) ?? null,
     zone: block.zone,
   };
-}
-
-function cellCenter(cell: Point): Point {
-  return [cell[0] + 0.5, cell[1] + 0.5];
 }
 
 function pushEntity(
@@ -202,6 +213,7 @@ function pushEntity(
       refsFor(placer, block, cell),
     ),
   );
+  if (occupy) placer.occupants.set(key(cell), aabbFor(position, asset.footprint, yaw));
   return true;
 }
 
@@ -290,32 +302,84 @@ function pathTowardSidewalk(
   return cells;
 }
 
-function garnishOffset(cell: Point, random: SeededRandom): Point {
-  return [cell[0] + 0.28 + random.float() * 0.44, cell[1] + 0.28 + random.float() * 0.44];
+function pushGarnish(
+  placer: ParkPlacer,
+  asset: PlacementAsset,
+  cell: Point,
+  position: Point,
+  yaw: number,
+  block: CityDocumentV1["blocks"][number],
+  placed: ScatterSample[],
+): void {
+  if (!pushEntity(placer, asset, cell, position, yaw, block, false)) return;
+  placed.push({ position, radius: scatterRadius(asset.footprint) });
+}
+
+function garnishCell(
+  placer: ParkPlacer,
+  block: CityDocumentV1["blocks"][number],
+  cell: Point,
+  chance: number,
+): void {
+  if (placer.random.float() > chance) return;
+  const blockers: ScatterAabb[] = [];
+  const occupant = placer.occupants.get(key(cell));
+  if (occupant) blockers.push(occupant);
+  const placed: ScatterSample[] = [];
+  if (placer.random.float() < SPARSE_CHANCE) {
+    const sparse = pickId(PARK_SPARSE_ASSETS, placer.catalog, placer.random);
+    if (sparse) {
+      const position = tryScatterPoint(cell, sparse.footprint, placer.random, blockers, placed);
+      if (position) {
+        pushGarnish(
+          placer,
+          sparse,
+          cell,
+          position,
+          placer.random.integer(0, 3) * 90,
+          block,
+          placed,
+        );
+      }
+    }
+  }
+  const count = clusterCount(placer.document.generator.parameters.decorationDensity);
+  for (let index = 0; index < count; index += 1) {
+    const cluster = pickId(PARK_CLUSTER_ASSETS, placer.catalog, placer.random);
+    if (!cluster) continue;
+    const position = tryScatterPoint(cell, cluster.footprint, placer.random, blockers, placed);
+    if (!position) continue;
+    pushGarnish(placer, cluster, cell, position, freeYaw(placer.random), block, placed);
+  }
 }
 
 function composePlaza(
   placer: ParkPlacer,
   block: CityDocumentV1["blocks"][number],
   interiorCells: Point[],
-): Set<string> {
+): string | null {
   const interior = new Set(interiorCells.map(key));
   const cx = interiorCells.reduce((sum, cell) => sum + cell[0], 0) / interiorCells.length;
   const cz = interiorCells.reduce((sum, cell) => sum + cell[1], 0) / interiorCells.length;
   const center = nearestCell(interiorCells, [cx, cz]);
   const pathKeys = new Set<string>();
-  if (!center) return pathKeys;
+  if (!center) return null;
   const statue = pickId(PARK_STATUE_ASSETS, placer.catalog, placer.random);
+  let statueKey: string | null = null;
   if (statue) {
-    pushEntity(
-      placer,
-      statue,
-      center,
-      cellCenter(center),
-      placer.random.integer(0, 3) * 90,
-      block,
-      true,
-    );
+    if (
+      pushEntity(
+        placer,
+        statue,
+        center,
+        cellCenter(center),
+        placer.random.integer(0, 3) * 90,
+        block,
+        true,
+      )
+    ) {
+      statueKey = key(center);
+    }
   }
   const pathCells: Point[] = [];
   for (const direction of CARDINALS) {
@@ -341,12 +405,13 @@ function composePlaza(
     if (!interior.has(key(neighbor)) || pathKeys.has(key(neighbor))) continue;
     if (!stillConnected(interiorCells, placer.sidewalks, placer.hash, pathCells, neighbor))
       continue;
+    const yaw = placer.random.integer(0, 3) * 90;
     pushEntity(
       placer,
       planter,
       neighbor,
-      cellCenter(neighbor),
-      placer.random.integer(0, 3) * 90,
+      occupantJitter(neighbor, planter.footprint, placer.random),
+      yaw,
       block,
       true,
     );
@@ -359,9 +424,17 @@ function composePlaza(
     const tree = pickId(PARK_TREE_ASSETS, placer.catalog, placer.random);
     if (!tree) continue;
     if (!stillConnected(interiorCells, placer.sidewalks, placer.hash, required, cell)) continue;
-    pushEntity(placer, tree, cell, cellCenter(cell), placer.random.integer(0, 3) * 90, block, true);
+    pushEntity(
+      placer,
+      tree,
+      cell,
+      occupantJitter(cell, tree.footprint, placer.random),
+      freeYaw(placer.random),
+      block,
+      true,
+    );
   }
-  return pathKeys;
+  return statueKey;
 }
 
 function composeGrove(
@@ -376,56 +449,28 @@ function composeGrove(
       placer,
       tree,
       treeCell,
-      cellCenter(treeCell),
-      placer.random.integer(0, 3) * 90,
+      occupantJitter(treeCell, tree.footprint, placer.random),
+      freeYaw(placer.random),
       block,
       true,
     );
   }
   const decoration = placer.document.generator.parameters.decorationDensity;
   const garnishChance = 0.45 + decoration / 220;
-  for (const cell of cells) {
-    if (placer.random.float() > garnishChance) continue;
-    const garnish = pickId(PARK_GARNISH_ASSETS, placer.catalog, placer.random);
-    if (!garnish) continue;
-    const occupy = placer.hash.has(cell);
-    if (occupy && key(cell) !== (treeCell ? key(treeCell) : "")) continue;
-    pushEntity(
-      placer,
-      garnish,
-      cell,
-      garnishOffset(cell, placer.random),
-      placer.random.integer(0, 3) * 90,
-      block,
-      false,
-    );
-  }
+  for (const cell of cells) garnishCell(placer, block, cell, garnishChance);
 }
 
 function garnishPlaza(
   placer: ParkPlacer,
   block: CityDocumentV1["blocks"][number],
   interiorCells: Point[],
-  pathKeys: ReadonlySet<string>,
+  statueKey: string | null,
 ): void {
   const decoration = placer.document.generator.parameters.decorationDensity;
   const chance = 0.4 + decoration / 200;
   for (const cell of interiorCells) {
-    const occupied = placer.hash.has(cell);
-    const onPath = pathKeys.has(key(cell));
-    if (occupied && !onPath) continue;
-    if (placer.random.float() > chance) continue;
-    const garnish = pickId(PARK_GARNISH_ASSETS, placer.catalog, placer.random);
-    if (!garnish) continue;
-    pushEntity(
-      placer,
-      garnish,
-      cell,
-      garnishOffset(cell, placer.random),
-      placer.random.integer(0, 3) * 90,
-      block,
-      false,
-    );
+    if (statueKey && key(cell) === statueKey) continue;
+    garnishCell(placer, block, cell, chance);
   }
 }
 
@@ -454,6 +499,7 @@ export function placeParkInteriors(
     sidewalks,
     roads,
     lotsByCell,
+    occupants: new Map(),
   };
   for (const block of [...document.blocks].sort(
     (left, right) =>
@@ -470,8 +516,8 @@ export function placeParkInteriors(
       composeGrove(placer, block, cells);
       continue;
     }
-    const pathKeys = composePlaza(placer, block, interiorCells);
-    garnishPlaza(placer, block, interiorCells, pathKeys);
+    const statueKey = composePlaza(placer, block, interiorCells);
+    garnishPlaza(placer, block, interiorCells, statueKey);
   }
   return placer.entities;
 }

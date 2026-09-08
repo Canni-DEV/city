@@ -6,7 +6,7 @@
 
 M3.7.2 places structured park interiors as `CityEntity` records. Occupying props — Nature Kit trees, large bushes, statues, `suburban:planter`, and `nature:pot_large` — claim a unique spatial-hash cell and remain pedestrian obstacles.
 
-Park-surface and garnish props — suburban plaza path strips, flowers, grass, `nature:pot_small`, and `nature:sign` — **share** the park cell instead of unique-hash occupancy. GEN-011 does not treat those records as overlaps against each other, against empty grass, or against path strips. They stay in-mask, off occupied road and sidewalk cells, and inside a park block. They are excluded from the pedestrian obstacle set so NPCs walk the plaza. Pathfinding code is not rewritten; reconstruction already ignores the non-obstacle allowlist (SIM-002).
+Park-surface and garnish props — suburban plaza path strips, flowers, grass, `nature:pot_small`, and `nature:sign` — **share** the park cell instead of unique-hash occupancy. Multiple garnish records may share one cell (cluster flowers/grass/small plants; at most one `pot_small` or `sign`). GEN-011 does not treat those records as overlaps against each other, against empty grass, or against path strips. They stay in-mask, off occupied road and sidewalk cells, and inside a park block. Occupying trees and planters still claim a unique cell but may use a deterministic sub-cell offset inside that cell. Shared garnish is excluded from the pedestrian obstacle set so NPCs walk the plaza; occupying props remain obstacles. Pathfinding code is not rewritten; reconstruction already ignores the non-obstacle allowlist (SIM-002).
 
 Plaza paths never sit on sidewalk `tile-low` cells. The sidewalk ring remains the park’s street edge.
 

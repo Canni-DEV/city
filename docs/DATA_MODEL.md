@@ -24,4 +24,4 @@ M3.6.3 adds no schema fields or migrations. NPC component maps, orders, predicti
 
 M3.7.1 adds no schema fields. Curb furniture is ordinary `CityEntity` records (DAT-003) distinguished by catalog category and asset ID. Sub-cell transforms are valid. Generator `0.7.0` cities include them in the structural hash via `entities`. Old `0.6.7` cities remain loadable without silent regeneration and simply lack this furniture.
 
-M3.7.2 adds no schema fields. Park interior props are ordinary `CityEntity` records. Generator `0.8.0` cities include them in the structural hash via `entities`. Old `0.7.0` cities remain loadable without silent regeneration and keep scatter-era park trees.
+M3.7.2 adds no schema fields. Park interior props are ordinary `CityEntity` records. Generator `0.8.1` cities include them in the structural hash via `entities`, with sub-cell transforms on jittered occupants and clustered garnish. Old `0.8.0` and `0.7.0` cities remain loadable without silent regeneration; `0.7.0` keeps scatter-era park trees and `0.8.0` keeps centered park interiors.

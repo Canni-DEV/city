@@ -1,14 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
   buildPedestrianNetwork,
+  type CityEntity,
   generateRoadCity,
   hashGeneratedStructure,
   isParkSharedCellAsset,
   isPedestrianNonObstacle,
   isPocketParkBlock,
   occupiedRoadSet,
+  PARK_GARNISH_ASSETS,
   PARK_PATH_ASSETS,
+  PARK_PLANTER_ASSETS,
   PARK_STATUE_ASSETS,
+  PARK_TREE_ASSETS,
   PRESET_PARAMETERS,
   sidewalkKeySet,
   validatePlacedCity,
@@ -26,6 +30,19 @@ const input = {
 
 const statues = new Set<string>(PARK_STATUE_ASSETS);
 const paths = new Set<string>(PARK_PATH_ASSETS);
+const garnish = new Set<string>(PARK_GARNISH_ASSETS);
+const trees = new Set<string>(PARK_TREE_ASSETS);
+const planters = new Set<string>(PARK_PLANTER_ASSETS);
+
+function entityCell(entity: CityEntity): string {
+  return `${Math.floor(entity.transform.position[0] ?? 0)},${Math.floor(entity.transform.position[2] ?? 0)}`;
+}
+
+function onCellCenter(entity: CityEntity): boolean {
+  const x = entity.transform.position[0] ?? 0;
+  const z = entity.transform.position[2] ?? 0;
+  return Math.abs(x - Math.floor(x) - 0.5) < 1e-9 && Math.abs(z - Math.floor(z) - 0.5) < 1e-9;
+}
 
 describe("TST-011 park interiors", () => {
   it("composes one statue plaza in habitable parks and a grove in pocket remnants", async () => {
@@ -109,11 +126,53 @@ describe("TST-011 park interiors", () => {
     }
   }, 30_000);
 
-  it("TST-001 golden hash stays stable for generator 0.8.0 parks", async () => {
+  it("scatters multiple garnish per cell without snapping occupants to the lattice", async () => {
+    const city = await generateRoadCity(input);
+    expect(city.generator.version).toBe("0.8.1");
+    expect(validatePlacedCity(city, TEST_ASSETS)).toEqual([]);
+    const parkProps = Object.values(city.entities).filter((entity) => entity.zone === "park");
+    const garnishByCell = new Map<string, number>();
+    for (const entity of parkProps) {
+      if (!garnish.has(entity.assetId)) continue;
+      const cell = entityCell(entity);
+      garnishByCell.set(cell, (garnishByCell.get(cell) ?? 0) + 1);
+    }
+    expect([...garnishByCell.values()].some((count) => count > 1)).toBe(true);
+    const occupying = parkProps.filter(
+      (entity) =>
+        trees.has(entity.assetId) || planters.has(entity.assetId) || statues.has(entity.assetId),
+    );
+    expect(
+      occupying.some((entity) => trees.has(entity.assetId) || planters.has(entity.assetId)),
+    ).toBe(true);
+    expect(
+      occupying
+        .filter((entity) => trees.has(entity.assetId) || planters.has(entity.assetId))
+        .some((entity) => !onCellCenter(entity)),
+    ).toBe(true);
+    const occupyingCells = occupying.map(entityCell);
+    expect(new Set(occupyingCells).size).toBe(occupyingCells.length);
+    const monuments = parkProps.filter((entity) => statues.has(entity.assetId));
+    for (const statue of monuments) {
+      expect(onCellCenter(statue)).toBe(true);
+      expect(garnishByCell.has(entityCell(statue))).toBe(false);
+    }
+    const pathProps = parkProps.filter((entity) => paths.has(entity.assetId));
+    expect(pathProps.length).toBeGreaterThan(0);
+    expect(pathProps.every(onCellCenter)).toBe(true);
+    const treeCells = new Set(
+      parkProps.filter((entity) => trees.has(entity.assetId)).map(entityCell),
+    );
+    expect(
+      parkProps.some((entity) => garnish.has(entity.assetId) && treeCells.has(entityCell(entity))),
+    ).toBe(true);
+  }, 30_000);
+
+  it("TST-001 golden hash stays stable for generator 0.8.1 parks", async () => {
     const first = await generateRoadCity(input);
     const second = await generateRoadCity({ ...input, id: "city-parks-b" });
     expect(hashGeneratedStructure(first)).toBe(hashGeneratedStructure(second));
-    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"3f67ab6b"`);
+    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"7507de60"`);
   }, 30_000);
 
   it("composes civic plazas on Balanced 96 seed green-crossroads", async () => {

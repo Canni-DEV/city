@@ -52,7 +52,7 @@ import { createSidewalks, validateSidewalks } from "./sidewalks.js";
 import { placeStreetFurniture } from "./street-furniture.js";
 import type { GenerationStage } from "./worker-protocol.js";
 
-export const GENERATOR_VERSION = "0.8.0";
+export const GENERATOR_VERSION = "0.8.1";
 /** Road, traffic, placement, and leftover decoration keep 0.6.7 streams (GEN-029). */
 const ROAD_RNG_VERSION = "0.6.7";
 /** Curb furniture keeps the M3.7.1 stream so GEN-031 does not re-roll. */

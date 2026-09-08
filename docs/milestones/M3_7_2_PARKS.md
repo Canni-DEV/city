@@ -6,17 +6,17 @@
 
 ## Outputs
 
-- Generator `0.8.0` runs a deterministic `parkInterior` stage after curb furniture. Habitable park manzanas compose a civic plaza (one statue, walkable suburban path strips, planters, edge trees). Pocket remnants compose a small grove (tree plus flowers; no monument or path).
+- Generator `0.8.1` runs a deterministic `parkInterior` stage after curb furniture. Habitable park manzanas compose a civic plaza (one statue, walkable suburban path strips, planters, edge trees). Pocket remnants compose a small grove (tree plus flowers; no monument or path). Occupying trees/planters jitter inside their unique cell; cluster garnish may place multiple instances per cell.
 - GEN-009 still consumes the placement RNG on park lots and pocket blocks but no longer `tryPlace`s scatter trees, so later lots do not re-roll. GEN-010 leftover decoration skips `zone === "park"` cells so leftover fill does not occupy the courtyard before composition.
-- Road, traffic, and building RNG stay keyed with `0.6.7`. Curb furniture stays on the `0.7.0` `streetFurniture` stream. Only `parkInterior` uses `0.8.0`.
+- Road, traffic, and building RNG stay keyed with `0.6.7`. Curb furniture stays on the `0.7.0` `streetFurniture` stream. Only `parkInterior` uses `0.8.1`.
 - Catalog pack `nature` allowlists 41 Kenney Nature Kit GLBs (trees, bushes, flowers, grass, statues, pots, sign). City-kit count stays 213. Suburban `path-short` / `path-stones-short` / `path-stones-messy` / `planter` gain park zone compatibility via overrides. Original files under `/assets` stay untouched.
 - Park paths and garnish share occupancy cells and are not pedestrian obstacles (ADR-0017). Trees, large bushes, statues, planters, and large pots occupy uniquely and remain obstacles. Pedestrian and vehicle algorithms are unchanged; the network reconstructs around the new footprints.
 
 ## Verification and stop
 
-Run `pnpm check`, `pnpm typecheck`, `pnpm test`, `pnpm build`, and `pnpm test:batch`. TST-011 covers plaza vs pocket motifs, leftover isolation, shared-cell garnish, occupant obstacles, habitable-park reachability, and determinism. Golden hashes use generator `0.8.0`. Old `0.7.0` documents remain loadable without silent regeneration.
+Run `pnpm check`, `pnpm typecheck`, `pnpm test`, `pnpm build`, and `pnpm test:batch`. TST-011 covers plaza vs pocket motifs, leftover isolation, shared-cell garnish (including multiple garnish per cell and sub-cell occupant jitter), occupant obstacles, habitable-park reachability, and determinism. Golden hashes use generator `0.8.1`. Old `0.8.0` and `0.7.0` documents remain loadable without silent regeneration.
 
-Manual QA (owner): new Balanced 96×96, seed `green-crossroads`. Habitable parks show a statue and crossing path strips; pocket remnants show a grove without a monument; pedestrians walk the paths and go around statues; vehicles ignore park props.
+Manual QA (owner): new Balanced 96×96, seed `green-crossroads`. Habitable parks show a statue and crossing path strips; pocket remnants show a grove without a monument; trees and flowers are not snapped to a cell lattice; pedestrians walk the paths and go around statues; vehicles ignore park props.
 
 No fountains, camping, crops, palms, `_fall` variants, road/lot/zone edits, NPC sit-points, or M4. Stop for review before M3.7.3.
 
