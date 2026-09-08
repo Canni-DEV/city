@@ -128,7 +128,7 @@ describe("TST-011 park interiors", () => {
 
   it("scatters multiple garnish per cell without snapping occupants to the lattice", async () => {
     const city = await generateRoadCity(input);
-    expect(city.generator.version).toBe("0.8.1");
+    expect(city.generator.version).toBe("0.9.0");
     expect(validatePlacedCity(city, TEST_ASSETS)).toEqual([]);
     const parkProps = Object.values(city.entities).filter((entity) => entity.zone === "park");
     const garnishByCell = new Map<string, number>();
@@ -168,11 +168,11 @@ describe("TST-011 park interiors", () => {
     ).toBe(true);
   }, 60_000);
 
-  it("TST-001 golden hash stays stable for generator 0.8.1 parks", async () => {
+  it("TST-001 golden hash stays stable for generator 0.9.0 parks", async () => {
     const first = await generateRoadCity(input);
     const second = await generateRoadCity({ ...input, id: "city-parks-b" });
     expect(hashGeneratedStructure(first)).toBe(hashGeneratedStructure(second));
-    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"7507de60"`);
+    expect(hashGeneratedStructure(first)).toMatchInlineSnapshot(`"8b332d50"`);
   }, 60_000);
 
   it("composes civic plazas on Balanced 96 seed green-crossroads", async () => {

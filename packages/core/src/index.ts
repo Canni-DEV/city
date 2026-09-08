@@ -1,4 +1,5 @@
 export * from "./agents.js";
+export * from "./block-yards.js";
 export * from "./commands.js";
 export * from "./domain.js";
 export * from "./drive-contracts.js";

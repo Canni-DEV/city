@@ -1,4 +1,5 @@
 import { Delaunay } from "d3-delaunay";
+import { placeBlockYards } from "./block-yards.js";
 import type { CityDocumentV1, GenerationParameters, MapSize } from "./domain.js";
 import { CityDocumentSchema } from "./domain.js";
 import { buildDriveNetwork, type DriveNetworkValidation } from "./drive-network.js";
@@ -52,11 +53,13 @@ import { createSidewalks, validateSidewalks } from "./sidewalks.js";
 import { placeStreetFurniture } from "./street-furniture.js";
 import type { GenerationStage } from "./worker-protocol.js";
 
-export const GENERATOR_VERSION = "0.8.1";
+export const GENERATOR_VERSION = "0.9.0";
 /** Road, traffic, placement, and leftover decoration keep 0.6.7 streams (GEN-029). */
 const ROAD_RNG_VERSION = "0.6.7";
 /** Curb furniture keeps the M3.7.1 stream so GEN-031 does not re-roll. */
 const STREET_FURNITURE_RNG_VERSION = "0.7.0";
+/** Park interiors keep the M3.7.2 stream so GEN-032 does not re-roll. */
+const PARK_INTERIOR_RNG_VERSION = "0.8.1";
 
 type Direction = "north" | "east" | "south" | "west";
 
@@ -122,11 +125,13 @@ export class RoadGenerationError extends Error {
 
 function randomFor(seed: string, attempt: number, stage: string): SeededRandom {
   const version =
-    stage === "parkInterior"
+    stage === "blockYards"
       ? GENERATOR_VERSION
-      : stage === "streetFurniture"
-        ? STREET_FURNITURE_RNG_VERSION
-        : ROAD_RNG_VERSION;
+      : stage === "parkInterior"
+        ? PARK_INTERIOR_RNG_VERSION
+        : stage === "streetFurniture"
+          ? STREET_FURNITURE_RNG_VERSION
+          : ROAD_RNG_VERSION;
   return new SeededRandom(`${version}:${seed}:${attempt}:${stage}`);
 }
 
@@ -823,12 +828,20 @@ export async function generateRoadCity(
       occupancy,
       placed.length + decorated.length + furniture.length,
     );
+    await checkpoint(hooks, "blockYards", 98, "Composing yards, courtyards, and lot dumpsters");
+    const yards = placeBlockYards(
+      document,
+      input.assets,
+      randomFor(attemptSeed, attempt, "blockYards"),
+      occupancy,
+      placed.length + decorated.length + furniture.length + parks.length,
+    );
     document.entities = Object.fromEntries(
-      [...placed, ...decorated, ...furniture, ...parks]
+      [...placed, ...decorated, ...furniture, ...parks, ...yards]
         .sort((left, right) => left.id.localeCompare(right.id))
         .map((entity) => [entity.id, entity]),
     );
-    await checkpoint(hooks, "validation", 98, "Validating placement, roads, and zone areas");
+    await checkpoint(hooks, "validation", 99, "Validating placement, roads, and zone areas");
     finalIssues = [
       ...validateRoadCity(document),
       ...validateLandCity(document),

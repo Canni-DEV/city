@@ -18,3 +18,5 @@ Accepted decisions are immutable historical records. Supersede them with a new A
 14. [Explicit runtime vehicle network](0014-runtime-vehicles.md)
 15. [Continuous component-based runtime pedestrians](0015-npc-refactor.md)
 16. [Sub-cell curb street furniture](0016-curb-street-furniture.md)
+17. [Park interior shared occupancy](0017-park-interior-occupancy.md)
+18. [Lot-yard occupancy and dumpsters](0018-block-yard-occupancy.md)

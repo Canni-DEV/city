@@ -6,6 +6,7 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 
 ### Added
 
+- M3.7 / M3.7.3: suburban and urban yards as `CityEntity` records — sidewalk-facing buildings, courtyard pocket greens vs groves, lot dumpsters, sparse `fence-low`, and typical suburban yard props. Nature Kit stays park-only.
 - M3.7 / M3.7.2: structured park interiors (civic plaza vs pocket grove) as `CityEntity` records, Kenney Nature Kit allowlist (`nature:*`), walkable plaza path strips that are not pedestrian obstacles, and generator `0.8.1` sub-cell scatter so trees/planters jitter inside a unique cell while multiple flowers/grass can share that cell.
 - M3.7 / M3.7.1: deterministic curb street furniture (traffic lights, stop and street-name signs, highway signs at gates, street lamps, avenue poles, sparse dumpsters) as `CityEntity` records on sidewalks. Traffic lights are visual only.
 - M3.6.3: hybrid pedestrian navigation through sidewalks, complete crossings and reachable parks; component-based moveTo/wait orders, collision-checked continuous movement, safe traffic-gap prediction, and Pedestrian navigation diagnostics with shared Pause/Resume/Step.
@@ -22,6 +23,7 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 
 ### Changed
 
+- Generator `0.9.0`: `blockYards` stage after park interiors (GEN-033). Road/traffic/building RNG stays keyed with `0.6.7`; curb furniture stays on the `0.7.0` stream; park interiors stay on the `0.8.1` stream. GEN-010 skips suburban/urban leftover cells. Old `0.8.1` cities load without silent regeneration.
 - Generator `0.8.1`: `parkInterior` sub-cell jitter for occupying trees/planters and dart-throwing cluster garnish (GEN-032 hotfix). Road/traffic/building RNG stays keyed with `0.6.7`; curb furniture stays on the `0.7.0` stream. Old `0.8.0` cities load without silent regeneration.
 - Generator `0.8.0`: `parkInterior` stage after curb furniture (GEN-032). Road/traffic/building RNG stays keyed with `0.6.7`; curb furniture stays on the `0.7.0` stream. GEN-009 no longer scatter-places park trees (dummy RNG). GEN-010 skips park-zone leftover cells. Old `0.7.0` cities load without silent regeneration.
 - Generator `0.7.0`: `streetFurniture` stage after leftover decoration (GEN-030/031). Road/traffic/placement RNG stays keyed with `0.6.7`. GEN-010 no longer samples road-pack street furniture. Street-lamp arms face the carriageway; one street-name post sits on the north-east corner of each T/4-way; STOP marks only local approaches into an avenue; gate highway signs face inbound traffic. Old `0.6.7` cities load without silent regeneration.
