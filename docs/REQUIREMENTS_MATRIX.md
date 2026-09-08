@@ -16,7 +16,7 @@
 | NPC refactor | SIM-001–010 amended, SIM-020–026, FUN-044, UX-026, DAT-008, AST-010, REN-009/010 | M3.6.3 | TST-006/008/009, AC-010/012, manual movement/overlay QA | Implemented; static checks pass, owner manual review pending |
 | Zone-detail program | GEN-030+, GEN-032, AST-015–016, FUN-045–046, ADR-0016–0017 | M3.7 | Per sub-phase brief | Program open; 3.7.1 and 3.7.2 in this delivery |
 | Curb street furniture | GEN-010/011 amended, GEN-030–031, SIM-002 amended, AST-015, FUN-045, TST-010 | M3.7.1 | TST-001/003/008/010, 200-city batch, owner visual QA | Implemented, pending review |
-| Park interiors | GEN-009/010/011/026 amended, GEN-032, SIM-002 amended, AST-016, FUN-046, TST-011, ADR-0017 | M3.7.2 | TST-001/003/006/008/011, 200-city batch, owner visual QA | Implemented, pending review |
+| Park interiors | GEN-009/010/011/026 amended, GEN-032, SIM-002 amended, AST-016, FUN-046, TST-011, ADR-0017 | M3.7.2 | TST-001/003/006/008/011, 200-city batch, owner visual QA | Implemented (0.8.1 sub-cell scatter hotfix), pending review |
 | Editing | FUN-020–025, UX-010–023, EDT-001–010 | M4 | TST-004, manual input QA | Planned |
 | Persistence/library | FUN-001–003, FUN-031–033, PER-001–008 | M5 | TST-005 | Planned |
 | Accessibility/release | UX-024, ACC-001–008, DEP-001–005 | M6 | AC-004, full manual QA | Planned |

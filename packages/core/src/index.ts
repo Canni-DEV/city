@@ -18,6 +18,7 @@ export * from "./road-mesh.js";
 export * from "./road-repair.js";
 export * from "./road-tiles.js";
 export * from "./road-topology.js";
+export * from "./scatter-cell.js";
 export * from "./sidewalks.js";
 export * from "./street-furniture.js";
 export * from "./vehicles.js";
