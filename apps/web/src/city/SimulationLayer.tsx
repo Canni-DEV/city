@@ -1,5 +1,6 @@
 import {
   advanceSimulationClock,
+  applyNpcMotionRequest,
   interpolateNpcPose,
   SIMULATION_STEP,
   tickNpcWorld,
@@ -32,6 +33,10 @@ export function SimulationLayer({
   useFrame((_, delta) => {
     const tick = () => {
       resizeSimulation(runtime, agents, vehicles);
+      for (const [id, request] of runtime.motionRequests) {
+        applyNpcMotionRequest(runtime.world, runtime.network, id, request);
+      }
+      runtime.motionRequests.clear();
       runtime.previous = new Map(runtime.world.poses);
       runtime.previousVehicles = runtime.vehicles.current;
       tickNpcWorld(
@@ -52,6 +57,46 @@ export function SimulationLayer({
           seed: runtime.world.seed,
           dt: SIMULATION_STEP,
         });
+      for (const [id, actor] of runtime.animationActors) {
+        const pose = runtime.world.poses.get(id);
+        if (!pose) continue;
+        const before = runtime.previous.get(id) ?? pose;
+        const directive = runtime.world.animation.get(id);
+        const attentionPose = directive?.attentionTargetId
+          ? runtime.world.poses.get(directive.attentionTargetId)
+          : undefined;
+        const sequence = directive?.sequence ?? 0;
+        if (directive?.beat === "wave" && runtime.animationSequences.get(id) !== sequence) {
+          actor.playBeat({ type: "wave" });
+        }
+        runtime.animationSequences.set(id, sequence);
+        actor.fixedUpdate(
+          SIMULATION_STEP,
+          {
+            position: { x: pose.x, y: pose.y, z: pose.z },
+            facingYaw: pose.yaw,
+            velocity: {
+              x: (pose.x - before.x) / SIMULATION_STEP,
+              y: (pose.y - before.y) / SIMULATION_STEP,
+              z: (pose.z - before.z) / SIMULATION_STEP,
+            },
+            grounded: true,
+          },
+          attentionPose
+            ? {
+                attention: {
+                  target: {
+                    x: attentionPose.x,
+                    y: attentionPose.y + actor.animator.rig.height * 0.85,
+                    z: attentionPose.z,
+                  },
+                },
+              }
+            : {},
+        );
+        const request = actor.motionRequest;
+        if (request) runtime.motionRequests.set(id, request);
+      }
     };
     const stepping = runtime.steps > 0 && !hidden.current;
     if (stepping) runtime.steps--;
@@ -67,6 +112,7 @@ export function SimulationLayer({
     runtime.animationDelta = count * SIMULATION_STEP;
     const alpha =
       stepping || runtime.paused ? 1 : Math.min(1, runtime.clock.accumulator / SIMULATION_STEP);
+    runtime.animationAlpha = alpha;
     for (const [id, pose] of runtime.world.poses)
       runtime.display.set(id, interpolateNpcPose(runtime.previous.get(id) ?? pose, pose, alpha));
     if (runtime.drive) {

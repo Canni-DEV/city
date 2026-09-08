@@ -19,6 +19,7 @@ import {
 } from "./vehicles.js";
 
 export const NPC_SPEED = 0.33;
+export const NPC_RUN_SPEED = 0.75;
 export const SIMULATION_STEP = 1 / 60;
 export type NpcOrder = { kind: "moveTo"; point: Point } | { kind: "wait"; seconds: number };
 export type NpcOrderStatus = "pending" | "active" | "completed" | "cancelled" | "failed";
@@ -54,17 +55,61 @@ export interface NpcCrossing {
   waiting: number;
   retry: number;
 }
+export interface NpcControlState {
+  mode: "autonomous" | "manual";
+  direction: Point;
+  run: boolean;
+  stopRequested: boolean;
+  greetSequence: number;
+}
+export type NpcAnimationPhase = "idle" | "walk" | "run" | "greet";
+export interface NpcAnimationDirective {
+  phase: NpcAnimationPhase;
+  sequence: number;
+  attentionTargetId: string | null;
+  beat: "wave" | null;
+}
+export interface NpcOrchestrationConfig {
+  walkSpeed: number;
+  runSpeed: number;
+  runCrossings: boolean;
+  greetingRadius: number;
+  greetingCooldownMin: number;
+  greetingCooldownMax: number;
+  manualCrossingHeadingThreshold: number;
+}
+export const DEFAULT_NPC_ORCHESTRATION: Readonly<NpcOrchestrationConfig> = {
+  walkSpeed: NPC_SPEED,
+  runSpeed: NPC_RUN_SPEED,
+  runCrossings: true,
+  greetingRadius: 0.9,
+  greetingCooldownMin: 8,
+  greetingCooldownMax: 18,
+  manualCrossingHeadingThreshold: 0.5,
+};
+export interface NpcSocialState {
+  nextGreetingTick: number;
+}
+export interface NpcMotionRequest {
+  translation: { x: number; y: number; z: number };
+  yawDelta: number;
+  source: "turn" | "stagger" | "sidestep";
+}
 export interface NpcWorld {
   seed: string;
   ids: string[];
   nextId: number;
   tick: number;
   poses: Map<string, NpcPose>;
-  locomotion: Map<string, { speed: number; radius: number }>;
+  locomotion: Map<string, { speed: number; runSpeed: number; radius: number }>;
   navigation: Map<string, NpcNavigation>;
   behavior: Map<string, NpcBehavior>;
   crossing: Map<string, NpcCrossing>;
   appearance: Map<string, { skin: AgentSkin }>;
+  control: Map<string, NpcControlState>;
+  animation: Map<string, NpcAnimationDirective>;
+  social: Map<string, NpcSocialState>;
+  orchestration: NpcOrchestrationConfig;
 }
 export interface NpcDiagnostic {
   id: string;
@@ -77,8 +122,35 @@ export interface NpcDiagnostic {
   route: Point[];
   neighbors: string[];
   crossing: string | null;
+  controlMode: NpcControlState["mode"];
+  animationPhase: NpcAnimationPhase;
+  attentionTargetId: string | null;
+  crossingRun: boolean;
+  stopRequested: boolean;
 }
-export function createNpcWorld(seed: string): NpcWorld {
+export function resolveNpcOrchestrationConfig(
+  input: Partial<NpcOrchestrationConfig> = {},
+): NpcOrchestrationConfig {
+  const finite = (value: number | undefined, fallback: number, min: number, max: number) =>
+    value === undefined || !Number.isFinite(value) ? fallback : Math.max(min, Math.min(max, value));
+  const walkSpeed = finite(input.walkSpeed, NPC_SPEED, 0.05, 2);
+  const runSpeed = finite(input.runSpeed, NPC_RUN_SPEED, walkSpeed, 4);
+  const greetingCooldownMin = finite(input.greetingCooldownMin, 8, 0.5, 120);
+  return {
+    walkSpeed,
+    runSpeed,
+    runCrossings: input.runCrossings ?? true,
+    greetingRadius: finite(input.greetingRadius, 0.9, NPC_RADIUS * 2, 4),
+    greetingCooldownMin,
+    greetingCooldownMax: finite(input.greetingCooldownMax, 18, greetingCooldownMin, 240),
+    manualCrossingHeadingThreshold: finite(input.manualCrossingHeadingThreshold, 0.5, -1, 1),
+  };
+}
+
+export function createNpcWorld(
+  seed: string,
+  orchestration: Partial<NpcOrchestrationConfig> = {},
+): NpcWorld {
   return {
     seed,
     ids: [],
@@ -90,6 +162,10 @@ export function createNpcWorld(seed: string): NpcWorld {
     behavior: new Map(),
     crossing: new Map(),
     appearance: new Map(),
+    control: new Map(),
+    animation: new Map(),
+    social: new Map(),
+    orchestration: resolveNpcOrchestrationConfig(orchestration),
   };
 }
 const pointOf = (p: NpcPose): Point => [p.x, p.z];
@@ -118,6 +194,9 @@ export function resizeNpcPopulation(
       world.behavior,
       world.crossing,
       world.appearance,
+      world.control,
+      world.animation,
+      world.social,
     ])
       map.delete(id);
   }
@@ -149,7 +228,12 @@ export function resizeNpcPopulation(
       yaw: 0,
       speed: 0,
     });
-    world.locomotion.set(id, { speed: NPC_SPEED * (0.9 + rng.float() * 0.2), radius: NPC_RADIUS });
+    const variation = 0.9 + rng.float() * 0.2;
+    world.locomotion.set(id, {
+      speed: world.orchestration.walkSpeed * variation,
+      runSpeed: world.orchestration.runSpeed * variation,
+      radius: NPC_RADIUS,
+    });
     world.navigation.set(id, {
       legs: [],
       leg: 0,
@@ -167,7 +251,134 @@ export function resizeNpcPopulation(
     });
     world.crossing.set(id, { active: null, waiting: 0, retry: 0 });
     world.appearance.set(id, { skin: AGENT_SKINS[rng.integer(0, 3)] ?? AGENT_SKINS[0] });
+    world.control.set(id, {
+      mode: "autonomous",
+      direction: [0, 0],
+      run: false,
+      stopRequested: false,
+      greetSequence: 0,
+    });
+    world.animation.set(id, {
+      phase: "idle",
+      sequence: 0,
+      attentionTargetId: null,
+      beat: null,
+    });
+    world.social.set(id, {
+      nextGreetingTick: greetingTick(world, id, 0),
+    });
   }
+}
+
+function greetingTick(world: NpcWorld, id: string, sequence: number): number {
+  const rng = new SeededRandom(`${world.seed}:${id}:greet:${sequence}`);
+  const { greetingCooldownMin: min, greetingCooldownMax: max } = world.orchestration;
+  return world.tick + Math.round((min + rng.float() * (max - min)) / SIMULATION_STEP);
+}
+
+export function takeNpcControl(world: NpcWorld, id: string): boolean {
+  const control = world.control.get(id);
+  if (!control) return false;
+  control.mode = "manual";
+  control.direction = [0, 0];
+  control.run = false;
+  control.stopRequested = true;
+  const behavior = world.behavior.get(id);
+  if (behavior) behavior.wander = false;
+  if (!world.crossing.get(id)?.active) cancelNpcOrder(world, id);
+  return true;
+}
+
+export function releaseNpcControl(world: NpcWorld, id: string): boolean {
+  const control = world.control.get(id);
+  if (!control) return false;
+  control.mode = "autonomous";
+  control.direction = [0, 0];
+  control.run = false;
+  control.stopRequested = false;
+  const behavior = world.behavior.get(id);
+  if (behavior) {
+    behavior.wander = true;
+    if (!world.crossing.get(id)?.active) behavior.status = "completed";
+  }
+  return true;
+}
+
+export function setNpcControlInput(
+  world: NpcWorld,
+  id: string,
+  input: { direction: Point; run: boolean },
+): boolean {
+  const control = world.control.get(id);
+  if (!control || control.mode !== "manual" || !input.direction.every(Number.isFinite))
+    return false;
+  const length = Math.hypot(...input.direction);
+  control.direction =
+    length > 1e-9 ? [input.direction[0] / length, input.direction[1] / length] : [0, 0];
+  control.run = Boolean(input.run);
+  control.stopRequested = length <= 1e-9;
+  return true;
+}
+
+export function stopNpc(world: NpcWorld, id: string): boolean {
+  const control = world.control.get(id);
+  if (!control) return false;
+  control.direction = [0, 0];
+  control.run = false;
+  control.stopRequested = true;
+  cancelNpcOrder(world, id);
+  return true;
+}
+
+export function greetNpc(world: NpcWorld, id: string): boolean {
+  const directive = world.animation.get(id);
+  const control = world.control.get(id);
+  const pose = world.poses.get(id);
+  if (!directive || !control || !pose || world.crossing.get(id)?.active) return false;
+  const target = world.ids
+    .filter((other) => other !== id)
+    .map((other) => ({ id: other, pose: world.poses.get(other) }))
+    .filter((candidate): candidate is { id: string; pose: NpcPose } => Boolean(candidate.pose))
+    .sort(
+      (a, b) =>
+        distance2(pointOf(pose), pointOf(a.pose)) - distance2(pointOf(pose), pointOf(b.pose)) ||
+        a.id.localeCompare(b.id),
+    )[0];
+  control.greetSequence++;
+  directive.attentionTargetId = target?.id ?? null;
+  return true;
+}
+
+export function applyNpcMotionRequest(
+  world: NpcWorld,
+  network: PedestrianNetwork,
+  id: string,
+  request: NpcMotionRequest,
+): boolean {
+  const pose = world.poses.get(id);
+  if (
+    !pose ||
+    ![request.translation.x, request.translation.y, request.translation.z, request.yawDelta].every(
+      Number.isFinite,
+    )
+  )
+    return false;
+  const next: Point = [pose.x + request.translation.x, pose.z + request.translation.z];
+  const crossing = Boolean(world.crossing.get(id)?.active);
+  if (!network.visible(pointOf(pose), next, crossing)) return false;
+  if (
+    world.ids.some((other) => {
+      if (other === id) return false;
+      const otherPose = world.poses.get(other);
+      return otherPose ? distance2(next, pointOf(otherPose)) < NPC_RADIUS * 2 : false;
+    })
+  )
+    return false;
+  pose.x = next[0];
+  pose.z = next[1];
+  pose.y = network.height(next);
+  pose.yaw = wrap(pose.yaw + request.yawDelta);
+  return true;
 }
 
 function smoothPoints(network: PedestrianNetwork, source: Point[], crossing: boolean): Point[] {
@@ -373,7 +584,10 @@ export function canEnterNpcCrossing(
       return false;
   }
   if (!traffic?.vehicles.length) return true;
-  const speed = world.locomotion.get(id)?.speed ?? NPC_SPEED;
+  const locomotion = world.locomotion.get(id);
+  const speed = world.orchestration.runCrossings
+    ? (locomotion?.runSpeed ?? NPC_RUN_SPEED)
+    : (locomotion?.speed ?? NPC_SPEED);
   const horizon = leg.length / speed + speed / 0.8 + 6 + 1;
   let predicted = traffic.vehicles;
   const step = 0.1;
@@ -411,6 +625,118 @@ function wander(world: NpcWorld, network: PedestrianNetwork, id: string): void {
   }
 }
 
+function scheduleAutonomousGreetings(world: NpcWorld): void {
+  const used = new Set<string>();
+  for (const id of world.ids) {
+    if (used.has(id)) continue;
+    const control = world.control.get(id),
+      social = world.social.get(id),
+      pose = world.poses.get(id),
+      crossing = world.crossing.get(id);
+    if (
+      control?.mode !== "autonomous" ||
+      !social ||
+      !pose ||
+      pose.speed > 0.02 ||
+      crossing?.active ||
+      world.tick < social.nextGreetingTick
+    )
+      continue;
+    const partner = world.ids
+      .filter((other) => other !== id && !used.has(other))
+      .map((other) => ({
+        id: other,
+        pose: world.poses.get(other),
+        control: world.control.get(other),
+        crossing: world.crossing.get(other),
+      }))
+      .filter(
+        (
+          candidate,
+        ): candidate is {
+          id: string;
+          pose: NpcPose;
+          control: NpcControlState;
+          crossing: NpcCrossing;
+        } =>
+          Boolean(candidate.pose && candidate.control && candidate.crossing) &&
+          candidate.control?.mode === "autonomous" &&
+          !candidate.crossing?.active &&
+          (candidate.pose?.speed ?? 1) <= 0.02 &&
+          distance2(pointOf(pose), pointOf(candidate.pose as NpcPose)) <=
+            world.orchestration.greetingRadius,
+      )
+      .sort((a, b) => a.id.localeCompare(b.id))[0];
+    if (!partner) continue;
+    used.add(id);
+    used.add(partner.id);
+    for (const [who, target] of [
+      [id, partner.id],
+      [partner.id, id],
+    ] as const) {
+      const c = world.control.get(who),
+        directive = world.animation.get(who),
+        state = world.social.get(who);
+      if (!c || !directive || !state) continue;
+      c.greetSequence++;
+      directive.attentionTargetId = target;
+      state.nextGreetingTick = greetingTick(world, who, c.greetSequence);
+    }
+  }
+}
+
+function manualCrossingLeg(
+  world: NpcWorld,
+  network: PedestrianNetwork,
+  id: string,
+  pose: NpcPose,
+  direction: Point,
+): NpcLeg | null {
+  const node = nearestPedestrianNode(network, pointOf(pose));
+  if (!node || distance2(node.point, pointOf(pose)) > 0.32) return null;
+  const candidates = (network.outgoing.get(node.id) ?? [])
+    .filter((edge) => edge.crossing)
+    .map((edge) => {
+      const end = edge.points[edge.points.length - 1] as Point,
+        length = Math.max(distance2(edge.points[0] as Point, end), 1e-9),
+        dot =
+          ((end[0] - (edge.points[0]?.[0] ?? 0)) * direction[0] +
+            (end[1] - (edge.points[0]?.[1] ?? 0)) * direction[1]) /
+          length;
+      return { edge, dot };
+    })
+    .filter(({ dot }) => dot >= world.orchestration.manualCrossingHeadingThreshold)
+    .sort((a, b) => b.dot - a.dot || a.edge.id.localeCompare(b.edge.id));
+  const edge = candidates[0]?.edge;
+  if (!edge) return null;
+  const points = smoothPoints(network, [pointOf(pose), ...edge.points], true);
+  return { points, crossingId: edge.id, length: lengthOf(points) };
+}
+
+function updateAnimationDirectives(world: NpcWorld): void {
+  for (const id of world.ids) {
+    const pose = world.poses.get(id),
+      control = world.control.get(id),
+      crossing = world.crossing.get(id),
+      directive = world.animation.get(id);
+    if (!pose || !control || !directive) continue;
+    if (control.greetSequence > directive.sequence) {
+      directive.sequence = control.greetSequence;
+      directive.phase = "greet";
+      directive.beat = "wave";
+      continue;
+    }
+    directive.beat = null;
+    directive.attentionTargetId = null;
+    directive.phase =
+      pose.speed <= 0.015
+        ? "idle"
+        : crossing?.active || (control.mode === "manual" && control.run)
+          ? "run"
+          : "walk";
+  }
+}
+
 /** SIM-021/022: all proposals read the same snapshot; sweep validation precedes integration. */
 export function tickNpcWorld(
   world: NpcWorld,
@@ -421,6 +747,7 @@ export function tickNpcWorld(
   if (!Number.isFinite(dt) || dt < 0 || dt > SIMULATION_STEP + 1e-9)
     throw new Error("NPC systems require a finite fixed step");
   if (dt === 0) return;
+  scheduleAutonomousGreetings(world);
   const old = new Map(world.poses),
     proposed = new Map<string, NpcPose>();
   const spatial = new Map<string, string[]>();
@@ -442,20 +769,59 @@ export function tickNpcWorld(
       b = world.behavior.get(id),
       nav = world.navigation.get(id),
       cross = world.crossing.get(id),
-      body = world.locomotion.get(id);
-    if (!pose || !b || !nav || !cross || !body) continue;
+      body = world.locomotion.get(id),
+      control = world.control.get(id);
+    if (!pose || !b || !nav || !cross || !body || !control) continue;
     if (b.wander && ["completed", "failed"].includes(b.status)) wander(world, network, id);
     if (b.status === "pending" && b.order && !cross.active)
       issueNpcOrder(world, network, id, b.order, b.wander);
     let target: Point | undefined,
       leg = nav.legs[nav.leg];
-    if (b.order?.kind === "wait" && b.status === "active" && !cross.active) {
+    if (control.mode === "manual" && !cross.active) {
+      b.wander = false;
+      if (!control.stopRequested && Math.hypot(...control.direction) > 1e-9) {
+        const crossingLeg = manualCrossingLeg(world, network, id, pose, control.direction);
+        if (crossingLeg) {
+          nav.legs = [crossingLeg];
+          nav.leg = 0;
+          nav.cursor = 0;
+          leg = crossingLeg;
+          b.status = "active";
+          b.reason = "Waiting to run across safely";
+        } else {
+          const distance = Math.max(body.radius * 2, 0.3),
+            next: Point = [
+              pose.x + control.direction[0] * distance,
+              pose.z + control.direction[1] * distance,
+            ];
+          if (network.visible(pointOf(pose), next)) {
+            target = next;
+            b.status = "active";
+            b.reason = control.run ? "Running under user control" : "Walking under user control";
+          } else {
+            b.reason = "Manual movement blocked by boundary or obstacle";
+          }
+          nav.legs = [];
+          nav.leg = 0;
+          nav.cursor = 0;
+          leg = undefined;
+        }
+      } else {
+        nav.legs = [];
+        nav.leg = 0;
+        nav.cursor = 0;
+        leg = undefined;
+        b.status = "active";
+        b.reason = "Stopped under user control";
+      }
+    }
+    if (!target && b.order?.kind === "wait" && b.status === "active" && !cross.active) {
       b.remaining = Math.max(0, b.remaining - dt);
       if (b.remaining <= 1e-9) {
         b.status = "completed";
         b.reason = "Wait completed";
       }
-    } else if ((b.status === "active" || cross.active) && leg) {
+    } else if (!target && (b.status === "active" || cross.active) && leg) {
       const end = leg.points[leg.points.length - 1] as Point;
       if (distance2(pointOf(pose), end) < 0.0067) {
         nav.leg++;
@@ -506,7 +872,7 @@ export function tickNpcWorld(
         }
       } else if (leg && cross.active)
         target = leg.points[Math.min(nav.cursor, leg.points.length - 1)];
-    } else if (b.status === "active" && b.order?.kind === "moveTo") {
+    } else if (!target && b.status === "active" && b.order?.kind === "moveTo") {
       b.status = "completed";
       b.reason = "Arrived";
     }
@@ -557,7 +923,13 @@ export function tickNpcWorld(
     const goalDistance = leg
       ? distance2(pointOf(pose), leg.points[leg.points.length - 1] as Point)
       : remaining;
-    const desiredSpeed = Math.abs(turn) > 0.9 ? 0 : Math.min(body.speed, goalDistance * 2);
+    const requestedSpeed =
+      cross.active && world.orchestration.runCrossings
+        ? body.runSpeed
+        : control.mode === "manual" && control.run
+          ? body.runSpeed
+          : body.speed;
+    const desiredSpeed = Math.abs(turn) > 0.9 ? 0 : Math.min(requestedSpeed, goalDistance * 2);
     const speed = Math.max(
       0,
       Math.min(pose.speed + 0.8 * dt, Math.max(pose.speed - 0.8 * dt, desiredSpeed)),
@@ -637,6 +1009,7 @@ export function tickNpcWorld(
   }
   world.poses = proposed;
   world.tick++;
+  updateAnimationDirectives(world);
 }
 
 export function npcDiagnostics(world: NpcWorld, selected?: string): NpcDiagnostic[] {
@@ -661,6 +1034,11 @@ export function npcDiagnostics(world: NpcWorld, selected?: string): NpcDiagnosti
             distance2(pointOf(world.poses.get(other) as NpcPose), pointOf(pose)) < 1,
         ),
         crossing: world.crossing.get(id)?.active ?? null,
+        controlMode: world.control.get(id)?.mode ?? "autonomous",
+        animationPhase: world.animation.get(id)?.phase ?? "idle",
+        attentionTargetId: world.animation.get(id)?.attentionTargetId ?? null,
+        crossingRun: Boolean(world.crossing.get(id)?.active) && world.orchestration.runCrossings,
+        stopRequested: world.control.get(id)?.stopRequested ?? false,
       },
     ];
   });

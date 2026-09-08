@@ -417,6 +417,52 @@ h2 {
   min-height: 18px;
   accent-color: var(--city-accent);
 }
+.npc-control-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+}
+.npc-control-actions .city-button {
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--city-border);
+  border-radius: 7px;
+  color: var(--city-text);
+  background: var(--city-surface-raised);
+}
+.animation-lab {
+  height: calc(100vh - 70px);
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  overflow: hidden;
+}
+.animation-lab-panel {
+  overflow-y: auto;
+  padding: 24px;
+  border-right: 1px solid var(--city-border);
+}
+.animation-lab-panel h1 {
+  font-size: 38px;
+}
+.animation-lab-panel label {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0;
+  color: var(--city-muted);
+}
+.animation-lab-panel input[type="range"] {
+  width: 100%;
+}
+.animation-lab-panel label:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: center;
+}
+.animation-lab-stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
 .zone-legend {
   padding: 0;
   margin: 4px 0;

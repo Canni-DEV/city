@@ -22,6 +22,10 @@
     "paths": {
       "@city/core": ["./packages/core/src/index.ts"],
       "@city/assets": ["./packages/assets/src/index.ts"],
+      "@city/procedural-animation": ["./packages/procedural-animation/src/web-contract.d.ts"],
+      "@city/procedural-animation/physics": [
+        "./packages/procedural-animation/src/procedural-character/physics.ts"
+      ],
       "@city/ui": ["./packages/ui/src/index.ts"]
     },
     "verbatimModuleSyntax": true

@@ -1,5 +1,5 @@
 import { Button, Panel } from "@city/ui";
-import { ArrowRight, MapIcon } from "lucide-react";
+import { Activity, ArrowRight, MapIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export function LibraryPage() {
@@ -18,6 +18,14 @@ export function LibraryPage() {
           <MapIcon size={34} aria-hidden="true" />
           <h2>No saved cities.</h2>
         </Panel>
+        {import.meta.env.DEV && (
+          <Panel className="status-card">
+            <Activity size={34} aria-hidden="true" />
+            <h2>Animation lab</h2>
+            <p>Inspect procedural gait, gestures, skeletons, and the 50-NPC load target.</p>
+            <Button onClick={() => navigate("/dev/animations")}>Open lab</Button>
+          </Panel>
+        )}
       </section>
     </div>
   );

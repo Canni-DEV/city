@@ -8,6 +8,7 @@ flowchart LR
   ASSET[packages/assets] --> WEB
   CORE[packages/core] --> ASSET
   CORE --> WEB
+  ANIM[packages/procedural-animation] --> WEB
   WEB --> WORKER[Generation worker]
   WEB --> DB[(Dexie / IndexedDB)]
   DOC[CityDocumentV1] --> WEB
@@ -44,3 +45,5 @@ Dependencies point inward toward core contracts. Core never imports browser, ren
 M3.6.2 derives one `DriveNetwork` in `@city/core` from persisted `RoadTopology` plus generated catalog `driveProfile` / `vehicleBounds`. The web view shares that network between the vehicle mover, Traffic lanes overlay, and inspector. Core has no React or Three.js dependency. Runtime vehicles store `segmentId`, distance, and route — data that a later ECS adapter can reference without introducing components, signals, reservations, or pedestrian rule changes in this milestone. Overlay geometry is created only while Traffic lanes is on and is disposed on unmount.
 
 M3.6.3 (ADR-015) derives PedestrianNetwork and NpcWorld alongside DriveNetwork. Plain component maps keyed by stable NPC IDs separate pose, locomotion, navigation, behavior/orders, crossing and appearance. Pure core systems mutate only the supplied runtime world; no browser or Three.js imports enter core. The web simulation owner drives both layers at fixed ticks, with interpolated render snapshots. Shared path-geometry utilities retain the vehicle API through re-exports. No new ECS dependency.
+
+M3.8 (ADR-0019) absorbs procedural animation into `@city/procedural-animation`. Core adds runtime-only control, social and animation-directive components while retaining exclusive motion/navigation/collision/crossing authority and no Three.js dependency. The animation package owns rig posing and optional bounded motion requests. Web owns actor registration, interpolation, accessible selection/input and the explicit `cityOrbit` / `freeFlight` / `npcFollow` camera modes. The package `/physics` entry remains optional and is not reachable from the production City application.

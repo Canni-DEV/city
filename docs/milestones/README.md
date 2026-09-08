@@ -15,6 +15,7 @@ Each brief is an execution contract. Complete only its scope, attach its require
 - [M3.7.1 — Streets](M3_7_1_STREETS.md)
 - [M3.7.2 — Parks](M3_7_2_PARKS.md)
 - [M3.7.3 — Urban blocks](M3_7_3_URBAN_BLOCKS.md)
+- [M3.8 — Procedural NPC animation and control](M3_8_PROCEDURAL_ANIMATION.md)
 - [M4 — Editor](M4_EDITOR.md)
 - [M5 — Local library](M5_LOCAL_LIBRARY.md)
 - [M6 — Hardening and 1.0](M6_HARDENING.md)

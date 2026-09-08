@@ -21,6 +21,24 @@ export default defineConfig({
         replacement: fileURLToPath(new URL("../../packages/ui/src/index.ts", import.meta.url)),
       },
       {
+        find: /^@city\/procedural-animation$/,
+        replacement: fileURLToPath(
+          new URL(
+            "../../packages/procedural-animation/src/procedural-character/index.ts",
+            import.meta.url,
+          ),
+        ),
+      },
+      {
+        find: /^@city\/procedural-animation\/physics$/,
+        replacement: fileURLToPath(
+          new URL(
+            "../../packages/procedural-animation/src/procedural-character/physics.ts",
+            import.meta.url,
+          ),
+        ),
+      },
+      {
         find: /^@city\/ui\/styles\.css$/,
         replacement: fileURLToPath(new URL("../../packages/ui/src/styles.css", import.meta.url)),
       },

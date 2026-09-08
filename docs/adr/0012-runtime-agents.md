@@ -2,6 +2,8 @@
 
 **Status:** Accepted — 2026-09-05
 
+> Amended by ADR-0019: NPCs remain outside `CityDocumentV1`, while transient diagnostic selection, direct control and follow camera are permitted without becoming editor objects.
+
 ## Decision
 
 Populate a small set of animated pedestrians at runtime from the open `CityDocumentV1` (seed plus occupied road cells). Agents are not `CityEntity` records, are not written to `.city.json`, and are not part of the generator document hash.

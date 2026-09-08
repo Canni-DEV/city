@@ -18,6 +18,7 @@
 | Curb street furniture | GEN-010/011 amended, GEN-030–031, SIM-002 amended, AST-015, FUN-045, TST-010 | M3.7.1 | TST-001/003/008/010, 200-city batch, owner visual QA | Implemented, pending review |
 | Park interiors | GEN-009/010/011/026 amended, GEN-032, SIM-002 amended, AST-016, FUN-046, TST-011, ADR-0017 | M3.7.2 | TST-001/003/006/008/011, 200-city batch, owner visual QA | Implemented |
 | Urban blocks / yards | GEN-009/010/011 amended, GEN-033, FUN-047, TST-012, ADR-0018 | M3.7.3 | TST-001/003/008/012, 200-city batch, owner visual QA | Implemented, pending review |
+| Procedural NPC animation/control | FUN-040/044 amended, FUN-048, UX-011/026 amended, UX-027, SIM-027–030, REN-011, TST-013, ADR-0019 | M3.8 | package tests on Three 0.185.x; deterministic core/control tests; web selection/input/camera and production-exclusion tests; owner backend/performance QA | Implemented, pending review |
 | Editing | FUN-020–025, UX-010–023, EDT-001–010 | M4 | TST-004, manual input QA | Planned |
 | Persistence/library | FUN-001–003, FUN-031–033, PER-001–008 | M5 | TST-005 | Planned |
 | Accessibility/release | UX-024, ACC-001–008, DEP-001–005 | M6 | AC-004, full manual QA | Planned |

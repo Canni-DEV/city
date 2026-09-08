@@ -10,6 +10,7 @@ import {
   spawnVehicles,
   type VehicleRuntimeState,
 } from "@city/core";
+import type { AnimatedCharacter, MotionRequest } from "@city/procedural-animation";
 
 export function createSimulationRuntime(city: CityDocumentV1, drive: DriveNetwork | null) {
   const network = buildPedestrianNetwork(city),
@@ -41,6 +42,10 @@ export function createSimulationRuntime(city: CityDocumentV1, drive: DriveNetwor
     paused: false,
     steps: 0,
     animationDelta: 0,
+    animationAlpha: 1,
+    animationActors: new Map<string, AnimatedCharacter>(),
+    animationSequences: new Map<string, number>(),
+    motionRequests: new Map<string, MotionRequest>(),
     previous: new Map<string, NpcPose>(),
     display: new Map<string, NpcPose>(),
     vehicles: { current: [] as VehicleRuntimeState[] },

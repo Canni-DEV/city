@@ -10,6 +10,13 @@ const AssetViewerPage = import.meta.env.DEV
       import("./pages/AssetViewerPage").then((module) => ({ default: module.AssetViewerPage })),
     )
   : null;
+const AnimationLabPage = import.meta.env.DEV
+  ? lazy(() =>
+      import("./pages/AnimationLabPage").then((module) => ({
+        default: module.AnimationLabPage,
+      })),
+    )
+  : null;
 
 export function App() {
   return (
@@ -43,6 +50,16 @@ export function App() {
               element={
                 <Suspense fallback={<p className="route-loading">Loading asset catalog…</p>}>
                   <AssetViewerPage />
+                </Suspense>
+              }
+            />
+          )}
+          {AnimationLabPage && (
+            <Route
+              path="/dev/animations"
+              element={
+                <Suspense fallback={<p className="route-loading">Loading animation lab…</p>}>
+                  <AnimationLabPage />
                 </Suspense>
               }
             />
