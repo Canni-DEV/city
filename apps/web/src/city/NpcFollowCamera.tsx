@@ -53,6 +53,7 @@ export function NpcFollowCamera({
   // PerspectiveCamera ref stays null, so orbit would otherwise bind at the origin.
   const camera = useMemo(() => {
     const next = new THREE.PerspectiveCamera(50, 1, 0.05, size * 16);
+    Object.assign(next, { manual: true });
     const hip = new THREE.Vector3();
     if (followTarget(runtime, id, size, hip)) frameFollowCamera(next, hip);
     else frameFollowCamera(next, hip.set(0, 0.9, 0));
@@ -81,6 +82,8 @@ export function NpcFollowCamera({
     return () => set({ camera: previous });
   }, [camera, frameKey, get, id, runtime, set, size, viewSize.height, viewSize.width]);
 
+  // Priority must stay <= 0. A positive useFrame priority makes R3F skip
+  // automatic gl.render, which freezes the city until npcFollow unmounts.
   useFrame(() => {
     const orbit = controls.current;
     if (!orbit || !followTarget(runtime, id, size, target.current)) return;
@@ -96,7 +99,7 @@ export function NpcFollowCamera({
     }
     orbit.target.lerp(target.current, 0.1);
     orbit.update();
-  }, 1);
+  });
 
   return (
     <>

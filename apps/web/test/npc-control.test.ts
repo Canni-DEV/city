@@ -43,6 +43,7 @@ describe("TST-013 NPC camera transitions", () => {
     expect(text).not.toMatch(/<PerspectiveCamera/);
     expect(text).not.toMatch(/size \/ 2/);
     expect(text).not.toMatch(/pose\.y \+ 0\.9/);
+    expect(text).not.toMatch(/useFrame\([\s\S]*?,\s*[1-9]\d*\s*\)/);
   });
 });
 
