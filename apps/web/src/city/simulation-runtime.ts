@@ -10,6 +10,7 @@ import {
   spawnVehicles,
   type VehicleRuntimeState,
 } from "@city/core";
+import type { AnimatedCharacter, MotionRequest } from "@city/procedural-animation";
 
 export function createSimulationRuntime(city: CityDocumentV1, drive: DriveNetwork | null) {
   const network = buildPedestrianNetwork(city),
@@ -41,6 +42,10 @@ export function createSimulationRuntime(city: CityDocumentV1, drive: DriveNetwor
     paused: false,
     steps: 0,
     animationDelta: 0,
+    animationAlpha: 1,
+    animationActors: new Map<string, AnimatedCharacter>(),
+    animationSequences: new Map<string, number>(),
+    motionRequests: new Map<string, MotionRequest>(),
     previous: new Map<string, NpcPose>(),
     display: new Map<string, NpcPose>(),
     vehicles: { current: [] as VehicleRuntimeState[] },
@@ -51,12 +56,27 @@ export function createSimulationRuntime(city: CityDocumentV1, drive: DriveNetwor
   };
 }
 export type SimulationRuntime = ReturnType<typeof createSimulationRuntime>;
+function pruneNpcRuntime(runtime: SimulationRuntime): void {
+  const live = new Set(runtime.world.ids);
+  for (const collection of [
+    runtime.display,
+    runtime.previous,
+    runtime.animationSequences,
+    runtime.motionRequests,
+  ]) {
+    for (const id of collection.keys()) {
+      if (!live.has(id)) collection.delete(id);
+    }
+  }
+}
+
 export function resizeSimulation(runtime: SimulationRuntime, agents: number, vehicles: number) {
   const crossingOccupied = [...runtime.world.crossing.values()].some((c) => c.active);
   // A newly spawned NPC must not occupy a reserved crossing exit either.
   if (agents !== runtime.agentCount && !(agents > runtime.agentCount && crossingOccupied)) {
     resizeNpcPopulation(runtime.world, runtime.network, agents);
     runtime.agentCount = agents;
+    pruneNpcRuntime(runtime);
   }
   // Do not introduce unpredicted traffic while a pedestrian owns a crossing.
   const admittingMoreTraffic = vehicles > runtime.vehicleCount;

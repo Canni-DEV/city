@@ -1,0 +1,7 @@
+node_modules
+dist
+demo-dist
+.cache
+*.tgz
+.DS_Store
+*.local

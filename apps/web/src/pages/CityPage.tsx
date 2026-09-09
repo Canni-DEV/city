@@ -8,6 +8,8 @@ import {
   type MapSize,
   normalizeGenerationParameters,
   PRESET_PARAMETERS,
+  releaseNpcControl,
+  takeNpcControl,
   ZONE_TYPES,
   zoneAreaShares,
 } from "@city/core";
@@ -15,8 +17,15 @@ import { Button, Panel } from "@city/ui";
 import { CircleStop, Dices, RotateCcw, Route, Sparkles } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { CityCanvas } from "../city/CityCanvas";
+import {
+  type CameraMode,
+  enterNpcFollow,
+  exitNpcControl,
+  toggleFreeFlight,
+} from "../city/camera-mode";
 import { GenerationControls } from "../city/GenerationControls";
 import { isEditableTarget } from "../city/keyboard";
+import { NpcControlPanel } from "../city/NpcControlPanel";
 import { PedestrianInspector } from "../city/PedestrianInspector";
 import { createSimulationRuntime } from "../city/simulation-runtime";
 import { suggestCityName } from "../city/suggest-city-name";
@@ -40,7 +49,8 @@ export function CityPage() {
     traffic: false,
     pedestrians: false,
   });
-  const [freeCamera, setFreeCamera] = useState(false);
+  const [cameraMode, setCameraMode] = useState<CameraMode>("cityOrbit");
+  const [controlledNpcId, setControlledNpcId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [stats, setStats] = useState({ fps: 0, drawCalls: 0 });
   const workerRef = useRef<Worker | null>(null);
@@ -58,7 +68,12 @@ export function CityPage() {
     [generatedCity],
   );
   useEffect(() => {
-    if (generatedCity) setSelectedDriveId(null);
+    if (generatedCity) {
+      setSelectedDriveId(null);
+      setSelectedNpcId(null);
+      setControlledNpcId(null);
+      setCameraMode(exitNpcControl());
+    }
   }, [generatedCity]);
   const simulation = useMemo(
     () => (generatedCity ? createSimulationRuntime(generatedCity, driveNetwork) : null),
@@ -91,26 +106,69 @@ export function CityPage() {
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (isEditableTarget(event.target)) return;
+      if (event.key === "Tab" && controlledNpcId) {
+        event.preventDefault();
+        if (simulation) releaseNpcControl(simulation.world, controlledNpcId);
+        setControlledNpcId(null);
+        setCameraMode(exitNpcControl());
+        return;
+      }
       if (event.key === "Escape") {
+        if (controlledNpcId && simulation) releaseNpcControl(simulation.world, controlledNpcId);
+        setControlledNpcId(null);
+        setCameraMode(exitNpcControl());
         setSelectedDriveId(null);
         setSelectedNpcId(null);
-        if (freeCamera) {
-          setFreeCamera(false);
-          return;
-        }
         useCityStore.getState().selectEntity(null);
         return;
       }
       if (event.key === "f" || event.key === "F") {
         if (event.ctrlKey || event.metaKey || event.altKey) return;
         if (!useCityStore.getState().document) return;
+        if (controlledNpcId) return;
         event.preventDefault();
-        setFreeCamera((enabled) => !enabled);
+        setCameraMode((mode) => toggleFreeFlight(mode, false));
       }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [freeCamera]);
+  }, [controlledNpcId, simulation]);
+
+  useEffect(() => {
+    if (!simulation || (!selectedNpcId && !controlledNpcId)) return;
+    const timer = window.setInterval(() => {
+      if (selectedNpcId && !simulation.world.ids.includes(selectedNpcId)) setSelectedNpcId(null);
+      if (controlledNpcId && !simulation.world.ids.includes(controlledNpcId)) {
+        setControlledNpcId(null);
+        setCameraMode(exitNpcControl());
+      }
+    }, 250);
+    return () => window.clearInterval(timer);
+  }, [controlledNpcId, selectedNpcId, simulation]);
+
+  function selectNpc(id: string | null) {
+    if (controlledNpcId && controlledNpcId !== id && simulation) {
+      releaseNpcControl(simulation.world, controlledNpcId);
+      setControlledNpcId(null);
+      setCameraMode(exitNpcControl());
+    }
+    setSelectedNpcId(id);
+    setSelectedDriveId(null);
+    store.selectEntity(null);
+  }
+
+  function controlNpc(id: string) {
+    if (!simulation || !takeNpcControl(simulation.world, id)) return;
+    setSelectedNpcId(id);
+    setControlledNpcId(id);
+    setCameraMode(enterNpcFollow(true));
+  }
+
+  function releaseControl() {
+    if (controlledNpcId && simulation) releaseNpcControl(simulation.world, controlledNpcId);
+    setControlledNpcId(null);
+    setCameraMode(exitNpcControl());
+  }
 
   useEffect(() => {
     const worker = new Worker(new URL("../workers/generation.worker.ts", import.meta.url), {
@@ -379,10 +437,16 @@ export function CityPage() {
           </fieldset>
         )}
         {overlays.pedestrians && simulation && (
-          <PedestrianInspector
+          <PedestrianInspector runtime={simulation} selected={selectedNpcId} onSelect={selectNpc} />
+        )}
+        {generatedCity && simulation && (
+          <NpcControlPanel
             runtime={simulation}
             selected={selectedNpcId}
-            onSelect={setSelectedNpcId}
+            controlled={controlledNpcId}
+            onSelect={selectNpc}
+            onControl={controlNpc}
+            onRelease={releaseControl}
           />
         )}
         {overlays.traffic && driveNetwork && (
@@ -417,17 +481,18 @@ export function CityPage() {
             <button
               type="button"
               className="city-button"
-              aria-pressed={freeCamera}
+              aria-pressed={cameraMode === "freeFlight"}
               aria-label={
-                freeCamera
+                cameraMode === "freeFlight"
                   ? "Return to city camera. Shortcut F."
                   : "Enable free camera. Shortcut F."
               }
-              onClick={() => setFreeCamera((enabled) => !enabled)}
+              disabled={cameraMode === "npcFollow"}
+              onClick={() => setCameraMode((mode) => toggleFreeFlight(mode, false))}
             >
-              {freeCamera ? "City camera (F)" : "Free camera (F)"}
+              {cameraMode === "freeFlight" ? "City camera (F)" : "Free camera (F)"}
             </button>
-            {freeCamera ? (
+            {cameraMode === "freeFlight" ? (
               <p className="selection-status" role="status">
                 Free camera: WASD moves, right-drag looks, wheel flies along view, Space/E up, C/Q
                 down, Shift faster. F or Escape returns to the city view.
@@ -497,11 +562,13 @@ export function CityPage() {
           overlays={overlays}
           quality={quality}
           selectedEntityId={store.selectedEntityId}
-          freeCamera={freeCamera}
+          cameraMode={cameraMode}
+          controlledNpcId={controlledNpcId}
+          onSelectNpc={(id) => selectNpc(id)}
           onSelect={store.selectEntity}
           onStats={setStats}
         />
-        {generatedCity && freeCamera ? (
+        {generatedCity && cameraMode === "freeFlight" ? (
           <p className="free-camera-hint" role="status">
             Free camera. WASD to move, right-drag to look. F or Escape for city view.
           </p>

@@ -17,9 +17,12 @@ import {
   syncRendererLayout,
 } from "../rendering/renderer";
 import { AgentLayer } from "./AgentLayer";
+import type { CameraMode } from "./camera-mode";
 import { FreeFlightControls } from "./FreeFlightControls";
 import { InstancedAssetBatch } from "./InstancedAssetBatch";
 import { LandOverlays, type OverlayOptions } from "./LandOverlays";
+import { NpcControlInput } from "./NpcControlInput";
+import { NpcFollowCamera } from "./NpcFollowCamera";
 import { PedestrianOverlay } from "./PedestrianOverlay";
 import { SimulationLayer } from "./SimulationLayer";
 import type { SimulationRuntime } from "./simulation-runtime";
@@ -32,6 +35,8 @@ const EMPTY_CITY_CAMERA = {
   near: 0.1,
   far: 640,
 };
+
+export type { CameraMode } from "./camera-mode";
 
 function UrbanGround({ document }: { document: CityDocumentV1 }) {
   const mesh = useRef<THREE.InstancedMesh>(null);
@@ -171,7 +176,9 @@ function CityScene({
   onSelectDrive,
   quality,
   selectedEntityId,
-  freeCamera,
+  cameraMode,
+  controlledNpcId,
+  onSelectNpc,
   onSelect,
   onStats,
 }: {
@@ -184,7 +191,9 @@ function CityScene({
   onSelectDrive: (id: string | null) => void;
   quality: ResolvedQuality;
   selectedEntityId: string | null;
-  freeCamera: boolean;
+  cameraMode: CameraMode;
+  controlledNpcId: string | null;
+  onSelectNpc: (id: string) => void;
   onSelect: (id: string | null) => void;
   onStats: (stats: { fps: number; drawCalls: number }) => void;
 }) {
@@ -217,7 +226,7 @@ function CityScene({
 
   return (
     <>
-      {freeCamera ? (
+      {cameraMode === "freeFlight" ? (
         <>
           <PerspectiveCamera
             makeDefault
@@ -227,6 +236,16 @@ function CityScene({
             position={[size * 0.55, size * 0.7, size * 0.55]}
           />
           <FreeFlightControls />
+        </>
+      ) : cameraMode === "npcFollow" && simulation && controlledNpcId ? (
+        <>
+          <NpcFollowCamera
+            key={controlledNpcId}
+            runtime={simulation}
+            id={controlledNpcId}
+            size={size}
+          />
+          <NpcControlInput runtime={simulation} id={controlledNpcId} />
         </>
       ) : (
         <CityCamera size={size} />
@@ -291,12 +310,19 @@ function CityScene({
           />
         ))}
         <SelectionProxy document={document} entityId={selectedEntityId} />
-        {simulation && <AgentLayer runtime={simulation} count={quality.agentCount} />}
+        {simulation && (
+          <AgentLayer
+            runtime={simulation}
+            count={quality.agentCount}
+            selected={selectedNpcId}
+            onSelect={onSelectNpc}
+          />
+        )}
         {simulation && driveNetwork && (
           <VehicleLayer runtime={simulation} count={quality.vehicleCount} />
         )}
       </Suspense>
-      {freeCamera ? null : (
+      {cameraMode === "cityOrbit" ? (
         <OrbitControls
           makeDefault
           target={[0, 0, 0]}
@@ -304,7 +330,7 @@ function CityScene({
           maxZoom={48}
           maxPolarAngle={Math.PI * 0.48}
         />
-      )}
+      ) : null}
     </>
   );
 }
@@ -320,7 +346,9 @@ export function CityCanvas({
   onSelectDrive,
   quality,
   selectedEntityId,
-  freeCamera,
+  cameraMode,
+  controlledNpcId,
+  onSelectNpc,
   onSelect,
   onStats,
 }: {
@@ -334,7 +362,9 @@ export function CityCanvas({
   onSelectDrive: (id: string | null) => void;
   quality: ResolvedQuality;
   selectedEntityId: string | null;
-  freeCamera: boolean;
+  cameraMode: CameraMode;
+  controlledNpcId: string | null;
+  onSelectNpc: (id: string) => void;
   onSelect: (id: string | null) => void;
   onStats: (stats: { fps: number; drawCalls: number }) => void;
 }) {
@@ -373,7 +403,9 @@ export function CityCanvas({
           onSelectDrive={onSelectDrive}
           quality={quality}
           selectedEntityId={selectedEntityId}
-          freeCamera={freeCamera}
+          cameraMode={cameraMode}
+          controlledNpcId={controlledNpcId}
+          onSelectNpc={onSelectNpc}
           onSelect={onSelect}
           onStats={onStats}
         />

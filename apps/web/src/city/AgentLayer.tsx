@@ -1,127 +1,137 @@
-import {
-  type AssetCatalogEntry,
-  agentFootLift,
-  agentUniformScale,
-  assetById,
-  runtimeAssetUrl,
-} from "@city/assets";
+import { type AssetCatalogEntry, assetById, runtimeAssetUrl } from "@city/assets";
+import type { CreateAnimatedCharacterOptions } from "@city/procedural-animation";
 import { useGLTF } from "@react-three/drei";
 import { useFrame, useLoader } from "@react-three/fiber";
-import { useLayoutEffect, useMemo, useRef } from "react";
-import { clone } from "three/addons/utils/SkeletonUtils.js";
+import { useRef } from "react";
 import * as THREE from "three/webgpu";
+import { npcScenePose } from "./npc-visual";
 import type { SimulationRuntime } from "./simulation-runtime";
-
-/** Kenney Run is a sprint; half speed matches DEFAULT_AGENT_SPEED (SIM-005). */
-const RUN_CYCLE_TIME_SCALE = 0.5;
+import { useAnimatedCharacter } from "./use-animated-character";
 
 function skinUrl(entry: AssetCatalogEntry, skin: string, baseUrl: string): string {
   const path =
-    entry.texturePaths.find((texture) => texture.endsWith(`/${skin}.png`)) ?? entry.texturePaths[0];
+    entry.texturePaths.find((candidate) => candidate.endsWith(`/${skin}.png`)) ??
+    entry.texturePaths[0];
   return runtimeAssetUrl(path ?? "", baseUrl);
 }
 
-function bindAgentClips(
-  mixer: THREE.AnimationMixer,
-  animations: THREE.AnimationClip[],
-): { idle: THREE.AnimationAction | null; run: THREE.AnimationAction | null } {
-  const idleSource = animations.find((clip) => clip.name === "idle");
-  const runSource = animations.find((clip) => clip.name === "run");
-  const idle = idleSource ? mixer.clipAction(idleSource.clone()) : null;
-  const run = runSource ? mixer.clipAction(runSource.clone()) : null;
-  idle?.setLoop(THREE.LoopRepeat, Infinity);
-  run?.setLoop(THREE.LoopRepeat, Infinity);
-  run?.setEffectiveTimeScale(RUN_CYCLE_TIME_SCALE);
-  return { idle, run };
+function numericNpcSeed(seed: string, id: string): number {
+  let value = 2166136261;
+  for (const character of `${seed}:${id}`) {
+    value ^= character.charCodeAt(0);
+    value = Math.imul(value, 16777619);
+  }
+  return value >>> 0;
 }
 
 function AgentAvatar({
   id,
   runtime,
   entry,
-  half,
+  mapSize,
+  selected,
+  onSelect,
 }: {
   id: string;
   runtime: SimulationRuntime;
   entry: AssetCatalogEntry;
-  half: number;
+  mapSize: number;
+  selected: boolean;
+  onSelect: (id: string) => void;
 }) {
-  const group = useRef<THREE.Group>(null);
-  const blend = useRef(0);
+  const pick = useRef<THREE.Mesh>(null);
+  const marker = useRef<THREE.Mesh>(null);
   const { scene, animations } = useGLTF(
     runtimeAssetUrl(entry.runtimePath, import.meta.env.BASE_URL),
   );
   const skin = runtime.world.appearance.get(id)?.skin ?? "skaterMaleA";
   const texture = useLoader(THREE.TextureLoader, skinUrl(entry, skin, import.meta.env.BASE_URL));
-  const root = useMemo(() => clone(scene), [scene]);
-  const mixer = useMemo(() => new THREE.AnimationMixer(root), [root]);
-  const actions = useMemo(() => bindAgentClips(mixer, animations), [animations, mixer]);
-  const scale = agentUniformScale(entry);
-
-  useLayoutEffect(() => {
-    const ownedMaterials: THREE.Material[] = [];
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.flipY = true;
-    texture.needsUpdate = true;
-    root.traverse((child) => {
-      const mesh = child as THREE.SkinnedMesh;
-      if (!mesh.isMesh) return;
-      mesh.frustumCulled = false;
-      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      const next = materials.map(() => {
-        const nodeMaterial = new THREE.MeshStandardNodeMaterial();
-        nodeMaterial.color.set("#ffffff");
-        nodeMaterial.metalness = 0;
-        nodeMaterial.roughness = 0.7;
-        nodeMaterial.map = texture;
-        nodeMaterial.side = THREE.FrontSide;
-        ownedMaterials.push(nodeMaterial);
-        return nodeMaterial;
+  const height = entry.dimensions[1] * (entry.uniformScale ?? 1);
+  const locomotion = runtime.world.locomotion.get(id);
+  const { actor, actorRef } = useAnimatedCharacter(
+    () => ({
+      gltf: { scene, animations } as CreateAnimatedCharacterOptions["gltf"],
+      texture,
+      height,
+      seed: numericNpcSeed(runtime.world.seed, id),
+      animation: {
+        walkSpeed: locomotion?.speed ?? runtime.world.orchestration.walkSpeed,
+        runSpeed: locomotion?.runSpeed ?? runtime.world.orchestration.runSpeed,
+      },
+    }),
+    [animations, height, id, mapSize, runtime, scene, texture],
+    (created) => {
+      created.object.traverse((node) => {
+        const mesh = node as THREE.Mesh;
+        if (!mesh.isMesh) return;
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
       });
-      mesh.material = next.length === 1 ? (next[0] ?? mesh.material) : next;
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-    });
-    return () => {
-      for (const material of ownedMaterials) material.dispose();
-    };
-  }, [root, texture]);
-
-  useLayoutEffect(() => {
-    actions.idle?.play();
-    actions.run?.play();
-    actions.run?.setEffectiveWeight(0);
-    return () => {
-      // stopAllAction is enough. uncacheRoot wipes AnimationAction bindings while
-      // React Strict Mode keeps the memoized mixer/actions, so the remount play()
-      // crashes with `_cacheIndex` and unmounts the city canvas.
-      mixer.stopAllAction();
-    };
-  }, [actions, mixer]);
+      runtime.animationActors.set(id, created);
+      const pose = runtime.world.poses.get(id);
+      if (pose) {
+        created.fixedUpdate(1 / 60, {
+          position: npcScenePose(pose, mapSize),
+          facingYaw: pose.yaw,
+          velocity: { x: 0, y: 0, z: 0 },
+          grounded: true,
+        });
+      }
+      return () => {
+        if (runtime.animationActors.get(id) === created) runtime.animationActors.delete(id);
+        runtime.animationSequences.delete(id);
+        runtime.motionRequests.delete(id);
+      };
+    },
+  );
 
   useFrame(() => {
-    const pose = runtime.display.get(id),
-      target = group.current;
-    if (!pose || !target) return;
-    target.position.set(pose.x - half, pose.y + agentFootLift(), pose.z - half);
-    target.rotation.y = pose.yaw;
-    const dt = runtime.animationDelta;
-    const desired = Math.min(1, pose.speed / 0.12);
-    blend.current += Math.max(-dt / 0.2, Math.min(dt / 0.2, desired - blend.current));
-    actions.run?.setEffectiveWeight(blend.current);
-    actions.idle?.setEffectiveWeight(1 - blend.current);
-    actions.run?.setEffectiveTimeScale((RUN_CYCLE_TIME_SCALE * pose.speed) / 0.33);
-    mixer.update(dt);
-  });
+    const current = actorRef.current;
+    if (!current) return;
+    current.updateVisual(runtime.animationAlpha);
+    const pose = runtime.display.get(id) ?? runtime.world.poses.get(id);
+    if (!pose) return;
+    const visual = npcScenePose(pose, mapSize);
+    pick.current?.position.set(visual.x, visual.y + height / 2, visual.z);
+    marker.current?.position.set(visual.x, visual.y + 0.015, visual.z);
+  }, -1);
 
+  if (!actor) return null;
   return (
-    <group ref={group} scale={scale}>
-      <primitive object={root} position={[0, entry.verticalOffset, 0]} />
-    </group>
+    <>
+      <primitive object={actor.object} />
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: WebGL pick geometry has an equivalent accessible selector. */}
+      <mesh
+        ref={pick}
+        onClick={(event) => {
+          event.stopPropagation();
+          onSelect(id);
+        }}
+      >
+        <capsuleGeometry args={[Math.max(0.12, height * 0.3), Math.max(0.12, height), 4, 8]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+      {selected && (
+        <mesh ref={marker} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.15, 0.19, 32]} />
+          <meshBasicMaterial color="#d3ff99" transparent opacity={0.95} depthTest={false} />
+        </mesh>
+      )}
+    </>
   );
 }
 
-export function AgentLayer({ runtime, count }: { runtime: SimulationRuntime; count: number }) {
+export function AgentLayer({
+  runtime,
+  count,
+  selected,
+  onSelect,
+}: {
+  runtime: SimulationRuntime;
+  count: number;
+  selected: string | null;
+  onSelect: (id: string) => void;
+}) {
   const body = assetById.get("protagonists:character-medium");
   if (!body) return null;
   return (
@@ -132,7 +142,9 @@ export function AgentLayer({ runtime, count }: { runtime: SimulationRuntime; cou
           id={id}
           runtime={runtime}
           entry={body}
-          half={runtime.city.map.size / 2}
+          mapSize={runtime.city.map.size}
+          selected={selected === id}
+          onSelect={onSelect}
         />
       ))}
     </>

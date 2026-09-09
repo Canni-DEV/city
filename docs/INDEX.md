@@ -32,5 +32,6 @@ City is specified through stable requirement (`PRD`, `FUN`, `UX`, `ARC`, `DAT`, 
 - [M3.7.1 streets](milestones/M3_7_1_STREETS.md)
 - [M3.7.2 parks](milestones/M3_7_2_PARKS.md)
 - [M3.7.3 urban blocks](milestones/M3_7_3_URBAN_BLOCKS.md)
+- [M3.8 procedural NPC animation and control](milestones/M3_8_PROCEDURAL_ANIMATION.md)
 
 Specifications are authoritative. If code, a brief, and a specification conflict, stop and resolve the conflict through a documented decision before implementation.

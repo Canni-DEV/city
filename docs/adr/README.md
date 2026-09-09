@@ -20,3 +20,4 @@ Accepted decisions are immutable historical records. Supersede them with a new A
 16. [Sub-cell curb street furniture](0016-curb-street-furniture.md)
 17. [Park interior shared occupancy](0017-park-interior-occupancy.md)
 18. [Lot-yard occupancy and dumpsters](0018-block-yard-occupancy.md)
+19. [Procedural NPC animation authority and runtime control](0019-procedural-npc-animation.md)

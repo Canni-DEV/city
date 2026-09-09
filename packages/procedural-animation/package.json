@@ -1,0 +1,43 @@
+{
+  "name": "@city/procedural-animation",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "vite build && tsc -p tsconfig.build.json --emitDeclarationOnly",
+    "test": "pnpm build && node --test test/*.test.mjs"
+  },
+  "devDependencies": {
+    "@types/three": "0.185.1",
+    "typescript": "7.0.2",
+    "@dimforge/rapier3d-compat": "0.14.0",
+    "three": "0.185.1",
+    "vite": "8.0.0"
+  },
+  "version": "0.2.0",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./physics": {
+      "types": "./dist/physics.d.ts",
+      "import": "./dist/physics.js"
+    }
+  },
+  "peerDependencies": {
+    "three": ">=0.185.0 <1",
+    "@dimforge/rapier3d-compat": "0.14.0"
+  },
+  "peerDependenciesMeta": {
+    "@dimforge/rapier3d-compat": {
+      "optional": true
+    }
+  }
+}
