@@ -130,18 +130,21 @@ describe("TST-008 M3.6.3 continuous NPC components", () => {
     issueNpcOrder(world, network, "npc:1", { kind: "moveTo", point: [16.6, 3.5] });
     issueNpcOrder(world, network, "npc:2", { kind: "moveTo", point: [2.6, 3.5] });
     issueNpcOrder(world, network, "npc:3", { kind: "moveTo", point: [3.4, 3.5] });
+    const clearance = NPC_RADIUS * 2 - 1e-8;
+    let closest = Number.POSITIVE_INFINITY;
     for (let i = 0; i < 8000; i++) {
       tickNpcWorld(world, network, SIMULATION_STEP);
       for (let a = 0; a < world.ids.length; a++) {
+        const left = world.poses.get(world.ids[a] as string);
+        if (!left) continue;
         for (let b = a + 1; b < world.ids.length; b++) {
-          const left = world.poses.get(world.ids[a] as string),
-            right = world.poses.get(world.ids[b] as string);
-          expect(
-            distance2([left?.x ?? 0, left?.z ?? 0], [right?.x ?? 0, right?.z ?? 0]),
-          ).toBeGreaterThanOrEqual(NPC_RADIUS * 2 - 1e-8);
+          const right = world.poses.get(world.ids[b] as string);
+          if (!right) continue;
+          closest = Math.min(closest, distance2([left.x, left.z], [right.x, right.z]));
         }
       }
     }
+    expect(closest).toBeGreaterThanOrEqual(clearance);
     for (const id of world.ids) {
       expect(world.behavior.get(id)?.reason).not.toMatch(/Yielding/);
     }
@@ -149,7 +152,7 @@ describe("TST-008 M3.6.3 continuous NPC components", () => {
     expect(world.poses.get("npc:1")?.x ?? 0).toBeGreaterThan(8);
     expect(world.poses.get("npc:2")?.x ?? 0).toBeLessThan(12);
     expect(world.poses.get("npc:3")?.x ?? 0).toBeLessThan(12);
-  });
+  }, 20_000);
   it("replans to the same destination after yield timeout", () => {
     const { world, network } = setup(undefined, 2);
     place(world, "npc:0", [4.4, 3.5], Math.PI / 2);

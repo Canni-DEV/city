@@ -277,17 +277,13 @@ export function nearestPedestrianNode(
   point: Point,
   component?: number,
 ): PedestrianNode | undefined {
-  let best: PedestrianNode | undefined,
-    distance = Number.POSITIVE_INFINITY;
-  for (const n of network.nodes.values()) {
-    if (component !== undefined && n.component !== component) continue;
-    const d = distance2(n.point, point);
-    if (d < distance && network.visible(point, n.point)) {
-      distance = d;
-      best = n;
-    }
+  const ranked: { node: PedestrianNode; distance: number }[] = [];
+  for (const node of network.nodes.values()) {
+    if (component !== undefined && node.component !== component) continue;
+    ranked.push({ node, distance: distance2(node.point, point) });
   }
-  return best;
+  ranked.sort((a, b) => a.distance - b.distance);
+  for (const { node } of ranked) if (network.visible(point, node.point)) return node;
 }
 
 /** SIM-023/026: diagnostic associations conservatively include whole vehicle bodies. */

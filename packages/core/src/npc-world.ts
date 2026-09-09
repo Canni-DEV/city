@@ -8,6 +8,7 @@ import {
   nearestPedestrianNode,
   type PedestrianEdge,
   type PedestrianNetwork,
+  type PedestrianNode,
 } from "./pedestrian-network.js";
 import { SeededRandom } from "./rng.js";
 import type { Point } from "./road-tiles.js";
@@ -614,8 +615,14 @@ function segmentDistance(p: Point, a: Point, b: Point): number {
   );
   return distance2(p, [a[0] + dx * t, a[1] + dz * t]);
 }
-const nearLeg = (point: Point, leg: NpcLeg, radius: number) =>
-  leg.points.slice(1).some((p, i) => segmentDistance(point, leg.points[i] as Point, p) < radius);
+function nearLeg(point: Point, leg: NpcLeg, radius: number): boolean {
+  for (let i = 1; i < leg.points.length; i++) {
+    const a = leg.points[i - 1],
+      b = leg.points[i];
+    if (a && b && segmentDistance(point, a, b) < radius) return true;
+  }
+  return false;
+}
 
 type NpcStepFailure = "boundary" | "pedestrian";
 
@@ -716,7 +723,7 @@ function isCrossingApproach(network: PedestrianNetwork, id: string): boolean {
 }
 
 function atCrossingApproach(network: PedestrianNetwork, pose: NpcPose): boolean {
-  const node = nearestPedestrianNode(network, pointOf(pose));
+  const node = network.nodes.get(`s:${Math.floor(pose.x)},${Math.floor(pose.z)}`);
   return Boolean(
     node && isCrossingApproach(network, node.id) && distance2(node.point, pointOf(pose)) < 0.55,
   );
@@ -778,12 +785,16 @@ function wanderDestination(
     b = world.behavior.get(id);
   if (!pose || !b) return undefined;
   const rng = new SeededRandom(`${world.seed}:${id}:order:${b.sequence++}`),
-    start = nearestPedestrianNode(network, pointOf(pose));
-  const pool = [...network.nodes.values()].filter(
-    (n) => n.component === start?.component && distance2(n.point, pointOf(pose)) > 0.5,
-  );
-  const midBlock = pool.filter((n) => !isCrossingApproach(network, n.id));
-  const options = midBlock.length ? midBlock : pool;
+    start = nearestPedestrianNode(network, pointOf(pose)),
+    at = pointOf(pose);
+  const midBlock: PedestrianNode[] = [],
+    reachable: PedestrianNode[] = [];
+  for (const node of network.nodes.values()) {
+    if (node.component !== start?.component || distance2(node.point, at) <= 0.5) continue;
+    reachable.push(node);
+    if (!isCrossingApproach(network, node.id)) midBlock.push(node);
+  }
+  const options = midBlock.length ? midBlock : reachable;
   const destination = options[rng.integer(0, Math.max(0, options.length - 1))];
   if (!destination) return undefined;
   const jitter: Point = [
@@ -833,9 +844,9 @@ function scheduleAutonomousGreetings(world: NpcWorld, network: PedestrianNetwork
       crossing?.active ||
       (crossing?.waiting ?? 0) > 0 ||
       (world.behavior.get(id)?.yieldSeconds ?? 0) > 0.05 ||
-      atCrossingApproach(network, pose) ||
       world.tick < social.nextGreetingTick ||
-      (social.greetUntilTick >= 0 && world.tick <= social.greetUntilTick)
+      (social.greetUntilTick >= 0 && world.tick <= social.greetUntilTick) ||
+      atCrossingApproach(network, pose)
     )
       continue;
     const crowd = world.ids.filter((other) => {
