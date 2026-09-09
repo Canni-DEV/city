@@ -34,5 +34,6 @@ City is specified through stable requirement (`PRD`, `FUN`, `UX`, `ARC`, `DAT`, 
 - [M3.7.3 urban blocks](milestones/M3_7_3_URBAN_BLOCKS.md)
 - [M3.8 procedural NPC animation and control](milestones/M3_8_PROCEDURAL_ANIMATION.md)
 - [M3.8.1 third-person follow and locomotion](milestones/M3_8_1_NPC_FOLLOW_LOCOMOTION.md)
+- [M3.9 cinematic entry experience](milestones/M3_9_CINEMATIC_EXPERIENCE.md)
 
 Specifications are authoritative. If code, a brief, and a specification conflict, stop and resolve the conflict through a documented decision before implementation.

@@ -20,6 +20,7 @@
 | Urban blocks / yards | GEN-009/010/011 amended, GEN-033, FUN-047, TST-012, ADR-0018 | M3.7.3 | TST-001/003/008/012, 200-city batch, owner visual QA | Implemented, pending review |
 | Procedural NPC animation/control | FUN-040/044 amended, FUN-048, UX-011/026 amended, UX-027, SIM-027–030, REN-011, TST-013, ADR-0019 | M3.8 | package tests on Three 0.185.x; deterministic core/control tests; web selection/input/camera and production-exclusion tests; owner backend/performance QA | Implemented |
 | Third-person follow and NPC locomotion | UX-011/027 amended, REN-011 amended, SIM-004/022 amended, TST-013 amended, ADR-0019 amended | M3.8.1 | TST-013 camera/locomotion; owner follow/zoom/yield QA | Implemented, pending review |
+| Cinematic entry experience | PRD-005/006 amended, FUN-030/049, UX-001/028, ACC-006/007, REN-012, TST-014, ADR-0020 | M3.9 | timeline/route/handoff unit tests; owner backend, motion and visual QA | Implemented, pending review |
 | Editing | FUN-020–025, UX-010–023, EDT-001–010 | M4 | TST-004, manual input QA | Planned |
 | Persistence/library | FUN-001–003, FUN-031–033, PER-001–008 | M5 | TST-005 | Planned |
 | Accessibility/release | UX-024, ACC-001–008, DEP-001–005 | M6 | AC-004, full manual QA | Planned |
