@@ -5,6 +5,7 @@ import {
   canEnterNpcCrossing,
   createEmptyCityDocument,
   createNpcWorld,
+  distance2,
   issueNpcOrder,
   type Point,
   PRESET_PARAMETERS,
@@ -139,5 +140,98 @@ describe("TST-008 safe complete crossing admission", () => {
     expect(world.crossing.get("npc:0")?.active).toBeNull();
     expect(world.behavior.get("npc:0")?.status).toBe("completed");
     expect(world.poses.get("npc:0")?.z).toBeGreaterThan(5);
+  });
+  it("does not repath a 1.5s yield during an admitted crossing", () => {
+    const city = crossingFixture();
+    city.sidewalks.push({
+      id: "s2",
+      blockId: "b",
+      position: [3, 3],
+      rotation: 0,
+      assetId: "roads:tile-low",
+    });
+    const network = buildPedestrianNetwork(city),
+      world = createNpcWorld("traffic");
+    resizeNpcPopulation(world, network, 2);
+    world.poses.set("npc:0", { x: 4.5, z: 3.5, y: 0.025, yaw: 0, speed: 0 });
+    world.poses.set("npc:1", { x: 3.5, z: 3.5, y: 0.025, yaw: 0, speed: 0 });
+    const wander0 = world.behavior.get("npc:0"),
+      wander1 = world.behavior.get("npc:1");
+    if (wander0) wander0.wander = false;
+    if (wander1) wander1.wander = false;
+    issueNpcOrder(world, network, "npc:0", { kind: "moveTo", point: [4.5, 5.5] });
+    for (let i = 0; i < 200; i++) {
+      tickNpcWorld(world, network, SIMULATION_STEP);
+      if (world.crossing.get("npc:0")?.active) break;
+    }
+    expect(world.crossing.get("npc:0")?.active).not.toBeNull();
+    const destination = world.navigation.get("npc:0")?.destination;
+    const crossingId = world.crossing.get("npc:0")?.active;
+    const onCrossing = world.poses.get("npc:0");
+    if (onCrossing) {
+      world.poses.set("npc:1", {
+        ...onCrossing,
+        z: onCrossing.z + 0.28,
+        yaw: Math.PI,
+        speed: 0,
+      });
+    }
+    for (let i = 0; i < Math.ceil(1.6 / SIMULATION_STEP); i++)
+      tickNpcWorld(world, network, SIMULATION_STEP);
+    expect(world.crossing.get("npc:0")?.active).toBe(crossingId);
+    expect(world.navigation.get("npc:0")?.destination).toEqual(destination);
+  });
+  it("lets a sidewalk-corner crowd admit instead of packing the node", () => {
+    const city = crossingFixture();
+    city.sidewalks = [
+      [3, 3],
+      [4, 3],
+      [5, 3],
+      [3, 5],
+      [4, 5],
+      [5, 5],
+    ].map((position, i) => ({
+      id: `s${i}`,
+      blockId: "b",
+      position: position as Point,
+      rotation: 0,
+      assetId: "roads:tile-low",
+    }));
+    const network = buildPedestrianNetwork(city),
+      world = createNpcWorld("traffic");
+    resizeNpcPopulation(world, network, 4);
+    const starts: Point[] = [
+      [3.35, 3.5],
+      [3.75, 3.5],
+      [4.2, 3.5],
+      [4.7, 3.5],
+    ];
+    const dests: Point[] = [
+      [3.2, 5.7],
+      [3.55, 5.7],
+      [5.45, 5.7],
+      [5.1, 5.7],
+    ];
+    for (const [index, id] of world.ids.entries()) {
+      const point = starts[index] ?? ([3.35, 3.5] as Point);
+      world.poses.set(id, { x: point[0], z: point[1], y: 0.025, yaw: 0, speed: 0 });
+      const behavior = world.behavior.get(id);
+      if (behavior) behavior.wander = false;
+      issueNpcOrder(world, network, id, {
+        kind: "moveTo",
+        point: dests[index] ?? ([3.2, 5.7] as Point),
+      });
+    }
+    for (let i = 0; i < 3600; i++) tickNpcWorld(world, network, SIMULATION_STEP);
+    const packed = world.ids.filter((id) => {
+      const pose = world.poses.get(id);
+      return pose ? distance2([pose.x, pose.z], [4.5, 3.5]) < 0.35 : false;
+    });
+    const progressed = world.ids.filter((id) => {
+      const pose = world.poses.get(id);
+      return (pose?.z ?? 0) > 4.15 || world.behavior.get(id)?.status === "completed";
+    });
+    expect(packed.length).toBeLessThan(4);
+    expect(progressed.length).toBeGreaterThanOrEqual(2);
   });
 });

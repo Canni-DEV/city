@@ -11,11 +11,15 @@ import {
   issueNpcOrder,
   NPC_RADIUS,
   npcDiagnostics,
+  npcMoverHasPriority,
   type Point,
   PRESET_PARAMETERS,
   resizeNpcPopulation,
   SIMULATION_STEP,
+  setNpcControlInput,
+  takeNpcControl,
   tickNpcWorld,
+  YIELD_REPATH_SECONDS,
 } from "../src/index.js";
 
 function fixture(cells: Point[] = Array.from({ length: 8 }, (_, i) => [i + 2, 3] as Point)) {
@@ -115,6 +119,67 @@ describe("TST-008 M3.6.3 continuous NPC components", () => {
     expect(world.behavior.get("npc:0")?.status).toBe("completed");
     expect(world.behavior.get("npc:1")?.status).toBe("completed");
   });
+  it("passes opposing walkers on a 1-cell sidewalk and recovers 4-NPC congestion", () => {
+    const corridor = Array.from({ length: 16 }, (_, i) => [i + 2, 3] as Point);
+    const { world, network } = setup(corridor, 4);
+    place(world, "npc:0", [3.5, 3.5], Math.PI / 2);
+    place(world, "npc:1", [5.5, 3.5], Math.PI / 2);
+    place(world, "npc:2", [16.5, 3.5], -Math.PI / 2);
+    place(world, "npc:3", [14.5, 3.5], -Math.PI / 2);
+    issueNpcOrder(world, network, "npc:0", { kind: "moveTo", point: [17.4, 3.5] });
+    issueNpcOrder(world, network, "npc:1", { kind: "moveTo", point: [16.6, 3.5] });
+    issueNpcOrder(world, network, "npc:2", { kind: "moveTo", point: [2.6, 3.5] });
+    issueNpcOrder(world, network, "npc:3", { kind: "moveTo", point: [3.4, 3.5] });
+    for (let i = 0; i < 8000; i++) {
+      tickNpcWorld(world, network, SIMULATION_STEP);
+      for (let a = 0; a < world.ids.length; a++) {
+        for (let b = a + 1; b < world.ids.length; b++) {
+          const left = world.poses.get(world.ids[a] as string),
+            right = world.poses.get(world.ids[b] as string);
+          expect(
+            distance2([left?.x ?? 0, left?.z ?? 0], [right?.x ?? 0, right?.z ?? 0]),
+          ).toBeGreaterThanOrEqual(NPC_RADIUS * 2 - 1e-8);
+        }
+      }
+    }
+    for (const id of world.ids) {
+      expect(world.behavior.get(id)?.reason).not.toMatch(/Yielding/);
+    }
+    expect(world.poses.get("npc:0")?.x ?? 0).toBeGreaterThan(8);
+    expect(world.poses.get("npc:1")?.x ?? 0).toBeGreaterThan(8);
+    expect(world.poses.get("npc:2")?.x ?? 0).toBeLessThan(12);
+    expect(world.poses.get("npc:3")?.x ?? 0).toBeLessThan(12);
+  });
+  it("replans to the same destination after yield timeout", () => {
+    const { world, network } = setup(undefined, 2);
+    place(world, "npc:0", [4.4, 3.5], Math.PI / 2);
+    place(world, "npc:1", [4.7, 3.5], -Math.PI / 2);
+    const goal: Point = [8.5, 3.5];
+    issueNpcOrder(world, network, "npc:0", { kind: "moveTo", point: goal });
+    issueNpcOrder(world, network, "npc:1", { kind: "moveTo", point: [2.5, 3.5] });
+    expect(world.navigation.get("npc:0")?.destination).toEqual(goal);
+    for (let i = 0; i < Math.ceil(YIELD_REPATH_SECONDS / SIMULATION_STEP) + 5; i++)
+      tickNpcWorld(world, network, SIMULATION_STEP);
+    expect(world.navigation.get("npc:0")?.destination).toEqual(goal);
+    expect(world.behavior.get("npc:0")?.wander).toBe(false);
+  });
+  it("keeps the higher-priority mover and lets manual control outrank ID", () => {
+    expect(npcMoverHasPriority(setup(undefined, 2).world, "npc:0", "npc:1")).toBe(true);
+    const crossingWorld = setup(undefined, 2).world;
+    const crossing = crossingWorld.crossing.get("npc:1");
+    if (crossing) crossing.active = "cross";
+    expect(npcMoverHasPriority(crossingWorld, "npc:1", "npc:0")).toBe(true);
+    const { world, network } = setup(undefined, 2);
+    place(world, "npc:0", [4.4, 3.5], Math.PI / 2);
+    place(world, "npc:1", [4.7, 3.5], -Math.PI / 2);
+    issueNpcOrder(world, network, "npc:0", { kind: "moveTo", point: [8.5, 3.5] });
+    takeNpcControl(world, "npc:1");
+    setNpcControlInput(world, "npc:1", { direction: [-1, 0], run: false });
+    expect(npcMoverHasPriority(world, "npc:1", "npc:0")).toBe(true);
+    const start1 = world.poses.get("npc:1")?.x ?? 0;
+    for (let i = 0; i < 45; i++) tickNpcWorld(world, network, SIMULATION_STEP);
+    expect(world.poses.get("npc:1")?.x ?? 0).toBeLessThan(start1);
+  });
   it("preserves survivors when population changes and does not mutate the document", () => {
     const { world, network, city } = setup(undefined, 2),
       json = JSON.stringify(city);
@@ -186,6 +251,20 @@ describe("TST-008 M3.6.3 continuous NPC components", () => {
       }),
     ).toBe(false);
     resizeNpcPopulation(world, buildPedestrianNetwork(fixture()), 1);
+    expect(
+      canEnterNpcCrossing(world, "npc:0", {
+        points: [
+          [2.5, 3.5],
+          [5.5, 3.5],
+        ],
+        crossingId: "cross",
+        length: 3,
+      }),
+    ).toBe(true);
+  });
+  it("does not treat sidewalk approach waiters as occupying the crossing", () => {
+    const { world } = setup(undefined, 2);
+    place(world, "npc:1", [2.5, 3.5]);
     expect(
       canEnterNpcCrossing(world, "npc:0", {
         points: [

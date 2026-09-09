@@ -6,6 +6,7 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 
 ### Added
 
+- M3.8.1: locked third-person camera while controlling an NPC (behind yaw, right-drag/Q/E look that springs back, wheel distance), city orbit `maxZoom` 96, and deterministic pedestrian yield recovery (sidestep, mover priority, 1.5 s repath, 3 s new destination, corner/crossing unjam).
 - M3.8: procedural animation for every runtime NPC, deterministic idle/walk/run/greet orchestration, safe manual NPC control, stable-ID/click selection, an orbitable NPC-follow camera, and a development-only animation lab.
 - Workspace package `@city/procedural-animation` with a non-physics interpolated `AnimatedCharacter` facade and retained optional `/physics` entry; catalog character assets remain canonical under `packages/assets/generated/characters`.
 - Owner recorded a successful manual review of M3.8 selection, Control NPC, follow camera, walking gait, and the animation lab.

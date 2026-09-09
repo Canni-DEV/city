@@ -74,7 +74,8 @@ export function NpcControlPanel({
       </p>
       {controlled === npc?.id && (
         <p className="selection-status" role="status">
-          WASD or arrows move, Shift runs, V greets, X stops. Tab returns to the city camera.
+          WASD or arrows move, Shift runs, V greets, X stops. Right-drag looks, wheel zooms, Q/E
+          turns the view. Tab returns to the city camera.
         </p>
       )}
     </fieldset>
