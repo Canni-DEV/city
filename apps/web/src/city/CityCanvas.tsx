@@ -17,7 +17,7 @@ import {
   syncRendererLayout,
 } from "../rendering/renderer";
 import { AgentLayer } from "./AgentLayer";
-import type { CameraMode } from "./camera-mode";
+import { type CameraMode, CITY_ORBIT_MAX_ZOOM, CITY_ORBIT_MIN_ZOOM } from "./camera-mode";
 import { FreeFlightControls } from "./FreeFlightControls";
 import { InstancedAssetBatch } from "./InstancedAssetBatch";
 import { LandOverlays, type OverlayOptions } from "./LandOverlays";
@@ -326,8 +326,8 @@ function CityScene({
         <OrbitControls
           makeDefault
           target={[0, 0, 0]}
-          minZoom={3}
-          maxZoom={48}
+          minZoom={CITY_ORBIT_MIN_ZOOM}
+          maxZoom={CITY_ORBIT_MAX_ZOOM}
           maxPolarAngle={Math.PI * 0.48}
         />
       ) : null}

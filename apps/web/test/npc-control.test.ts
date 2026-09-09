@@ -3,10 +3,14 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
+  behindNpcFollowOffset,
+  CITY_ORBIT_MAX_ZOOM,
   enterNpcFollow,
   exitNpcControl,
   followFramingIsValid,
-  offsetNpcFollowCamera,
+  NPC_FOLLOW_PITCH,
+  npcFollowCameraPose,
+  springNpcFollowLook,
   toggleFreeFlight,
 } from "../src/city/camera-mode";
 import { isEditableTarget } from "../src/city/keyboard";
@@ -27,23 +31,40 @@ describe("TST-013 NPC camera transitions", () => {
     expect(toggleFreeFlight("npcFollow", true)).toBe("npcFollow");
   });
 
-  it("frames the follow camera away from the hip target", () => {
+  it("frames the follow camera behind the NPC yaw", () => {
     const target = { x: 10, y: 1, z: -4 };
-    const camera = offsetNpcFollowCamera(target);
+    const camera = behindNpcFollowOffset(target, 0);
     expect(followFramingIsValid(camera, target)).toBe(true);
     expect(followFramingIsValid(target, target)).toBe(false);
-    expect(camera).toEqual({ x: 12.3, y: 2.3, z: -1 });
+    expect(camera.z).toBeLessThan(target.z);
+    expect(camera.y).toBeGreaterThan(target.y);
+    const beside = npcFollowCameraPose(target, 0, Math.PI / 2, NPC_FOLLOW_PITCH, 2.6);
+    expect(beside.x).not.toBeCloseTo(camera.x);
   });
 
-  it("binds follow orbit controls to a dedicated perspective camera", () => {
+  it("springs look yaw toward zero and pitch toward the default", () => {
+    const next = springNpcFollowLook(1, 1, 0.2);
+    expect(Math.abs(next.lookYaw)).toBeLessThan(1);
+    expect(Math.abs(next.lookPitch - NPC_FOLLOW_PITCH)).toBeLessThan(
+      Math.abs(1 - NPC_FOLLOW_PITCH),
+    );
+  });
+
+  it("binds a dedicated third-person perspective camera without OrbitControls", () => {
     const text = readFileSync(join(webRoot, "src/city/NpcFollowCamera.tsx"), "utf8");
     expect(text).toMatch(/new THREE\.PerspectiveCamera/);
-    expect(text).toMatch(/camera=\{camera\}/);
+    expect(text).toMatch(/npcFollowCameraPose/);
     expect(text).toMatch(/npcScenePose\(pose, mapSize\)/);
+    expect(text).not.toMatch(/OrbitControls/);
     expect(text).not.toMatch(/<PerspectiveCamera/);
     expect(text).not.toMatch(/size \/ 2/);
-    expect(text).not.toMatch(/pose\.y \+ 0\.9/);
     expect(text).not.toMatch(/useFrame\([\s\S]*?,\s*[1-9]\d*\s*\)/);
+  });
+
+  it("raises city orbit maxZoom to sidewalk scale", () => {
+    expect(CITY_ORBIT_MAX_ZOOM).toBe(96);
+    const canvas = readFileSync(join(webRoot, "src/city/CityCanvas.tsx"), "utf8");
+    expect(canvas).toMatch(/maxZoom=\{CITY_ORBIT_MAX_ZOOM\}/);
   });
 });
 

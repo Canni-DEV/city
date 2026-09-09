@@ -8,6 +8,7 @@ import {
   nearestPedestrianNode,
   type PedestrianEdge,
   type PedestrianNetwork,
+  type PedestrianNode,
 } from "./pedestrian-network.js";
 import { SeededRandom } from "./rng.js";
 import type { Point } from "./road-tiles.js";
@@ -22,6 +23,16 @@ export const NPC_SPEED = 0.33;
 export const NPC_RUN_SPEED = 0.75;
 export const SIMULATION_STEP = 1 / 60;
 export const NPC_GREET_HOLD = 2.4;
+export const YIELD_REPATH_SECONDS = 1.5;
+export const YIELD_NEW_DESTINATION_SECONDS = 3;
+export const NPC_SIDESTEP = 0.1;
+export const NPC_GOAL_ARRIVAL = 0.025;
+export const NPC_LEG_ARRIVAL = 0.32;
+export const NPC_TURN_CREEP = 0.12;
+export const CROSSING_APPROACH_IGNORE = 0.55;
+export const CROSSING_FOLLOW_GAP = 0.75;
+export const CROSSING_QUEUE_BASE = 0.4;
+export const CROSSING_QUEUE_SPACING = 0.26;
 export type NpcOrder = { kind: "moveTo"; point: Point } | { kind: "wait"; seconds: number };
 export type NpcOrderStatus = "pending" | "active" | "completed" | "cancelled" | "failed";
 export interface NpcPose {
@@ -50,6 +61,7 @@ export interface NpcBehavior {
   remaining: number;
   sequence: number;
   wander: boolean;
+  yieldSeconds: number;
 }
 export interface NpcCrossing {
   active: string | null;
@@ -179,6 +191,17 @@ const mix = (a: Point, b: Point, t: number): Point => [
   a[1] + (b[1] - a[1]) * t,
 ];
 
+/** Manual control outranks autonomous; otherwise the lexicographically smaller ID proceeds. */
+export function npcMoverHasPriority(world: NpcWorld, id: string, other: string): boolean {
+  const aManual = world.control.get(id)?.mode === "manual";
+  const bManual = world.control.get(other)?.mode === "manual";
+  if (aManual !== bManual) return aManual;
+  const aCrossing = Boolean(world.crossing.get(id)?.active);
+  const bCrossing = Boolean(world.crossing.get(other)?.active);
+  if (aCrossing !== bCrossing) return aCrossing;
+  return id < other;
+}
+
 /** Population changes preserve all surviving component values and identities. */
 export function resizeNpcPopulation(
   world: NpcWorld,
@@ -250,6 +273,7 @@ export function resizeNpcPopulation(
       remaining: 0,
       sequence: 0,
       wander: true,
+      yieldSeconds: 0,
     });
     world.crossing.set(id, { active: null, waiting: 0, retry: 0 });
     world.appearance.set(id, { skin: AGENT_SKINS[rng.integer(0, 3)] ?? AGENT_SKINS[0] });
@@ -591,8 +615,56 @@ function segmentDistance(p: Point, a: Point, b: Point): number {
   );
   return distance2(p, [a[0] + dx * t, a[1] + dz * t]);
 }
-const nearLeg = (point: Point, leg: NpcLeg, radius: number) =>
-  leg.points.slice(1).some((p, i) => segmentDistance(point, leg.points[i] as Point, p) < radius);
+function nearLeg(point: Point, leg: NpcLeg, radius: number): boolean {
+  for (let i = 1; i < leg.points.length; i++) {
+    const a = leg.points[i - 1],
+      b = leg.points[i];
+    if (a && b && segmentDistance(point, a, b) < radius) return true;
+  }
+  return false;
+}
+
+type NpcStepFailure = "boundary" | "pedestrian";
+
+function npcStepCandidate(
+  world: NpcWorld,
+  network: PedestrianNetwork,
+  pose: NpcPose,
+  next: Point,
+  yaw: number,
+  speed: number,
+  vx: number,
+  vz: number,
+  nearby: string[],
+  old: Map<string, NpcPose>,
+  crossing: boolean,
+  leg: NpcLeg | undefined,
+  radius: number,
+): NpcPose | NpcStepFailure {
+  if (!network.visible(pointOf(pose), next, crossing)) return "boundary";
+  if (crossing && leg && !nearLeg(next, leg, 0.2)) {
+    const start = leg.points[0];
+    if (!start || distance2(next, start) >= distance2(pointOf(pose), start) - 1e-9)
+      return "boundary";
+  }
+  for (const other of nearby) {
+    if (crossing && !world.crossing.get(other)?.active) continue;
+    const op = old.get(other);
+    if (!op) continue;
+    const relative: Point = [pose.x - op.x, pose.z - op.z];
+    const future: Point = [
+      relative[0] + (vx - Math.sin(op.yaw) * op.speed) * 0.5,
+      relative[1] + (vz - Math.cos(op.yaw) * op.speed) * 0.5,
+    ];
+    if (segmentDistance([0, 0], relative, future) < radius * 2 + 0.015) return "pedestrian";
+    const oc = world.crossing.get(other),
+      on = world.navigation.get(other),
+      reservedLeg = on?.legs[on.leg];
+    if (!crossing && oc?.active && reservedLeg && nearLeg(next, reservedLeg, NPC_RADIUS * 2 + 0.04))
+      return "pedestrian";
+  }
+  return { x: next[0], z: next[1], y: network.height(next), yaw, speed };
+}
 
 /** Conservative swept circular body envelopes include offset pivots and portal predictions. */
 export function canEnterNpcCrossing(
@@ -601,22 +673,30 @@ export function canEnterNpcCrossing(
   leg: NpcLeg,
   traffic?: NpcTraffic,
 ): boolean {
-  const end = leg.points[leg.points.length - 1];
-  if (!end) return false;
+  const end = leg.points[leg.points.length - 1],
+    start = leg.points[0];
+  if (!end || !start) return false;
   for (const other of world.ids) {
     if (other === id) continue;
     const pose = world.poses.get(other),
       state = world.crossing.get(other),
       nav = world.navigation.get(other);
-    if (
-      pose &&
-      (distance2(pointOf(pose), end) < NPC_RADIUS * 3 ||
-        nearLeg(pointOf(pose), leg, NPC_RADIUS * 2 + 0.05))
-    )
-      return false;
+    if (pose) {
+      const at = pointOf(pose);
+      if (distance2(at, end) < NPC_RADIUS * 3) return false;
+      // Sidewalk waiters at the approach must not occupy the reserved corridor.
+      if (
+        distance2(at, start) > CROSSING_APPROACH_IGNORE &&
+        nearLeg(at, leg, NPC_RADIUS * 2 + 0.05)
+      )
+        return false;
+    }
     const active = nav?.legs[nav.leg];
-    if (state?.active && active?.points.some((p) => nearLeg(p, leg, NPC_RADIUS * 2 + 0.05)))
-      return false;
+    if (state?.active && active) {
+      if (active.crossingId === leg.crossingId) {
+        if (pose && distance2(pointOf(pose), start) < CROSSING_FOLLOW_GAP) return false;
+      } else if (active.points.some((p) => nearLeg(p, leg, NPC_RADIUS * 2 + 0.05))) return false;
+    }
   }
   if (!traffic?.vehicles.length) return true;
   const locomotion = world.locomotion.get(id);
@@ -638,29 +718,117 @@ export function canEnterNpcCrossing(
   return true;
 }
 
+function isCrossingApproach(network: PedestrianNetwork, id: string): boolean {
+  return (network.outgoing.get(id) ?? []).some((edge) => edge.crossing);
+}
+
+function atCrossingApproach(network: PedestrianNetwork, pose: NpcPose): boolean {
+  const node = network.nodes.get(`s:${Math.floor(pose.x)},${Math.floor(pose.z)}`);
+  return Boolean(
+    node && isCrossingApproach(network, node.id) && distance2(node.point, pointOf(pose)) < 0.55,
+  );
+}
+
+function intendsCrossing(world: NpcWorld, id: string, crossingId: string): boolean {
+  const crossing = world.crossing.get(id),
+    nav = world.navigation.get(id);
+  if (!nav || crossing?.active) return false;
+  const current = nav.legs[nav.leg],
+    next = nav.legs[nav.leg + 1];
+  return current?.crossingId === crossingId || next?.crossingId === crossingId;
+}
+
+function crossingQueueHold(
+  world: NpcWorld,
+  network: PedestrianNetwork,
+  id: string,
+  pose: NpcPose,
+  start: Point,
+  crossingId: string,
+): Point | undefined {
+  const waiters = world.ids.filter((other) => intendsCrossing(world, other, crossingId));
+  const rank = Math.max(0, waiters.indexOf(id));
+  const dist = CROSSING_QUEUE_BASE + rank * CROSSING_QUEUE_SPACING;
+  const tryHold = (bx: number, bz: number) => {
+    const span = Math.hypot(bx, bz);
+    if (span < 1e-6) return undefined;
+    const hold: Point = [start[0] + (bx / span) * dist, start[1] + (bz / span) * dist];
+    return network.safe(hold) && network.visible(pointOf(pose), hold) ? hold : undefined;
+  };
+  const nav = world.navigation.get(id);
+  const prev = nav?.legs[(nav.leg ?? 0) - 1];
+  if (prev?.points[0]) {
+    const origin = prev.points[0];
+    const held = tryHold(origin[0] - start[0], origin[1] - start[1]);
+    if (held) return held;
+  }
+  const fromPose = tryHold(pose.x - start[0], pose.z - start[1]);
+  if (fromPose) return fromPose;
+  for (const [dx, dz] of [
+    [-1, 0],
+    [1, 0],
+    [0, -1],
+    [0, 1],
+  ] as Point[]) {
+    const held = tryHold(dx, dz);
+    if (held) return held;
+  }
+  return undefined;
+}
+
+function wanderDestination(
+  world: NpcWorld,
+  network: PedestrianNetwork,
+  id: string,
+): Point | undefined {
+  const pose = world.poses.get(id),
+    b = world.behavior.get(id);
+  if (!pose || !b) return undefined;
+  const rng = new SeededRandom(`${world.seed}:${id}:order:${b.sequence++}`),
+    start = nearestPedestrianNode(network, pointOf(pose)),
+    at = pointOf(pose);
+  const midBlock: PedestrianNode[] = [],
+    reachable: PedestrianNode[] = [];
+  for (const node of network.nodes.values()) {
+    if (node.component !== start?.component || distance2(node.point, at) <= 0.5) continue;
+    reachable.push(node);
+    if (!isCrossingApproach(network, node.id)) midBlock.push(node);
+  }
+  const options = midBlock.length ? midBlock : reachable;
+  const destination = options[rng.integer(0, Math.max(0, options.length - 1))];
+  if (!destination) return undefined;
+  const jitter: Point = [
+    destination.point[0] + (rng.float() - 0.5) * 0.4,
+    destination.point[1] + (rng.float() - 0.5) * 0.4,
+  ];
+  return network.safe(jitter) ? jitter : destination.point;
+}
+
 function wander(world: NpcWorld, network: PedestrianNetwork, id: string): void {
   const b = world.behavior.get(id),
     pose = world.poses.get(id);
   if (!b || !pose) return;
-  const rng = new SeededRandom(`${world.seed}:${id}:order:${b.sequence++}`);
   if (b.order?.kind === "moveTo" && b.status === "completed") {
+    if (atCrossingApproach(network, pose)) {
+      const next = wanderDestination(world, network, id);
+      if (next) {
+        issueNpcOrder(world, network, id, { kind: "moveTo", point: next }, true);
+        return;
+      }
+    }
+    const rng = new SeededRandom(`${world.seed}:${id}:order:${b.sequence++}`);
     issueNpcOrder(world, network, id, { kind: "wait", seconds: 1 + rng.float() * 2 }, true);
     return;
   }
-  const start = nearestPedestrianNode(network, pointOf(pose));
-  const options = [...network.nodes.values()].filter(
-    (n) => n.component === start?.component && distance2(n.point, pointOf(pose)) > 0.5,
-  );
-  const destination = options[rng.integer(0, Math.max(0, options.length - 1))];
-  if (destination)
-    issueNpcOrder(world, network, id, { kind: "moveTo", point: destination.point }, true);
+  const destination = wanderDestination(world, network, id);
+  if (destination) issueNpcOrder(world, network, id, { kind: "moveTo", point: destination }, true);
   else {
     b.reason = "No reachable destination";
     b.wander = false;
   }
 }
 
-function scheduleAutonomousGreetings(world: NpcWorld): void {
+function scheduleAutonomousGreetings(world: NpcWorld, network: PedestrianNetwork): void {
   const used = new Set<string>();
   for (const id of world.ids) {
     if (used.has(id)) continue;
@@ -674,10 +842,19 @@ function scheduleAutonomousGreetings(world: NpcWorld): void {
       !pose ||
       pose.speed > 0.02 ||
       crossing?.active ||
+      (crossing?.waiting ?? 0) > 0 ||
+      (world.behavior.get(id)?.yieldSeconds ?? 0) > 0.05 ||
       world.tick < social.nextGreetingTick ||
-      (social.greetUntilTick >= 0 && world.tick <= social.greetUntilTick)
+      (social.greetUntilTick >= 0 && world.tick <= social.greetUntilTick) ||
+      atCrossingApproach(network, pose)
     )
       continue;
+    const crowd = world.ids.filter((other) => {
+      if (other === id) return false;
+      const otherPose = world.poses.get(other);
+      return otherPose ? distance2(pointOf(pose), pointOf(otherPose)) <= 0.55 : false;
+    }).length;
+    if (crowd >= 3) continue;
     const partner = world.ids
       .filter((other) => other !== id && !used.has(other))
       .map((other) => ({
@@ -779,7 +956,7 @@ export function tickNpcWorld(
   if (!Number.isFinite(dt) || dt < 0 || dt > SIMULATION_STEP + 1e-9)
     throw new Error("NPC systems require a finite fixed step");
   if (dt === 0) return;
-  scheduleAutonomousGreetings(world);
+  scheduleAutonomousGreetings(world, network);
   const old = new Map(world.poses),
     proposed = new Map<string, NpcPose>();
   const spatial = new Map<string, string[]>();
@@ -796,6 +973,7 @@ export function tickNpcWorld(
         ids.push(...(spatial.get(`${x},${z}`) ?? []));
     return ids;
   };
+  const yielded = new Set<string>();
   for (const id of world.ids) {
     const pose = old.get(id),
       b = world.behavior.get(id),
@@ -855,7 +1033,14 @@ export function tickNpcWorld(
       }
     } else if (!target && (b.status === "active" || cross.active) && leg) {
       const end = leg.points[leg.points.length - 1] as Point;
-      if (distance2(pointOf(pose), end) < 0.0067) {
+      const nextLeg = nav.legs[nav.leg + 1];
+      const arrival =
+        nextLeg?.crossingId && !leg.crossingId
+          ? 0.16
+          : nav.leg >= nav.legs.length - 1
+            ? NPC_GOAL_ARRIVAL
+            : NPC_LEG_ARRIVAL;
+      if (distance2(pointOf(pose), end) < arrival) {
         nav.leg++;
         nav.cursor = 0;
         cross.active = null;
@@ -881,7 +1066,14 @@ export function tickNpcWorld(
             cross.waiting += dt;
             b.reason = "Waiting for a safe crossing and clear exit";
             if (cross.retry <= 0) cross.retry = 0.5;
-            if (cross.waiting >= 10 && nav.destination) {
+            let rerouted = false;
+            if (b.wander && cross.waiting >= YIELD_NEW_DESTINATION_SECONDS) {
+              const next = wanderDestination(world, network, id);
+              if (next) {
+                issueNpcOrder(world, network, id, { kind: "moveTo", point: next }, true);
+                rerouted = true;
+              }
+            } else if (cross.waiting >= 10 && nav.destination) {
               nav.penalized.add(leg.crossingId);
               issueNpcOrder(
                 world,
@@ -890,10 +1082,29 @@ export function tickNpcWorld(
                 { kind: "moveTo", point: nav.destination },
                 b.wander,
               );
+              rerouted = true;
+            }
+            if (rerouted) {
+              leg = nav.legs[nav.leg];
+              admitted = Boolean(leg && !leg.crossingId);
+              if (leg?.crossingId && !cross.active) {
+                admitted = canEnterNpcCrossing(world, id, leg, traffic);
+                if (admitted) {
+                  cross.active = leg.crossingId;
+                  cross.waiting = 0;
+                }
+              }
+            }
+            if (!admitted && leg?.crossingId) {
+              const start = leg.points[0];
+              const hold = start
+                ? crossingQueueHold(world, network, id, pose, start, leg.crossingId)
+                : undefined;
+              if (hold) target = hold;
             }
           }
         }
-        if (admitted) {
+        if (admitted && leg) {
           while (
             nav.cursor < leg.points.length - 1 &&
             distance2(pointOf(pose), leg.points[nav.cursor] as Point) < 0.12
@@ -920,6 +1131,7 @@ export function tickNpcWorld(
           l = n?.legs[n.leg];
         return l ? nearLeg(next, l, NPC_RADIUS * 2 + 0.04) : false;
       });
+      if (cross.waiting > 0 && neighbors(pose).some((other) => other !== id)) yielded.add(id);
       proposed.set(
         id,
         !reserved && network.visible(pointOf(pose), next)
@@ -961,56 +1173,105 @@ export function tickNpcWorld(
         : control.mode === "manual" && control.run
           ? body.runSpeed
           : body.speed;
-    const desiredSpeed = Math.abs(turn) > 0.9 ? 0 : Math.min(requestedSpeed, goalDistance * 2);
+    const approachCap = cross.waiting > 0 && !cross.active ? remaining * 2 : goalDistance * 2;
+    const desiredSpeed =
+      Math.abs(turn) > 0.9
+        ? Math.min(NPC_TURN_CREEP, requestedSpeed, approachCap)
+        : Math.min(requestedSpeed, approachCap);
     const speed = Math.max(
       0,
       Math.min(pose.speed + 0.8 * dt, Math.max(pose.speed - 0.8 * dt, desiredSpeed)),
     );
     let accepted: NpcPose | undefined;
-    for (const angle of cross.active ? [0] : [0, -0.3, 0.3, -0.6, 0.6]) {
+    let pedestrianBlock = false;
+    let boundaryBlock = false;
+    for (const angle of cross.active ? [0] : [0, -0.3, 0.3, -0.6, 0.6, -0.9, 0.9]) {
       const heading =
           pose.yaw +
           Math.max(-Math.PI * dt, Math.min(Math.PI * dt, wrap(desired + angle - pose.yaw))),
         vx = Math.sin(heading) * speed,
         vz = Math.cos(heading) * speed;
       const next: Point = [pose.x + vx * dt, pose.z + vz * dt];
-      if (!network.visible(pointOf(pose), next, !!cross.active)) continue;
-      if (cross.active && leg && !nearLeg(next, leg, 0.16)) continue;
-      let blocked = false;
-      for (const other of nearby) {
-        const op = old.get(other);
-        if (!op) continue;
-        const relative: Point = [pose.x - op.x, pose.z - op.z];
-        const future: Point = [
-          relative[0] + (vx - Math.sin(op.yaw) * op.speed) * 0.5,
-          relative[1] + (vz - Math.cos(op.yaw) * op.speed) * 0.5,
-        ];
-        if (segmentDistance([0, 0], relative, future) < body.radius * 2 + 0.015) {
-          blocked = true;
-          break;
-        }
-        const oc = world.crossing.get(other),
-          on = world.navigation.get(other),
-          reservedLeg = on?.legs[on.leg];
-        if (
-          !cross.active &&
-          oc?.active &&
-          reservedLeg &&
-          nearLeg(next, reservedLeg, NPC_RADIUS * 2 + 0.04)
-        ) {
-          blocked = true;
-          break;
-        }
+      const result = npcStepCandidate(
+        world,
+        network,
+        pose,
+        next,
+        heading,
+        speed,
+        vx,
+        vz,
+        nearby,
+        old,
+        !!cross.active,
+        leg,
+        body.radius,
+      );
+      if (result === "boundary") {
+        boundaryBlock = true;
+        continue;
       }
-      if (!blocked) {
-        accepted = { x: next[0], z: next[1], y: network.height(next), yaw: heading, speed };
+      if (result === "pedestrian") {
+        pedestrianBlock = true;
+        continue;
+      }
+      accepted = result;
+      break;
+    }
+    if (!accepted && !cross.active) {
+      const stepSpeed = speed > 1e-6 ? speed : requestedSpeed;
+      const rightX = Math.cos(desired),
+        rightZ = -Math.sin(desired);
+      for (const sign of [1, -1]) {
+        const probe: Point = [
+          pose.x + rightX * NPC_SIDESTEP * sign,
+          pose.z + rightZ * NPC_SIDESTEP * sign,
+        ];
+        if (!network.visible(pointOf(pose), probe)) {
+          boundaryBlock = true;
+          continue;
+        }
+        const vx = rightX * stepSpeed * sign,
+          vz = rightZ * stepSpeed * sign;
+        const next: Point = [pose.x + vx * dt, pose.z + vz * dt];
+        const result = npcStepCandidate(
+          world,
+          network,
+          pose,
+          next,
+          yaw,
+          stepSpeed,
+          vx,
+          vz,
+          nearby,
+          old,
+          false,
+          undefined,
+          body.radius,
+        );
+        if (result === "boundary") {
+          boundaryBlock = true;
+          continue;
+        }
+        if (result === "pedestrian") {
+          pedestrianBlock = true;
+          continue;
+        }
+        accepted = result;
         break;
       }
     }
     proposed.set(id, accepted ?? { ...pose, yaw, speed: 0 });
-    if (!accepted) b.reason = "Yielding to another pedestrian or boundary";
+    if (!accepted) {
+      yielded.add(id);
+      b.reason = pedestrianBlock
+        ? "Yielding to another pedestrian"
+        : boundaryBlock
+          ? "Yielding to a boundary"
+          : "Yielding to another pedestrian";
+    }
   }
-  // Reject both colliding proposals, then recheck against stopped agents until stable.
+  // Stop only the lower-priority mover, then recheck against stopped agents until stable.
   let changed = true;
   while (changed) {
     changed = false;
@@ -1020,26 +1281,77 @@ export function tickNpcWorld(
       if (!a || !ap) continue;
       for (const other of neighbors(a)) {
         if (other <= id) continue;
-        const b = old.get(other),
+        const otherPose = old.get(other),
           bp = proposed.get(other);
-        if (!b || !bp) continue;
+        if (!otherPose || !bp) continue;
         if (
-          segmentDistance([0, 0], [a.x - b.x, a.z - b.z], [ap.x - bp.x, ap.z - bp.z]) >=
+          segmentDistance(
+            [0, 0],
+            [a.x - otherPose.x, a.z - otherPose.z],
+            [ap.x - bp.x, ap.z - bp.z],
+          ) >=
           NPC_RADIUS * 2 - 1e-8
         )
           continue;
-        for (const who of [id, other]) {
+        const loser = npcMoverHasPriority(world, id, other) ? other : id;
+        const winner = loser === id ? other : id;
+        const stop = (who: string) => {
           const before = old.get(who),
             after = proposed.get(who);
-          if (before && after && distance2(pointOf(before), pointOf(after)) > 0) {
-            proposed.set(who, { ...before, speed: 0 });
-            changed = true;
-          }
-        }
+          if (!before || !after || distance2(pointOf(before), pointOf(after)) <= 0) return false;
+          proposed.set(who, { ...before, speed: 0 });
+          yielded.add(who);
+          const lost = world.behavior.get(who);
+          if (lost) lost.reason = "Yielding to another pedestrian";
+          return true;
+        };
+        if (stop(loser) || stop(winner)) changed = true;
       }
     }
   }
   world.poses = proposed;
+  for (const id of world.ids) {
+    const b = world.behavior.get(id),
+      nav = world.navigation.get(id),
+      cross = world.crossing.get(id),
+      control = world.control.get(id);
+    if (!b || !nav || !cross || !control) continue;
+    if (!yielded.has(id)) {
+      b.yieldSeconds = 0;
+      continue;
+    }
+    b.yieldSeconds += dt;
+    const hops = Math.floor(b.yieldSeconds / YIELD_REPATH_SECONDS);
+    const previousHops = Math.floor((b.yieldSeconds - dt) / YIELD_REPATH_SECONDS);
+    if (!cross.active) {
+      const current = nav.legs[nav.leg],
+        poseNow = world.poses.get(id);
+      const skipHops = Math.floor(b.yieldSeconds / 0.4),
+        previousSkip = Math.floor((b.yieldSeconds - dt) / 0.4);
+      if (current && !current.crossingId && poseNow && skipHops > previousSkip) {
+        while (
+          nav.cursor < current.points.length - 1 &&
+          distance2(pointOf(poseNow), current.points[nav.cursor] as Point) < 0.25
+        )
+          nav.cursor++;
+      }
+    }
+    if (
+      hops > previousHops &&
+      control.mode !== "manual" &&
+      !cross.active &&
+      cross.waiting <= 0 &&
+      b.order?.kind === "moveTo"
+    ) {
+      if (hops >= 2 && b.wander) {
+        const next = wanderDestination(world, network, id);
+        if (next) issueNpcOrder(world, network, id, { kind: "moveTo", point: next }, true);
+        b.yieldSeconds = 0;
+      } else if (nav.destination) {
+        issueNpcOrder(world, network, id, { kind: "moveTo", point: nav.destination }, b.wander);
+      }
+    }
+  }
   world.tick++;
   updateAnimationDirectives(world);
 }

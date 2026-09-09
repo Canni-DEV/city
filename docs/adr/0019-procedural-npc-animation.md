@@ -8,7 +8,7 @@ The standalone `procedural-animations/` project is absorbed as the workspace pac
 
 Authority is split explicitly. `@city/core` remains authoritative for NPC position, navigation, collision avoidance, swept separation, valid-mask/pedestrian-surface containment, safe crossing admission, fixed-tick behavior, and deterministic orchestration. `@city/procedural-animation` poses a loaded rig from actual core motion and may emit a bounded root-motion request. Core accepts, clips, or rejects that request against the same constraints; animation never commits world movement independently. Web owns transient actor registration, input, selection highlighting, interpolation, and camera composition.
 
-NPC selection and manual control are runtime diagnostics, not M4 object editing. They never create `CityEntity` records, editor commands, undo history, autosave state, migrations, or hash input. Manual and autonomous actors use the same core mover. The follow camera is a perspective orbit-follow camera targeting the selected actor, not a head-mounted camera.
+NPC selection and manual control are runtime diagnostics, not M4 object editing. They never create `CityEntity` records, editor commands, undo history, autosave state, migrations, or hash input. Manual and autonomous actors use the same core mover. The follow camera is a locked third-person camera behind the selected actor (M3.8.1), not a head-mounted camera and not an unconstrained orbit-follow.
 
 ## Consequences
 

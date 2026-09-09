@@ -6,6 +6,7 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 
 ### Added
 
+- M3.8.1: locked third-person camera while controlling an NPC (behind yaw, right-drag/Q/E look that springs back, wheel distance), city orbit `maxZoom` 96, and deterministic pedestrian yield recovery (sidestep, mover priority, 1.5 s repath, 3 s new destination, corner/crossing unjam).
 - M3.8: procedural animation for every runtime NPC, deterministic idle/walk/run/greet orchestration, safe manual NPC control, stable-ID/click selection, an orbitable NPC-follow camera, and a development-only animation lab.
 - Workspace package `@city/procedural-animation` with a non-physics interpolated `AnimatedCharacter` facade and retained optional `/physics` entry; catalog character assets remain canonical under `packages/assets/generated/characters`.
 - Owner recorded a successful manual review of M3.8 selection, Control NPC, follow camera, walking gait, and the animation lab.
@@ -22,7 +23,7 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 
 ### Fixed
 
-- Animation lab no longer crashes in development Strict Mode after disposing a procedural actor that the canvas still updates; the preview uses City's renderer path and keeps gait sliders from remounting the character.
+- M3.8.1 pedestrian ticks no longer scan the full hybrid graph (with `visible`) on every greeting check; nearest-node search tests visibility from closest to farthest.
 - Controlling an NPC no longer loses the WebGPU/WebGL context: `npcFollow` owns a perspective camera framed off the hip before OrbitControls construct, instead of orbiting the city orthographic camera at the origin.
 - City NPC gait matches the animation lab: actor roots are posed in scene space (map minus half, plus sidewalk lift) so procedural foot IK is not parented 48 cells away from `root.position`.
 - Runtime vehicles instance the child wheel meshes already present in each Kenney `cars:*` GLB (the same nodes `#/dev/assets` already showed). Wheels stay static; `vehicleBounds` still excludes them.
