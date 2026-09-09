@@ -1,10 +1,12 @@
-import { type AssetCatalogEntry, agentFootLift, assetById, runtimeAssetUrl } from "@city/assets";
-import { createAnimatedCharacter } from "@city/procedural-animation";
+import { type AssetCatalogEntry, assetById, runtimeAssetUrl } from "@city/assets";
+import type { CreateAnimatedCharacterOptions } from "@city/procedural-animation";
 import { useGLTF } from "@react-three/drei";
 import { useFrame, useLoader } from "@react-three/fiber";
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useRef } from "react";
 import * as THREE from "three/webgpu";
+import { npcScenePose } from "./npc-visual";
 import type { SimulationRuntime } from "./simulation-runtime";
+import { useAnimatedCharacter } from "./use-animated-character";
 
 function skinUrl(entry: AssetCatalogEntry, skin: string, baseUrl: string): string {
   const path =
@@ -26,14 +28,14 @@ function AgentAvatar({
   id,
   runtime,
   entry,
-  half,
+  mapSize,
   selected,
   onSelect,
 }: {
   id: string;
   runtime: SimulationRuntime;
   entry: AssetCatalogEntry;
-  half: number;
+  mapSize: number;
   selected: boolean;
   onSelect: (id: string) => void;
 }) {
@@ -45,56 +47,58 @@ function AgentAvatar({
   const skin = runtime.world.appearance.get(id)?.skin ?? "skaterMaleA";
   const texture = useLoader(THREE.TextureLoader, skinUrl(entry, skin, import.meta.env.BASE_URL));
   const height = entry.dimensions[1] * (entry.uniformScale ?? 1);
-  const actor = useMemo(
-    () =>
-      createAnimatedCharacter({
-        gltf: { scene, animations } as Parameters<typeof createAnimatedCharacter>[0]["gltf"],
-        texture,
-        height,
-        seed: numericNpcSeed(runtime.world.seed, id),
-        animation: {
-          walkSpeed: runtime.world.orchestration.walkSpeed,
-          runSpeed: runtime.world.orchestration.runSpeed,
-        },
-      }),
-    [animations, height, id, runtime, scene, texture],
+  const locomotion = runtime.world.locomotion.get(id);
+  const { actor, actorRef } = useAnimatedCharacter(
+    () => ({
+      gltf: { scene, animations } as CreateAnimatedCharacterOptions["gltf"],
+      texture,
+      height,
+      seed: numericNpcSeed(runtime.world.seed, id),
+      animation: {
+        walkSpeed: locomotion?.speed ?? runtime.world.orchestration.walkSpeed,
+        runSpeed: locomotion?.runSpeed ?? runtime.world.orchestration.runSpeed,
+      },
+    }),
+    [animations, height, id, mapSize, runtime, scene, texture],
+    (created) => {
+      created.object.traverse((node) => {
+        const mesh = node as THREE.Mesh;
+        if (!mesh.isMesh) return;
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+      });
+      runtime.animationActors.set(id, created);
+      const pose = runtime.world.poses.get(id);
+      if (pose) {
+        created.fixedUpdate(1 / 60, {
+          position: npcScenePose(pose, mapSize),
+          facingYaw: pose.yaw,
+          velocity: { x: 0, y: 0, z: 0 },
+          grounded: true,
+        });
+      }
+      return () => {
+        if (runtime.animationActors.get(id) === created) runtime.animationActors.delete(id);
+        runtime.animationSequences.delete(id);
+        runtime.motionRequests.delete(id);
+      };
+    },
   );
 
-  useLayoutEffect(() => {
-    actor.object.traverse((node) => {
-      const mesh = node as THREE.Mesh;
-      if (!mesh.isMesh) return;
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-    });
-    runtime.animationActors.set(id, actor);
-    const pose = runtime.world.poses.get(id);
-    if (pose) {
-      actor.fixedUpdate(1 / 60, {
-        position: { x: pose.x, y: pose.y, z: pose.z },
-        facingYaw: pose.yaw,
-        velocity: { x: 0, y: 0, z: 0 },
-        grounded: true,
-      });
-    }
-    return () => {
-      if (runtime.animationActors.get(id) === actor) runtime.animationActors.delete(id);
-      runtime.animationSequences.delete(id);
-      runtime.motionRequests.delete(id);
-      actor.dispose();
-    };
-  }, [actor, id, runtime]);
-
   useFrame(() => {
-    actor.updateVisual(runtime.animationAlpha);
+    const current = actorRef.current;
+    if (!current) return;
+    current.updateVisual(runtime.animationAlpha);
     const pose = runtime.display.get(id) ?? runtime.world.poses.get(id);
     if (!pose) return;
-    pick.current?.position.set(pose.x, pose.y + height / 2, pose.z);
-    marker.current?.position.set(pose.x, pose.y + 0.015, pose.z);
-  });
+    const visual = npcScenePose(pose, mapSize);
+    pick.current?.position.set(visual.x, visual.y + height / 2, visual.z);
+    marker.current?.position.set(visual.x, visual.y + 0.015, visual.z);
+  }, -1);
 
+  if (!actor) return null;
   return (
-    <group position={[-half, agentFootLift(), -half]}>
+    <>
       <primitive object={actor.object} />
       {/* biome-ignore lint/a11y/noStaticElementInteractions: WebGL pick geometry has an equivalent accessible selector. */}
       <mesh
@@ -113,7 +117,7 @@ function AgentAvatar({
           <meshBasicMaterial color="#d3ff99" transparent opacity={0.95} depthTest={false} />
         </mesh>
       )}
-    </group>
+    </>
   );
 }
 
@@ -138,7 +142,7 @@ export function AgentLayer({
           id={id}
           runtime={runtime}
           entry={body}
-          half={runtime.city.map.size / 2}
+          mapSize={runtime.city.map.size}
           selected={selected === id}
           onSelect={onSelect}
         />

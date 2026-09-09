@@ -42,7 +42,7 @@ M3.7.2 evidence uses generator `0.8.1`: default CI proves TST-001/006/008/009/01
 
 M3.7.3 evidence uses generator `0.9.0`: default CI proves TST-001/006/008/009/010/011/012 and generate smokes; the 200-city TST-002/003 occupancy census runs with `pnpm test:batch`. Yards and courtyards are composed, leftover decoration skips suburban/urban cells, pedestrian connectivity still holds, and golden hashes include the new entities. Old `0.8.1` snapshots remain loadable without silent regeneration.
 
-M3.8 evidence runs `pnpm check`, `pnpm typecheck`, `pnpm test`, `pnpm build`, and `git diff --check`; batch generation is unnecessary because persisted generation/occupancy/topology do not change. Owner QA uses Balanced 96×96 `green-crossroads` at 12+12 and 64+64 NPC/vehicles in Chrome and Edge, 1280×720 and 1920×1080, WebGPU and forced WebGL 2. Record selection/control/camera/crossing/accessibility results, FPS/draw calls, and the animation-lab 50-NPC p95 (review-machine target ≤4 ms, not a universal guarantee).
+M3.8 evidence runs `pnpm check`, `pnpm typecheck`, `pnpm test`, `pnpm build`, and `git diff --check`; batch generation is unnecessary because persisted generation/occupancy/topology do not change. Owner QA uses Balanced 96×96 `green-crossroads` at 12+12 and 64+64 NPC/vehicles in Chrome and Edge, 1280×720 and 1920×1080, WebGPU and forced WebGL 2. Record selection/control/camera/crossing/accessibility results, FPS/draw calls, and the animation-lab 50-NPC p95 (review-machine target ≤4 ms, not a universal guarantee). Owner recorded a successful manual review of this delivery (selection, Control NPC, follow camera, walking gait, and animation lab). Numeric FPS/draw-call/p95 notes were not attached to the branch.
 
 ## Manual QA per milestone
 

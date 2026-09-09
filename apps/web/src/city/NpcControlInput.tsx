@@ -8,7 +8,7 @@ import type { SimulationRuntime } from "./simulation-runtime";
 const UP = new THREE.Vector3(0, 1, 0);
 
 export function NpcControlInput({ runtime, id }: { runtime: SimulationRuntime; id: string }) {
-  const camera = useThree((state) => state.camera);
+  const get = useThree((state) => state.get);
   const keys = useRef(new Set<string>());
   const forward = useRef(new THREE.Vector3());
   const right = useRef(new THREE.Vector3());
@@ -51,6 +51,8 @@ export function NpcControlInput({ runtime, id }: { runtime: SimulationRuntime; i
   }, [id, runtime]);
 
   useFrame(() => {
+    const camera = get().camera;
+    if (![camera.position.x, camera.position.y, camera.position.z].every(Number.isFinite)) return;
     camera.getWorldDirection(forward.current);
     forward.current.y = 0;
     if (forward.current.lengthSq() < 1e-6) forward.current.set(0, 0, 1);

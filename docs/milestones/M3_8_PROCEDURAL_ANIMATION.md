@@ -32,4 +32,4 @@ Run `pnpm check`, `pnpm typecheck`, `pnpm test`, `pnpm build`, and `git diff --c
 
 Owner QA: generate Balanced 96×96 `green-crossroads` with 12 pedestrians/12 vehicles, then 64/64. In Chrome and Edge at 1280×720 and 1920×1080, exercise WebGPU and forced WebGL 2; verify all NPCs select, Control is explicit, animation transitions/crossings are safe, Tab/F/Escape are unambiguous, pause/step stays synchronized, and regeneration leaves no stale actor. Record FPS/draw calls at 12 and 64 NPCs. Run the animation-lab 50-NPC benchmark and record p95, targeting ≤4 ms on the review machine without treating that hardware result as universal.
 
-Attach automated output and owner browser/performance notes to review. Stop for review before M4.
+Attach automated output and owner browser/performance notes to review. Owner recorded a successful manual review of selection, Control NPC, follow camera, walking gait, and the animation lab on this delivery. Numeric FPS/draw-call/p95 measurements were not attached to the branch. Stop for review before M4.

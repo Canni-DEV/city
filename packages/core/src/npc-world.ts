@@ -21,6 +21,7 @@ import {
 export const NPC_SPEED = 0.33;
 export const NPC_RUN_SPEED = 0.75;
 export const SIMULATION_STEP = 1 / 60;
+export const NPC_GREET_HOLD = 2.4;
 export type NpcOrder = { kind: "moveTo"; point: Point } | { kind: "wait"; seconds: number };
 export type NpcOrderStatus = "pending" | "active" | "completed" | "cancelled" | "failed";
 export interface NpcPose {
@@ -89,6 +90,7 @@ export const DEFAULT_NPC_ORCHESTRATION: Readonly<NpcOrchestrationConfig> = {
 };
 export interface NpcSocialState {
   nextGreetingTick: number;
+  greetUntilTick: number;
 }
 export interface NpcMotionRequest {
   translation: { x: number; y: number; z: number };
@@ -266,6 +268,7 @@ export function resizeNpcPopulation(
     });
     world.social.set(id, {
       nextGreetingTick: greetingTick(world, id, 0),
+      greetUntilTick: -1,
     });
   }
 }
@@ -274,6 +277,17 @@ function greetingTick(world: NpcWorld, id: string, sequence: number): number {
   const rng = new SeededRandom(`${world.seed}:${id}:greet:${sequence}`);
   const { greetingCooldownMin: min, greetingCooldownMax: max } = world.orchestration;
   return world.tick + Math.round((min + rng.float() * (max - min)) / SIMULATION_STEP);
+}
+
+function beginGreeting(world: NpcWorld, id: string, targetId: string | null): void {
+  const control = world.control.get(id),
+    directive = world.animation.get(id),
+    social = world.social.get(id);
+  if (!control || !directive || !social) return;
+  control.greetSequence++;
+  directive.attentionTargetId = targetId;
+  social.nextGreetingTick = greetingTick(world, id, control.greetSequence);
+  social.greetUntilTick = world.tick + Math.round(NPC_GREET_HOLD / SIMULATION_STEP);
 }
 
 export function takeNpcControl(world: NpcWorld, id: string): boolean {
@@ -326,7 +340,7 @@ export function stopNpc(world: NpcWorld, id: string): boolean {
   control.direction = [0, 0];
   control.run = false;
   control.stopRequested = true;
-  cancelNpcOrder(world, id);
+  if (!world.crossing.get(id)?.active) cancelNpcOrder(world, id);
   return true;
 }
 
@@ -337,15 +351,36 @@ export function greetNpc(world: NpcWorld, id: string): boolean {
   if (!directive || !control || !pose || world.crossing.get(id)?.active) return false;
   const target = world.ids
     .filter((other) => other !== id)
-    .map((other) => ({ id: other, pose: world.poses.get(other) }))
-    .filter((candidate): candidate is { id: string; pose: NpcPose } => Boolean(candidate.pose))
+    .map((other) => ({
+      id: other,
+      pose: world.poses.get(other),
+      control: world.control.get(other),
+      crossing: world.crossing.get(other),
+    }))
+    .filter(
+      (
+        candidate,
+      ): candidate is {
+        id: string;
+        pose: NpcPose;
+        control: NpcControlState;
+        crossing: NpcCrossing;
+      } => Boolean(candidate.pose && candidate.control && candidate.crossing),
+    )
     .sort(
       (a, b) =>
         distance2(pointOf(pose), pointOf(a.pose)) - distance2(pointOf(pose), pointOf(b.pose)) ||
         a.id.localeCompare(b.id),
     )[0];
-  control.greetSequence++;
-  directive.attentionTargetId = target?.id ?? null;
+  beginGreeting(world, id, target?.id ?? null);
+  if (
+    target &&
+    target.control.mode === "autonomous" &&
+    !target.crossing.active &&
+    target.pose.speed <= 0.02 &&
+    distance2(pointOf(pose), pointOf(target.pose)) <= world.orchestration.greetingRadius
+  )
+    beginGreeting(world, target.id, id);
   return true;
 }
 
@@ -639,7 +674,8 @@ function scheduleAutonomousGreetings(world: NpcWorld): void {
       !pose ||
       pose.speed > 0.02 ||
       crossing?.active ||
-      world.tick < social.nextGreetingTick
+      world.tick < social.nextGreetingTick ||
+      (social.greetUntilTick >= 0 && world.tick <= social.greetUntilTick)
     )
       continue;
     const partner = world.ids
@@ -670,25 +706,14 @@ function scheduleAutonomousGreetings(world: NpcWorld): void {
     if (!partner) continue;
     used.add(id);
     used.add(partner.id);
-    for (const [who, target] of [
-      [id, partner.id],
-      [partner.id, id],
-    ] as const) {
-      const c = world.control.get(who),
-        directive = world.animation.get(who),
-        state = world.social.get(who);
-      if (!c || !directive || !state) continue;
-      c.greetSequence++;
-      directive.attentionTargetId = target;
-      state.nextGreetingTick = greetingTick(world, who, c.greetSequence);
-    }
+    beginGreeting(world, id, partner.id);
+    beginGreeting(world, partner.id, id);
   }
 }
 
 function manualCrossingLeg(
   world: NpcWorld,
   network: PedestrianNetwork,
-  id: string,
   pose: NpcPose,
   direction: Point,
 ): NpcLeg | null {
@@ -718,7 +743,8 @@ function updateAnimationDirectives(world: NpcWorld): void {
     const pose = world.poses.get(id),
       control = world.control.get(id),
       crossing = world.crossing.get(id),
-      directive = world.animation.get(id);
+      directive = world.animation.get(id),
+      social = world.social.get(id);
     if (!pose || !control || !directive) continue;
     if (control.greetSequence > directive.sequence) {
       directive.sequence = control.greetSequence;
@@ -726,12 +752,18 @@ function updateAnimationDirectives(world: NpcWorld): void {
       directive.beat = "wave";
       continue;
     }
+    if (social && social.greetUntilTick >= 0 && world.tick <= social.greetUntilTick) {
+      directive.phase = "greet";
+      directive.beat = null;
+      continue;
+    }
     directive.beat = null;
     directive.attentionTargetId = null;
-    directive.phase =
-      pose.speed <= 0.015
+    directive.phase = crossing?.active
+      ? "run"
+      : pose.speed <= 0.015
         ? "idle"
-        : crossing?.active || (control.mode === "manual" && control.run)
+        : control.mode === "manual" && control.run
           ? "run"
           : "walk";
   }
@@ -780,7 +812,7 @@ export function tickNpcWorld(
     if (control.mode === "manual" && !cross.active) {
       b.wander = false;
       if (!control.stopRequested && Math.hypot(...control.direction) > 1e-9) {
-        const crossingLeg = manualCrossingLeg(world, network, id, pose, control.direction);
+        const crossingLeg = manualCrossingLeg(world, network, pose, control.direction);
         if (crossingLeg) {
           nav.legs = [crossingLeg];
           nav.leg = 0;

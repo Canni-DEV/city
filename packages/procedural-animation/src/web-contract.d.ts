@@ -1,4 +1,4 @@
-import type { Object3D, Texture } from "three";
+import type { Object3D, Texture, Vector3 } from "three";
 import type { GLTF } from "three/addons/loaders/GLTFLoader.js";
 
 export interface Vec3 {
@@ -52,13 +52,16 @@ export interface AnimatedCharacter {
   readonly motionRequest: MotionRequest | null;
   fixedUpdate(dt: number, motion: MotionSample, intent?: AnimationIntent): void;
   playBeat(beat: Beat): BeatHandle;
+  setParameters(parameters: AnimationOptions): void;
+  hipWorldPosition(target: Vector3): Vector3;
   updateVisual(alpha: number): void;
   dispose(): void;
 }
-export function createAnimatedCharacter(options: {
+export interface CreateAnimatedCharacterOptions {
   gltf: GLTF;
   texture?: Texture;
   height: number;
   seed: number;
   animation?: AnimationOptions;
-}): AnimatedCharacter;
+}
+export function createAnimatedCharacter(options: CreateAnimatedCharacterOptions): AnimatedCharacter;

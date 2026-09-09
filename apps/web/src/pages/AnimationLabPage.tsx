@@ -1,10 +1,20 @@
 import { assetById, runtimeAssetUrl } from "@city/assets";
-import { type Beat, createAnimatedCharacter } from "@city/procedural-animation";
-import { OrbitControls, PerspectiveCamera, useGLTF } from "@react-three/drei";
-import { Canvas, useFrame, useLoader } from "@react-three/fiber";
+import type { Beat, CreateAnimatedCharacterOptions } from "@city/procedural-animation";
+import { OrbitControls, useGLTF } from "@react-three/drei";
+import { Canvas, type RootState, useFrame, useLoader } from "@react-three/fiber";
 import { Activity, Download, RotateCcw } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import * as THREE from "three/webgpu";
+import { useAnimatedCharacter } from "../city/use-animated-character";
+import { createCompatibleRenderer, syncRendererLayout } from "../rendering/renderer";
 
 interface LabProfile {
   style: number;
@@ -13,12 +23,27 @@ interface LabProfile {
   footLift: number;
 }
 
+const DEFAULT_PROFILE: LabProfile = {
+  style: 0.65,
+  stepLength: 0.72,
+  cadence: 3.2,
+  footLift: 0.1,
+};
+
 const labEntry = (() => {
   const entry = assetById.get("protagonists:character-medium");
   if (!entry) throw new Error("Missing protagonists:character-medium catalog entry");
   return entry;
 })();
 const labActorIds = Array.from({ length: 50 }, (_, index) => `lab-npc-${index}`);
+const labSkins = labEntry.texturePaths.map((path) => ({
+  path,
+  label:
+    path
+      .split("/")
+      .at(-1)
+      ?.replace(/\.png$/i, "") ?? path,
+}));
 
 function LabCharacter({
   index,
@@ -28,6 +53,8 @@ function LabCharacter({
   beat,
   profile,
   debug,
+  skinPath,
+  resetSequence,
   onSample,
 }: {
   index: number;
@@ -37,6 +64,8 @@ function LabCharacter({
   beat: { sequence: number; value: Beat } | null;
   profile: LabProfile;
   debug: boolean;
+  skinPath: string;
+  resetSequence: number;
   onSample?: (milliseconds: number) => void;
 }) {
   const { scene, animations } = useGLTF(
@@ -44,42 +73,59 @@ function LabCharacter({
   );
   const texture = useLoader(
     THREE.TextureLoader,
-    runtimeAssetUrl(
-      labEntry.texturePaths[index % labEntry.texturePaths.length] ?? "",
-      import.meta.env.BASE_URL,
-    ),
-  );
-  const actor = useMemo(
-    () =>
-      createAnimatedCharacter({
-        gltf: { scene, animations } as Parameters<typeof createAnimatedCharacter>[0]["gltf"],
-        texture,
-        height: 1.8,
-        seed: index + 1,
-        animation: { ...profile, walkSpeed: 1.5, runSpeed: 4.5 },
-      }),
-    [animations, index, profile, scene, texture],
+    runtimeAssetUrl(skinPath, import.meta.env.BASE_URL),
   );
   const time = useRef(0);
   const lastStep = useRef(stepSequence);
   const lastBeat = useRef(0);
-  const helper = useMemo(() => new THREE.SkeletonHelper(actor.object), [actor]);
+  const { actor, actorRef } = useAnimatedCharacter(
+    () => ({
+      gltf: { scene, animations } as CreateAnimatedCharacterOptions["gltf"],
+      texture,
+      height: 1.8,
+      seed: index + 1,
+      animation: {
+        style: profile.style,
+        stepLength: profile.stepLength,
+        cadence: profile.cadence,
+        footLift: profile.footLift,
+        walkSpeed: 1.5,
+        runSpeed: 4.5,
+      },
+    }),
+    [animations, index, resetSequence, scene, texture],
+    () => {
+      time.current = 0;
+      lastBeat.current = 0;
+      return () => {};
+    },
+  );
+  useLayoutEffect(() => {
+    actorRef.current?.setParameters({
+      style: profile.style,
+      stepLength: profile.stepLength,
+      cadence: profile.cadence,
+      footLift: profile.footLift,
+    });
+  }, [actorRef, profile]);
 
-  useEffect(() => {
-    if (beat && index === 0 && beat.sequence !== lastBeat.current) {
-      actor.playBeat(beat.value);
-      lastBeat.current = beat.sequence;
-    }
-  }, [actor, beat, index]);
+  const helper = useMemo(() => (actor ? new THREE.SkeletonHelper(actor.object) : null), [actor]);
   useEffect(
     () => () => {
-      helper.dispose();
-      actor.dispose();
+      helper?.dispose();
     },
-    [actor, helper],
+    [helper],
   );
+  useEffect(() => {
+    const current = actorRef.current;
+    if (!current || !beat || index !== 0 || beat.sequence === lastBeat.current) return;
+    current.playBeat(beat.value);
+    lastBeat.current = beat.sequence;
+  }, [actorRef, beat, index]);
 
   useFrame((_, delta) => {
+    const current = actorRef.current;
+    if (!current) return;
     const stepping = lastStep.current !== stepSequence;
     lastStep.current = stepSequence;
     if (paused && !stepping) return;
@@ -94,7 +140,7 @@ function LabCharacter({
       phase = time.current * (0.35 + index * 0.003),
       x = index === 0 ? 0 : baseX + Math.sin(phase) * 0.35,
       z = index === 0 ? time.current * moving : baseZ + Math.cos(phase) * 0.35;
-    actor.fixedUpdate(
+    current.fixedUpdate(
       dt,
       {
         position: { x, y: 0, z },
@@ -107,15 +153,16 @@ function LabCharacter({
       },
       index === 0 ? { attention: { target: { x: 2, y: 1.5, z: z + 2 } } } : {},
     );
-    actor.updateVisual(1);
+    current.updateVisual(1);
     onSample?.(performance.now() - started);
   });
 
-  helper.visible = debug;
+  if (!actor) return null;
+  if (helper) helper.visible = debug;
   return (
     <>
       <primitive object={actor.object} />
-      <primitive object={helper} />
+      {helper ? <primitive object={helper} /> : null}
     </>
   );
 }
@@ -124,15 +171,12 @@ export function AnimationLabPage() {
   const [speed, setSpeed] = useState(1.5);
   const [paused, setPaused] = useState(false);
   const [stepSequence, setStepSequence] = useState(0);
+  const [resetSequence, setResetSequence] = useState(0);
   const [beat, setBeat] = useState<{ sequence: number; value: Beat } | null>(null);
   const [debug, setDebug] = useState(false);
   const [crowd, setCrowd] = useState(false);
-  const [profile, setProfile] = useState<LabProfile>({
-    style: 0.65,
-    stepLength: 0.72,
-    cadence: 3.2,
-    footLift: 0.1,
-  });
+  const [skinIndex, setSkinIndex] = useState(0);
+  const [profile, setProfile] = useState<LabProfile>(DEFAULT_PROFILE);
   const samples = useRef<number[]>([]);
   const [p95, setP95] = useState(0);
   useEffect(() => {
@@ -161,12 +205,25 @@ export function AnimationLabPage() {
     anchor.click();
     URL.revokeObjectURL(url);
   };
+  const onCreated = useCallback((state: RootState) => {
+    syncRendererLayout(state.gl.domElement, state.setSize);
+  }, []);
 
   return (
     <div className="animation-lab">
       <aside className="animation-lab-panel">
         <p className="eyebrow">Development</p>
         <h1>Animation lab</h1>
+        <label>
+          Skin
+          <select value={skinIndex} onChange={(event) => setSkinIndex(Number(event.target.value))}>
+            {labSkins.map((skin, index) => (
+              <option key={skin.path} value={index}>
+                {skin.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <label>
           Speed: {speed.toFixed(2)} m/s
           <input
@@ -239,8 +296,12 @@ export function AnimationLabPage() {
             type="button"
             className="city-button"
             onClick={() => {
-              setProfile({ style: 0.65, stepLength: 0.72, cadence: 3.2, footLift: 0.1 });
+              setProfile({ ...DEFAULT_PROFILE });
               setSpeed(1.5);
+              setPaused(false);
+              setResetSequence((value) => value + 1);
+              samples.current = [];
+              setP95(0);
             }}
           >
             <RotateCcw size={16} /> Reset
@@ -273,33 +334,46 @@ export function AnimationLabPage() {
         </button>
       </aside>
       <section className="animation-lab-stage" aria-label="Procedural animation preview">
-        <Canvas camera={{ position: [2.3, 1.3, 3], fov: 50 }} shadows>
+        <Canvas
+          camera={{ position: [2.3, 1.3, 3], fov: 50, near: 0.05, far: 80 }}
+          shadows
+          style={{ position: "absolute", inset: 0 }}
+          gl={createCompatibleRenderer}
+          onCreated={onCreated}
+        >
           <color attach="background" args={["#1a1d23"]} />
           <ambientLight intensity={0.6} />
           <directionalLight position={[8, 14, 6]} intensity={1.35} castShadow />
-          <PerspectiveCamera makeDefault position={[2.3, 1.3, 3]} fov={50} />
           <OrbitControls makeDefault target={[0, 0.9, 0]} enableDamping />
           <gridHelper args={[40, 40, "#5a6270", "#2e333c"]} />
-          {labActorIds.slice(0, crowd ? 50 : 1).map((actorId, index) => (
-            <LabCharacter
-              key={`${actorId}:${JSON.stringify(profile)}`}
-              index={index}
-              speed={speed}
-              paused={paused}
-              stepSequence={stepSequence}
-              beat={beat}
-              profile={profile}
-              debug={debug}
-              onSample={
-                index === 0
-                  ? (value) => {
-                      samples.current.push(value);
-                      if (samples.current.length > 3600) samples.current.shift();
-                    }
-                  : undefined
-              }
-            />
-          ))}
+          <Suspense fallback={null}>
+            {labActorIds.slice(0, crowd ? 50 : 1).map((actorId, index) => (
+              <LabCharacter
+                key={actorId}
+                index={index}
+                speed={speed}
+                paused={paused}
+                stepSequence={stepSequence}
+                beat={beat}
+                profile={profile}
+                debug={debug}
+                resetSequence={resetSequence}
+                skinPath={
+                  index === 0
+                    ? (labSkins[skinIndex]?.path ?? labEntry.texturePaths[0] ?? "")
+                    : (labEntry.texturePaths[index % labEntry.texturePaths.length] ?? "")
+                }
+                onSample={
+                  index === 0
+                    ? (value) => {
+                        samples.current.push(value);
+                        if (samples.current.length > 3600) samples.current.shift();
+                      }
+                    : undefined
+                }
+              />
+            ))}
+          </Suspense>
         </Canvas>
       </section>
     </div>

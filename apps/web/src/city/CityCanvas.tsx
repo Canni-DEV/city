@@ -239,7 +239,12 @@ function CityScene({
         </>
       ) : cameraMode === "npcFollow" && simulation && controlledNpcId ? (
         <>
-          <NpcFollowCamera runtime={simulation} id={controlledNpcId} size={size} />
+          <NpcFollowCamera
+            key={controlledNpcId}
+            runtime={simulation}
+            id={controlledNpcId}
+            size={size}
+          />
           <NpcControlInput runtime={simulation} id={controlledNpcId} />
         </>
       ) : (

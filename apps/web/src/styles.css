@@ -463,6 +463,9 @@ h2 {
   min-width: 0;
   min-height: 0;
 }
+.animation-lab-stage canvas {
+  display: block;
+}
 .zone-legend {
   padding: 0;
   margin: 4px 0;

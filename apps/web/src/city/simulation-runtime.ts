@@ -56,12 +56,27 @@ export function createSimulationRuntime(city: CityDocumentV1, drive: DriveNetwor
   };
 }
 export type SimulationRuntime = ReturnType<typeof createSimulationRuntime>;
+function pruneNpcRuntime(runtime: SimulationRuntime): void {
+  const live = new Set(runtime.world.ids);
+  for (const collection of [
+    runtime.display,
+    runtime.previous,
+    runtime.animationSequences,
+    runtime.motionRequests,
+  ]) {
+    for (const id of collection.keys()) {
+      if (!live.has(id)) collection.delete(id);
+    }
+  }
+}
+
 export function resizeSimulation(runtime: SimulationRuntime, agents: number, vehicles: number) {
   const crossingOccupied = [...runtime.world.crossing.values()].some((c) => c.active);
   // A newly spawned NPC must not occupy a reserved crossing exit either.
   if (agents !== runtime.agentCount && !(agents > runtime.agentCount && crossingOccupied)) {
     resizeNpcPopulation(runtime.world, runtime.network, agents);
     runtime.agentCount = agents;
+    pruneNpcRuntime(runtime);
   }
   // Do not introduce unpredicted traffic while a pedestrian owns a crossing.
   const admittingMoreTraffic = vehicles > runtime.vehicleCount;

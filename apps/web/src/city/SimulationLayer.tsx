@@ -9,7 +9,12 @@ import {
 } from "@city/core";
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
+import { npcScenePose, npcSceneVelocity } from "./npc-visual";
 import { resizeSimulation, type SimulationRuntime } from "./simulation-runtime";
+
+function snapshotNpcPoses(runtime: SimulationRuntime): void {
+  runtime.previous = new Map([...runtime.world.poses].map(([id, pose]) => [id, { ...pose }]));
+}
 
 export function SimulationLayer({
   runtime,
@@ -37,7 +42,7 @@ export function SimulationLayer({
         applyNpcMotionRequest(runtime.world, runtime.network, id, request);
       }
       runtime.motionRequests.clear();
-      runtime.previous = new Map(runtime.world.poses);
+      snapshotNpcPoses(runtime);
       runtime.previousVehicles = runtime.vehicles.current;
       tickNpcWorld(
         runtime.world,
@@ -57,6 +62,7 @@ export function SimulationLayer({
           seed: runtime.world.seed,
           dt: SIMULATION_STEP,
         });
+      const mapSize = runtime.city.map.size;
       for (const [id, actor] of runtime.animationActors) {
         const pose = runtime.world.poses.get(id);
         if (!pose) continue;
@@ -70,25 +76,23 @@ export function SimulationLayer({
           actor.playBeat({ type: "wave" });
         }
         runtime.animationSequences.set(id, sequence);
+        const scene = npcScenePose(pose, mapSize);
+        const attention = attentionPose ? npcScenePose(attentionPose, mapSize) : undefined;
         actor.fixedUpdate(
           SIMULATION_STEP,
           {
-            position: { x: pose.x, y: pose.y, z: pose.z },
+            position: scene,
             facingYaw: pose.yaw,
-            velocity: {
-              x: (pose.x - before.x) / SIMULATION_STEP,
-              y: (pose.y - before.y) / SIMULATION_STEP,
-              z: (pose.z - before.z) / SIMULATION_STEP,
-            },
+            velocity: npcSceneVelocity(before, pose, SIMULATION_STEP),
             grounded: true,
           },
-          attentionPose
+          attention
             ? {
                 attention: {
                   target: {
-                    x: attentionPose.x,
-                    y: attentionPose.y + actor.animator.rig.height * 0.85,
-                    z: attentionPose.z,
+                    x: attention.x,
+                    y: attention.y + actor.animator.rig.height * 0.85,
+                    z: attention.z,
                   },
                 },
               }
@@ -129,7 +133,7 @@ export function SimulationLayer({
     }
     // Resuming at a high display refresh rate must not interpolate backwards.
     if (runtime.paused) {
-      runtime.previous = new Map(runtime.world.poses);
+      snapshotNpcPoses(runtime);
       runtime.previousVehicles = runtime.vehicles.current;
     }
   }, -2);

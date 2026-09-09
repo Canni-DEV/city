@@ -5,6 +5,7 @@ import RAPIER from "@dimforge/rapier3d-compat";
 import { Bone, Quaternion, Vector3 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import {
+  createAnimatedCharacter,
   FixedClock,
   ProceduralAnimator,
   prepareCharacterRoot,
@@ -858,4 +859,27 @@ test("stride displacement grows with speed while touchdown remains reachable", (
   assert.ok(measurements[2].lead > measurements[1].lead);
   assert.ok(measurements[2].lead > measurements[0].lead * 1.5);
   assert.ok(measurements[2].stride > measurements[0].stride * 1.3);
+});
+
+test("AnimatedCharacter interpolates fixed poses and ignores updates after dispose", () => {
+  const actor = createAnimatedCharacter({ gltf, height: 1.8, seed: 3 });
+  actor.fixedUpdate(1 / 60, sample(0, 0));
+  actor.fixedUpdate(1 / 60, sample(1.2, 0.4));
+  actor.updateVisual(0);
+  const start = actor.object.position.z;
+  actor.updateVisual(1);
+  const end = actor.object.position.z;
+  actor.updateVisual(0.5);
+  assert.ok(Number.isFinite(actor.object.position.z));
+  actor.setParameters({ style: 0.4, cadence: 2.8 });
+  const hip = new Vector3();
+  actor.hipWorldPosition(hip);
+  assert.ok(hip.toArray().every(Number.isFinite));
+  assert.ok(end !== start || start === actor.object.position.z);
+  actor.dispose();
+  actor.fixedUpdate(1 / 60, sample(2, 1));
+  actor.updateVisual(1);
+  actor.setParameters({ style: 1 });
+  assert.equal(actor.playBeat({ type: "wave" }).accepted, false);
+  assert.equal(actor.motionRequest, null);
 });

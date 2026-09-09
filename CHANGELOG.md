@@ -8,6 +8,7 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 
 - M3.8: procedural animation for every runtime NPC, deterministic idle/walk/run/greet orchestration, safe manual NPC control, stable-ID/click selection, an orbitable NPC-follow camera, and a development-only animation lab.
 - Workspace package `@city/procedural-animation` with a non-physics interpolated `AnimatedCharacter` facade and retained optional `/physics` entry; catalog character assets remain canonical under `packages/assets/generated/characters`.
+- Owner recorded a successful manual review of M3.8 selection, Control NPC, follow camera, walking gait, and the animation lab.
 - M3.7 / M3.7.3: suburban and urban yards as `CityEntity` records — sidewalk-facing buildings, courtyard pocket greens vs groves, lot dumpsters, sparse `fence-low`, and typical suburban yard props. Nature Kit stays park-only.
 - M3.7 / M3.7.2: structured park interiors (civic plaza vs pocket grove) as `CityEntity` records, Kenney Nature Kit allowlist (`nature:*`), walkable plaza path strips that are not pedestrian obstacles, and generator `0.8.1` sub-cell scatter so trees/planters jitter inside a unique cell while multiple flowers/grass can share that cell.
 - M3.7 / M3.7.1: deterministic curb street furniture (traffic lights, stop and street-name signs, highway signs at gates, street lamps, avenue poles, sparse dumpsters) as `CityEntity` records on sidewalks. Traffic lights are visual only.
@@ -21,6 +22,9 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 
 ### Fixed
 
+- Animation lab no longer crashes in development Strict Mode after disposing a procedural actor that the canvas still updates; the preview uses City's renderer path and keeps gait sliders from remounting the character.
+- Controlling an NPC no longer loses the WebGPU/WebGL context: `npcFollow` owns a perspective camera framed off the hip before OrbitControls construct, instead of orbiting the city orthographic camera at the origin.
+- City NPC gait matches the animation lab: actor roots are posed in scene space (map minus half, plus sidewalk lift) so procedural foot IK is not parented 48 cells away from `root.position`.
 - Runtime vehicles instance the child wheel meshes already present in each Kenney `cars:*` GLB (the same nodes `#/dev/assets` already showed). Wheels stay static; `vehicleBounds` still excludes them.
 
 ### Changed

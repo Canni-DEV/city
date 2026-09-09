@@ -34,7 +34,7 @@
 
 ## Persistence and routes
 
-- **FUN-030:** Routes are `#/`, `#/city/:cityId`, `#/credits`, and development-only `#/dev/assets`.
+- **FUN-030:** Routes are `#/`, `#/city/:cityId`, `#/credits`, development-only `#/dev/assets`, and development-only `#/dev/animations`.
 - **FUN-031:** Changes autosave after one second idle and refresh the thumbnail after ten seconds idle.
 - **FUN-032:** Import accepts at most 25 MB, copies colliding IDs, migrates older versions explicitly, and rejects future versions clearly.
 - **FUN-033:** Export produces a readable `.city.json` snapshot with generation provenance, without command history, runtime vehicles, reconstructed lane geometry, or diagnostic selection.
