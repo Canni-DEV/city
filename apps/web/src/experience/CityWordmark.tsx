@@ -1,20 +1,18 @@
 import { type CSSProperties, useEffect, useRef } from "react";
-import { clampProgress } from "./experience-timeline";
 
 const DOT_RADIUS_IN_VIEWBOX = 10;
 const VIEWBOX_WIDTH = 520;
 
 export function CityWordmark({
-  progress,
+  scale,
+  opacity,
   onDotRadius,
 }: {
-  progress: number;
+  scale: number;
+  opacity: number;
   onDotRadius: (radius: number) => void;
 }) {
   const svg = useRef<SVGSVGElement>(null);
-  const zoom = clampProgress((progress - 0.18) / 0.34);
-  const scale = 1 + zoom * 8;
-  const opacity = 1 - clampProgress((progress - 0.3) / 0.22);
 
   useEffect(() => {
     const element = svg.current;

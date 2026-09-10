@@ -17,7 +17,7 @@ import { CityWordmark } from "../experience/CityWordmark";
 import { ExperienceCanvas } from "../experience/ExperienceCanvas";
 import {
   actOpacity,
-  clampProgress,
+  experienceReveal,
   gatedExperienceProgress,
   scrollProgress,
   selectExperienceHero,
@@ -56,6 +56,8 @@ export function ExperiencePage() {
   const [sceneReady, setSceneReady] = useState(false);
   const [rawProgress, setRawProgress] = useState(0);
   const [visualProgress, setVisualProgress] = useState(0);
+  const scrollTarget = useRef(0);
+  scrollTarget.current = gatedExperienceProgress(rawProgress, sceneReady);
   const [dotRadius, setDotRadius] = useState(10);
   const [leaving, setLeaving] = useState(false);
   const startedAt = useRef(0);
@@ -149,7 +151,7 @@ export function ExperiencePage() {
     let frame = 0;
     let previous = performance.now();
     const animate = (now: number) => {
-      const target = gatedExperienceProgress(rawProgress, sceneReady);
+      const target = scrollTarget.current;
       const dt = Math.min((now - previous) / 1000, 0.05);
       previous = now;
       setVisualProgress((current) => {
@@ -161,7 +163,7 @@ export function ExperiencePage() {
     };
     frame = window.requestAnimationFrame(animate);
     return () => window.cancelAnimationFrame(frame);
-  }, [rawProgress, reducedMotion, sceneReady]);
+  }, [reducedMotion]);
 
   const quality = useMemo(() => {
     const resolved = resolveQuality(
@@ -237,13 +239,11 @@ export function ExperiencePage() {
     );
   }
 
-  const reveal = clampProgress((visualProgress - 0.18) / 0.36);
-  const wordmarkScale = 1 + reveal * 8;
   const viewportRadius =
     typeof window === "undefined" ? 1600 : Math.hypot(window.innerWidth, window.innerHeight) * 0.82;
-  const maskRadius = Math.max(dotRadius * wordmarkScale, dotRadius + reveal * viewportRadius);
+  const reveal = experienceReveal(visualProgress, dotRadius, viewportRadius);
   const pageStyle = {
-    "--experience-mask-radius": `${maskRadius}px`,
+    "--experience-mask-radius": `${reveal.maskRadius}px`,
   } as CSSProperties;
 
   return (
@@ -284,7 +284,11 @@ export function ExperiencePage() {
         ) : (
           <>
             <h1 className="visually-hidden">City</h1>
-            <CityWordmark progress={visualProgress} onDotRadius={setDotRadius} />
+            <CityWordmark
+              scale={reveal.scale}
+              opacity={reveal.opacity}
+              onDotRadius={setDotRadius}
+            />
             <section
               className="experience-copy experience-copy--opening"
               style={{ opacity: actOpacity(visualProgress, -0.1, 0, 0.31) }}

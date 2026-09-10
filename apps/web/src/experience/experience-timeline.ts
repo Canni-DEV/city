@@ -42,10 +42,6 @@ function mix(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
-function mix3(a: readonly number[], b: readonly number[], t: number): [number, number, number] {
-  return [mix(a[0] ?? 0, b[0] ?? 0, t), mix(a[1] ?? 0, b[1] ?? 0, t), mix(a[2] ?? 0, b[2] ?? 0, t)];
-}
-
 function pointSegmentDistance(
   point: readonly [number, number],
   start: readonly [number, number],
@@ -122,35 +118,19 @@ export function experienceCameraFrame(
   const heroScene: [number, number, number] = hero
     ? [hero.pose.x - mapSize / 2, hero.pose.y + 0.8, hero.pose.z - mapSize / 2]
     : [0, 0.8, 0];
+  // REN-012 / TST-014: a continuous dolly without intermediate easing stops.
   const yaw = hero?.pose.yaw ?? 0;
-  const finalPosition: [number, number, number] = [
-    heroScene[0] + Math.sin(yaw) * 6,
-    heroScene[1] + 4.5,
-    heroScene[2] + Math.cos(yaw) * 6,
-  ];
-  const overview: ExperienceCameraFrame = {
-    position: [0, mapSize * 1.28, mapSize * 0.86],
-    target: [0, 0, 0],
-    fov: 34,
-  };
-  const districtPosition: [number, number, number] = [
-    heroScene[0] * 0.55 + 12,
-    mapSize * 0.42,
-    heroScene[2] * 0.55 + 22,
-  ];
-  if (p <= 0.62) {
-    const t = smooth((p - 0.28) / 0.34);
-    return {
-      position: mix3(overview.position, districtPosition, t),
-      target: mix3(overview.target, [heroScene[0] * 0.45, 0, heroScene[2] * 0.45], t),
-      fov: mix(overview.fov, 42, t),
-    };
-  }
-  const t = smooth((p - 0.62) / 0.38);
+  const distance = Math.exp(mix(Math.log(mapSize * 1.54), Math.log(7.5), p));
+  const elevation = mix(Math.atan2(1.28, 0.86), Math.atan2(4.5, 6), p);
+  const horizontal = distance * Math.cos(elevation);
   return {
-    position: mix3(districtPosition, finalPosition, t),
-    target: mix3([heroScene[0] * 0.45, 0, heroScene[2] * 0.45], heroScene, t),
-    fov: mix(42, 43, t),
+    position: [
+      heroScene[0] + Math.sin(yaw) * horizontal,
+      heroScene[1] + distance * Math.sin(elevation),
+      heroScene[2] + Math.cos(yaw) * horizontal,
+    ],
+    target: heroScene,
+    fov: 43,
   };
 }
 
@@ -159,4 +139,16 @@ export function actOpacity(progress: number, start: number, peak: number, end: n
   if (p <= start || p >= end) return 0;
   if (p < peak) return smooth((p - start) / Math.max(peak - start, 1e-6));
   return 1 - smooth((p - peak) / Math.max(end - peak, 1e-6));
+}
+
+/** UX-028: the aperture is the scaled dot at every viewport size. */
+export function experienceReveal(progress: number, dotRadius: number, viewportRadius: number) {
+  const t = clampProgress(progress / 0.62);
+  const radius = Math.max(1, dotRadius);
+  const scale = Math.exp(Math.log(Math.max(1, viewportRadius / radius)) * t);
+  return {
+    scale,
+    maskRadius: radius * scale,
+    opacity: 1 - smooth((t - 0.82) / 0.18),
+  };
 }

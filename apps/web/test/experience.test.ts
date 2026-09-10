@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { cityEntryFromState } from "../src/city/city-entry";
 import {
   experienceCameraFrame,
+  experienceReveal,
   gatedExperienceProgress,
   scrollProgress,
   selectExperienceHero,
@@ -32,6 +33,38 @@ describe("TST-014 cinematic experience timeline", () => {
     expect(gatedExperienceProgress(0.8, false)).toBe(0.28);
     expect(gatedExperienceProgress(0.8, true)).toBe(0.8);
     expect(gatedExperienceProgress(Number.NaN, true)).toBe(0);
+  });
+
+  it("zooms immediately with the aperture locked to the dot at both desktop sizes", () => {
+    for (const [width, height] of [
+      [1280, 720],
+      [1920, 1080],
+    ] as const) {
+      const dot = (Math.min(width * 0.78, 1100) * 10) / 520;
+      const cover = Math.hypot(width, height) * 0.82;
+      let previous = 1;
+      for (let step = 1; step <= 62; step++) {
+        const reveal = experienceReveal(step / 100, dot, cover);
+        expect(reveal.scale).toBeGreaterThan(previous);
+        expect(reveal.maskRadius).toBeCloseTo(dot * reveal.scale);
+        previous = reveal.scale;
+      }
+      expect(experienceReveal(0.62, dot, cover).maskRadius).toBeGreaterThan(
+        Math.hypot(width, height) / 2,
+      );
+    }
+  });
+
+  it("advances toward the hero on every scroll step without a focal-length reversal or stop", () => {
+    const hero = { id: "npc:0", pose: { x: 40, y: 0, z: 55, yaw: 2.7, speed: 0 } };
+    let previous = Number.POSITIVE_INFINITY;
+    for (let step = 0; step <= 1000; step++) {
+      const frame = experienceCameraFrame(step / 1000, 96, hero);
+      const distance = Math.hypot(...frame.position.map((v, i) => v - (frame.target[i] ?? 0)));
+      expect(distance).toBeLessThan(previous);
+      expect(frame.fov).toBe(43);
+      previous = distance;
+    }
   });
 
   it("selects a deterministic central hero without mutating the document", () => {

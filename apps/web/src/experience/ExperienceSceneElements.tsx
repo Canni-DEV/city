@@ -1,6 +1,6 @@
 import { Html, PerspectiveCamera } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import type * as THREE from "three/webgpu";
 import { npcScenePose } from "../city/npc-visual";
 import type { SimulationRuntime } from "../city/simulation-runtime";
@@ -81,11 +81,5 @@ export function ExperienceSceneReady({ onReady }: { onReady: () => void }) {
     ready.current = true;
     callback.current();
   });
-  useEffect(
-    () => () => {
-      ready.current = true;
-    },
-    [],
-  );
   return null;
 }
