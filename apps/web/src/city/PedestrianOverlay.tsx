@@ -2,6 +2,7 @@ import { npcDiagnostics, type Point } from "@city/core";
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
 import * as THREE from "three/webgpu";
+import { updateDynamicLines } from "../rendering/dynamic-lines";
 import type { SimulationRuntime } from "./simulation-runtime";
 
 export function PedestrianOverlay({
@@ -77,6 +78,9 @@ export function PedestrianOverlay({
       ),
     [],
   );
+  // Bounds of a capacity buffer include stale vertices; this small diagnostic
+  // must remain visible when the selected route moves outside its old bounds.
+  dynamic.frustumCulled = false;
   useEffect(
     () => () => {
       drawing.geometry.dispose();
@@ -117,9 +121,7 @@ export function PedestrianOverlay({
           );
       }
     }
-    dynamic.geometry.dispose();
-    dynamic.geometry = new THREE.BufferGeometry();
-    dynamic.geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    updateDynamicLines(dynamic.geometry, positions);
   });
   return (
     <>

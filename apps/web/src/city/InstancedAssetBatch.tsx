@@ -1,7 +1,7 @@
 import { assetById, runtimeAssetUrl } from "@city/assets";
 import { useGLTF } from "@react-three/drei";
 import { useLoader } from "@react-three/fiber";
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three/webgpu";
 import type { RenderBatch } from "../rendering/instance-map";
 
@@ -127,6 +127,12 @@ export function InstancedAssetBatch({
     texture.needsUpdate = true;
     return meshes.map((mesh) => applyVariantMap(mesh.material as THREE.Material, texture));
   }, [keepEmbedded, meshes, texture]);
+  useEffect(
+    () => () => {
+      for (const material of materials) material.dispose();
+    },
+    [materials],
+  );
 
   if (!batch.items.length) return null;
   return (
