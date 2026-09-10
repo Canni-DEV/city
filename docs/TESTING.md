@@ -48,6 +48,8 @@ M3.8.1 evidence reuses that command set; batch generation remains unnecessary. O
 
 ## Manual QA per milestone
 
+M3.8.1 runtime maintenance adds TST-013 unit regressions for bone interpolation at alpha 0/0.5/1, reuse of exactly two bone-frame sets across 1,200 ticks, 10,000 diagnostic buffer updates with no replacement, capacity growth disposal and empty draw ranges, and 10,000 isolated NPC snapshot updates followed by population pruning. Existing movement/crossing tests cover the obstacle-index optimization. Validation for this patch uses unit tests and static/build checks only, per owner request; no browser memory or FPS result is claimed.
+
 Test current Chrome and Edge, WebGPU and forced WebGL 2, 1280×720 and 1920×1080, keyboard/focus/contrast/patterns, and capture implemented flows. From M3 onward record the rendering and generation budgets in `RENDERING_AND_PERFORMANCE.md`. M3.6.2 QA must include Traffic lanes off and on, inspector keyboard selection, and Escape clearing diagnostic selection.
 
 M3.6.3 QA includes pedestrian overlay off/on, keyboard inspector, shared pause and one-tick step, 75% character scale, smooth idle/run and close-up turns, Chrome/Edge and both backends at both supported resolutions, plus 64 pedestrians/64 vehicles. Report actual measurements and unavailable combinations explicitly. Generator code and hashes remain unchanged; the occupancy census is required only if that scope changes.

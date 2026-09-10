@@ -23,6 +23,7 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 
 ### Fixed
 
+- M3.8.1 runtime maintenance: dispose owned instancing materials on replacement/unmount, reuse pedestrian diagnostic GPU buffers instead of replacing geometry every frame, and prune removed vehicle snapshots. Procedural interpolation now keeps independent reusable bone frames; NPC snapshots reuse isolated storage and movement obstacle checks reuse precomputed rotations.
 - M3.8.1 pedestrian ticks no longer scan the full hybrid graph (with `visible`) on every greeting check; nearest-node search tests visibility from closest to farthest.
 - Controlling an NPC no longer loses the WebGPU/WebGL context: `npcFollow` owns a perspective camera framed off the hip before OrbitControls construct, instead of orbiting the city orthographic camera at the origin.
 - City NPC gait matches the animation lab: actor roots are posed in scene space (map minus half, plus sidewalk lift) so procedural foot IK is not parented 48 cells away from `root.position`.

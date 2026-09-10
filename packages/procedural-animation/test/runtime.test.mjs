@@ -861,6 +861,43 @@ test("stride displacement grows with speed while touchdown remains reachable", (
   assert.ok(measurements[2].stride > measurements[0].stride * 1.3);
 });
 
+test("TST-013 AnimatedCharacter keeps independent reusable bone interpolation frames", () => {
+  const actor = createAnimatedCharacter({ gltf, height: 1.8, seed: 19 });
+  const head = actor.animator.pose.require("Head");
+  const hips = actor.animator.pose.require("Hips");
+  actor.fixedUpdate(1 / 60, sample(1.5));
+  const beforeQ = head.quaternion.clone();
+  const beforeP = hips.position.clone();
+  actor.fixedUpdate(1 / 60, sample(1.5, 0.025), {
+    attention: { target: { x: 2, y: 1.5, z: 2 } },
+  });
+  const afterQ = head.quaternion.clone();
+  const afterP = hips.position.clone();
+  assert.ok(beforeQ.angleTo(afterQ) > 1e-6);
+  actor.updateVisual(0);
+  assert.ok(head.quaternion.angleTo(beforeQ) < 1e-7);
+  assert.ok(hips.position.distanceTo(beforeP) < 1e-9);
+  actor.updateVisual(0.5);
+  assert.ok(head.quaternion.angleTo(beforeQ.clone().slerp(afterQ, 0.5)) < 1e-7);
+  assert.ok(hips.position.distanceTo(beforeP.clone().lerp(afterP, 0.5)) < 1e-9);
+  actor.updateVisual(1);
+  assert.ok(head.quaternion.angleTo(afterQ) < 1e-7);
+  // Capture destinations should stay bounded to two distinct sets for the rig.
+  const snapshots = new Set();
+  const capture = actor.animator.pose.snapshotLocals.bind(actor.animator.pose);
+  actor.animator.pose.snapshotLocals = (rotations, positions) => {
+    snapshots.add(rotations);
+    snapshots.add(positions);
+    capture(rotations, positions);
+  };
+  for (let i = 0; i < 1200; i++) {
+    actor.fixedUpdate(1 / 60, sample(1.5, i * 0.025));
+    actor.updateVisual(0.5);
+  }
+  assert.equal(snapshots.size, 4);
+  actor.dispose();
+});
+
 test("AnimatedCharacter interpolates fixed poses and ignores updates after dispose", () => {
   const actor = createAnimatedCharacter({ gltf, height: 1.8, seed: 3 });
   actor.fixedUpdate(1 / 60, sample(0, 0));
