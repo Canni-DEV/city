@@ -8,7 +8,11 @@
 M2 generator overlays already implement those color-plus-pattern fills and a textual legend of actual versus target zone shares. M3.6.2 Traffic lanes pairs color with stroke style (solid vs dashed) and a textual legend. M6 still owns the full contrast, keyboard, and 1280×720 accessibility QA.
 - **ACC-005:** Errors identify the field or object, the constraint, and a recovery action; progress has a textual stage and percentage.
 - **ACC-006:** Motion respects `prefers-reduced-motion`; essential selection and validation feedback remains available without animation.
+
+M3.9 replaces its scroll-driven camera, SVG scaling and route crossfade with a static final city composition for reduced-motion users. The same document handoff remains available through an `Explore the city` button. Unsupported viewports receive a textual desktop requirement without starting generation or WebGL.
 - **ACC-007:** The 3D canvas has a meaningful label and adjacent textual selection/diagnostic state.
+
+The cinematic canvas names its generated city. Native scroll remains keyboard-operable, generation progress is announced, errors expose Retry and Back to library, and the final NPC action is a focused DOM button rather than a WebGL-only pick target.
 
 M3 adds a textual selection status beside the canvas. M3.6 free camera is a named control (button plus **F**); Escape returns to the default city view. M3.6.2 Traffic lanes exposes a textual segment inspector beside the canvas. M6 still owns the full contrast, keyboard, and 1280×720 accessibility QA.
 - **ACC-008:** Dialogs use Radix primitives and require explicit confirmation only for genuinely destructive actions.

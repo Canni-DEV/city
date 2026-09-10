@@ -6,6 +6,7 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 
 ### Added
 
+- M3.9: optional unlinked `#/experience` route with a hybrid SVG/R3F city reveal, native reversible scroll, deterministic stopped greeting NPC, accessible handoff into locked NPC control, desktop/reduced-motion fallbacks, and no `CityDocumentV1` or generator changes.
 - M3.8.1: locked third-person camera while controlling an NPC (behind yaw, right-drag/Q/E look that springs back, wheel distance), city orbit `maxZoom` 96, and deterministic pedestrian yield recovery (sidestep, mover priority, 1.5 s repath, 3 s new destination, corner/crossing unjam).
 - M3.8: procedural animation for every runtime NPC, deterministic idle/walk/run/greet orchestration, safe manual NPC control, stable-ID/click selection, an orbitable NPC-follow camera, and a development-only animation lab.
 - Workspace package `@city/procedural-animation` with a non-physics interpolated `AnimatedCharacter` facade and retained optional `/physics` entry; catalog character assets remain canonical under `packages/assets/generated/characters`.
@@ -23,6 +24,8 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 
 ### Fixed
 
+- M3.9: remove the opening scroll dead zone, keep the mask aligned with the enlarged wordmark dot, replace stop-start camera keyframes with a continuous fixed-FOV approach to the hero, and prevent Strict Mode from blocking scene readiness.
+
 - M3.8.1 runtime maintenance: dispose owned instancing materials on replacement/unmount, reuse pedestrian diagnostic GPU buffers instead of replacing geometry every frame, and prune removed vehicle snapshots. Procedural interpolation now keeps independent reusable bone frames; NPC snapshots reuse isolated storage and movement obstacle checks reuse precomputed rotations.
 - M3.8.1 pedestrian ticks no longer scan the full hybrid graph (with `visible`) on every greeting check; nearest-node search tests visibility from closest to farthest.
 - Controlling an NPC no longer loses the WebGPU/WebGL context: `npcFollow` owns a perspective camera framed off the hip before OrbitControls construct, instead of orbiting the city orthographic camera at the origin.
@@ -30,6 +33,8 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 - Runtime vehicles instance the child wheel meshes already present in each Kenney `cars:*` GLB (the same nodes `#/dev/assets` already showed). Wheels stay static; `vehicleBounds` still excludes them.
 
 ### Changed
+
+- M3.9: make floating narrative cards smaller and quieter, and move them toward the viewport edges to keep the city visible.
 
 - Runtime pedestrian animation no longer blends imported Idle/Run clips. Core remains authoritative for all motion/crossing/collision rules while the procedural package poses rigs and submits only bounded corrections. Selection/control/camera state stays outside `CityDocumentV1`; generator `0.9.0`, hashes, and exports are unchanged.
 - Generator `0.9.0`: `blockYards` stage after park interiors (GEN-033). Road/traffic/building RNG stays keyed with `0.6.7`; curb furniture stays on the `0.7.0` stream; park interiors stay on the `0.8.1` stream. GEN-010 skips suburban/urban leftover cells. Old `0.8.1` cities load without silent regeneration.

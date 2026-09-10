@@ -10,8 +10,8 @@ City is a modern browser-based creative sandbox for generating a convincing stat
 - **PRD-002:** Users can edit generated buildings, vegetation, street furniture, and decoration without editing roads or zoning in v1.
 - **PRD-003:** Users can manage multiple cities entirely in local browser storage and exchange readable `.city.json` files.
 - **PRD-004:** The experience targets current Chrome and Edge on desktop at a minimum 1280×720 viewport.
-- **PRD-005:** The presentation uses an orbital isometric camera, flat continuous terrain, irregular city edge, fixed daytime lighting, and no audio.
-- **PRD-006:** The product has no goals, economy, accounts, server dependency, telemetry, onboarding, or PWA behavior. A bounded runtime pedestrian layer including reachable parks and orders (SIM-001–010, SIM-020–026) and a bounded runtime vehicle layer (SIM-011–019) are allowed; massive crowds and massive traffic are not.
+- **PRD-005:** The main city presentation uses an orbital isometric camera, flat continuous terrain, irregular city edge, fixed daytime lighting, and no audio. The optional M3.9 showcase may use a constrained perspective camera before handing off to the normal city route.
+- **PRD-006:** The product has no goals, economy, accounts, server dependency, telemetry, mandatory onboarding, or PWA behavior. The unlinked M3.9 showcase is optional and never replaces the library entry point. A bounded runtime pedestrian layer including reachable parks and orders (SIM-001–010, SIM-020–026) and a bounded runtime vehicle layer (SIM-011–019) are allowed; massive crowds and massive traffic are not.
 - **PRD-007:** The interface is dark, English-only in v1, and makes zone meaning available through color and pattern.
 
 ## Success criteria

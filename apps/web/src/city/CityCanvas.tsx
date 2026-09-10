@@ -5,6 +5,12 @@ import { Canvas, type RootState, useFrame, useThree } from "@react-three/fiber";
 import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three/webgpu";
 import {
+  ExperienceCamera,
+  ExperienceHeroPrompt,
+  ExperienceSceneReady,
+} from "../experience/ExperienceSceneElements";
+import type { ExperienceHero } from "../experience/experience-timeline";
+import {
   buildEntityBatches,
   buildRoadBatches,
   buildSidewalkBatches,
@@ -166,7 +172,7 @@ function SelectionProxy({
   return <SelectionProxyModel document={document} entity={entity} />;
 }
 
-function CityScene({
+export function CityScene({
   document,
   overlays,
   driveNetwork,
@@ -181,6 +187,7 @@ function CityScene({
   onSelectNpc,
   onSelect,
   onStats,
+  experience,
 }: {
   document: CityDocumentV1;
   overlays: OverlayOptions;
@@ -196,6 +203,13 @@ function CityScene({
   onSelectNpc: (id: string) => void;
   onSelect: (id: string | null) => void;
   onStats: (stats: { fps: number; drawCalls: number }) => void;
+  experience?: {
+    progress: number;
+    hero: ExperienceHero | null;
+    onReady: () => void;
+    onMeet: () => void;
+    meetLabel: string;
+  };
 }) {
   const size = document.map.size;
   const half = size / 2;
@@ -226,7 +240,9 @@ function CityScene({
 
   return (
     <>
-      {cameraMode === "freeFlight" ? (
+      {experience ? (
+        <ExperienceCamera progress={experience.progress} size={size} hero={experience.hero} />
+      ) : cameraMode === "freeFlight" ? (
         <>
           <PerspectiveCamera
             makeDefault
@@ -321,8 +337,18 @@ function CityScene({
         {simulation && driveNetwork && (
           <VehicleLayer runtime={simulation} count={quality.vehicleCount} />
         )}
+        {experience && simulation && experience.hero ? (
+          <ExperienceHeroPrompt
+            runtime={simulation}
+            heroId={experience.hero.id}
+            progress={experience.progress}
+            label={experience.meetLabel}
+            onMeet={experience.onMeet}
+          />
+        ) : null}
+        {experience ? <ExperienceSceneReady onReady={experience.onReady} /> : null}
       </Suspense>
-      {cameraMode === "cityOrbit" ? (
+      {!experience && cameraMode === "cityOrbit" ? (
         <OrbitControls
           makeDefault
           target={[0, 0, 0]}

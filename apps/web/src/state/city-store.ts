@@ -20,6 +20,7 @@ interface CityState {
   completeGeneration: (document: CityDocumentV1, durationMs: number) => void;
   failGeneration: (message: string) => void;
   cancelGeneration: () => void;
+  adoptDocument: (document: CityDocumentV1, durationMs: number | null) => void;
   setBackend: (backend: RendererBackend) => void;
   setQuality: (quality: QualityProfile) => void;
   selectEntity: (entityId: string | null) => void;
@@ -66,6 +67,19 @@ export const useCityStore = create<CityState>()(
       set((state) => {
         state.status = state.document ? "ready" : "idle";
         state.progress = null;
+      }),
+    adoptDocument: (document, durationMs) =>
+      set((state) => {
+        state.document = document;
+        state.durationMs = durationMs;
+        state.selectedEntityId = null;
+        state.status = "ready";
+        state.error = null;
+        state.progress = {
+          stage: "validation",
+          percent: 100,
+          message: "City buildings and decoration ready",
+        };
       }),
     setBackend: (backend) =>
       set((state) => {

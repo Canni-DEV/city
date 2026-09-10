@@ -2,8 +2,8 @@ import { assetCatalog } from "@city/assets";
 import {
   buildDriveNetwork,
   CITY_PRESETS,
+  type CityDocumentV1,
   type GenerationParameters,
-  GenerationWorkerEventSchema,
   MAP_SIZES,
   type MapSize,
   normalizeGenerationParameters,
@@ -16,6 +16,7 @@ import {
 import { Button, Panel } from "@city/ui";
 import { CircleStop, Dices, RotateCcw, Route, Sparkles } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { CityCanvas } from "../city/CityCanvas";
 import {
   type CameraMode,
@@ -23,19 +24,24 @@ import {
   exitNpcControl,
   toggleFreeFlight,
 } from "../city/camera-mode";
+import { cityEntryFromState } from "../city/city-entry";
 import { GenerationControls } from "../city/GenerationControls";
 import { isEditableTarget } from "../city/keyboard";
 import { NpcControlPanel } from "../city/NpcControlPanel";
 import { PedestrianInspector } from "../city/PedestrianInspector";
-import { createSimulationRuntime } from "../city/simulation-runtime";
+import { createSimulationRuntime, resizeSimulation } from "../city/simulation-runtime";
 import { suggestCityName } from "../city/suggest-city-name";
 import { TrafficInspector } from "../city/TrafficInspector";
+import { useGenerationWorker } from "../generation/use-generation-worker";
 import { QUALITY_PROFILES, resolveQuality } from "../rendering/quality";
 import { useCityStore } from "../state/city-store";
 
 const RUNTIME_COUNT_MAX = 64;
 
 export function CityPage() {
+  const location = useLocation();
+  const entryState = useMemo(() => cityEntryFromState(location.state), [location.state]);
+  const entryDocumentRef = useRef<CityDocumentV1 | null>(null);
   const [name, setName] = useState("Green Crossroads");
   const [seed, setSeed] = useState("green-crossroads");
   const [nameTouched, setNameTouched] = useState(false);
@@ -53,10 +59,27 @@ export function CityPage() {
   const [controlledNpcId, setControlledNpcId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [stats, setStats] = useState({ fps: 0, drawCalls: 0 });
-  const workerRef = useRef<Worker | null>(null);
-  const activeRequestRef = useRef<string | null>(null);
   const startedAtRef = useRef(0);
   const store = useCityStore();
+  const generation = useGenerationWorker({
+    onEvent: (event) => {
+      const actions = useCityStore.getState();
+      if (event.type === "progress") {
+        actions.reportProgress({
+          stage: event.stage,
+          percent: event.percent,
+          message: event.message,
+        });
+      } else if (event.type === "complete") {
+        actions.completeGeneration(event.city, performance.now() - startedAtRef.current);
+      } else if (event.type === "cancelled") {
+        actions.cancelGeneration();
+      } else if (event.type === "error") {
+        actions.failGeneration(event.message);
+      }
+    },
+    onWorkerError: (message) => useCityStore.getState().failGeneration(message),
+  });
   const generatedCity = store.document;
   const [selectedDriveId, setSelectedDriveId] = useState<string | null>(null);
   const [selectedNpcId, setSelectedNpcId] = useState<string | null>(null);
@@ -70,11 +93,16 @@ export function CityPage() {
   useEffect(() => {
     if (generatedCity) {
       setSelectedDriveId(null);
-      setSelectedNpcId(null);
-      setControlledNpcId(null);
-      setCameraMode(exitNpcControl());
+      const isEntryDocument =
+        entryState &&
+        (entryDocumentRef.current === null || entryDocumentRef.current === generatedCity);
+      if (!isEntryDocument) {
+        setSelectedNpcId(null);
+        setControlledNpcId(null);
+        setCameraMode(exitNpcControl());
+      }
     }
-  }, [generatedCity]);
+  }, [entryState, generatedCity]);
   const simulation = useMemo(
     () => (generatedCity ? createSimulationRuntime(generatedCity, driveNetwork) : null),
     [generatedCity, driveNetwork],
@@ -102,6 +130,22 @@ export function CityPage() {
     [agentCount, qualityBase, vehicleCount],
   );
   const selectedEntity = generatedCity?.entities[store.selectedEntityId ?? ""] ?? null;
+
+  useEffect(() => {
+    if (!generatedCity || !simulation || !entryState) return;
+    if (entryDocumentRef.current && entryDocumentRef.current !== generatedCity) return;
+    entryDocumentRef.current = generatedCity;
+    const parsedIndex = /^npc:(\d+)$/.exec(entryState.controlledNpcId)?.[1];
+    const requiredCount = parsedIndex ? Math.min(64, Number(parsedIndex) + 1) : agentCount;
+    const entryAgentCount = Math.max(agentCount, requiredCount);
+    setAgentCount(entryAgentCount);
+    resizeSimulation(simulation, entryAgentCount, vehicleCount);
+    if (takeNpcControl(simulation.world, entryState.controlledNpcId)) {
+      setSelectedNpcId(entryState.controlledNpcId);
+      setControlledNpcId(entryState.controlledNpcId);
+      setCameraMode(enterNpcFollow(true));
+    }
+  }, [agentCount, entryState, generatedCity, simulation, vehicleCount]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -170,51 +214,6 @@ export function CityPage() {
     setCameraMode(exitNpcControl());
   }
 
-  useEffect(() => {
-    const worker = new Worker(new URL("../workers/generation.worker.ts", import.meta.url), {
-      type: "module",
-    });
-    workerRef.current = worker;
-    worker.onerror = (event) => {
-      useCityStore
-        .getState()
-        .failGeneration(event.message || "The generation worker failed to start.");
-      activeRequestRef.current = null;
-    };
-    worker.onmessageerror = () => {
-      useCityStore
-        .getState()
-        .failGeneration("The generation worker returned an unreadable message.");
-      activeRequestRef.current = null;
-    };
-    worker.onmessage = (message: MessageEvent<unknown>) => {
-      const actions = useCityStore.getState();
-      const parsed = GenerationWorkerEventSchema.safeParse(message.data);
-      if (!parsed.success || parsed.data.requestId !== activeRequestRef.current) return;
-      const event = parsed.data;
-      if (event.type === "progress") {
-        actions.reportProgress({
-          stage: event.stage,
-          percent: event.percent,
-          message: event.message,
-        });
-      } else if (event.type === "complete") {
-        actions.completeGeneration(event.city, performance.now() - startedAtRef.current);
-        activeRequestRef.current = null;
-      } else if (event.type === "cancelled") {
-        actions.cancelGeneration();
-        activeRequestRef.current = null;
-      } else if (event.type === "error") {
-        actions.failGeneration(event.message);
-        activeRequestRef.current = null;
-      }
-    };
-    return () => {
-      worker.terminate();
-      workerRef.current = null;
-    };
-  }, []);
-
   function generate(event: FormEvent) {
     event.preventDefault();
     if (!name.trim() || !seed.trim()) {
@@ -236,13 +235,9 @@ export function CityPage() {
       return;
     }
     setFormError(null);
-    const requestId = crypto.randomUUID();
-    activeRequestRef.current = requestId;
     startedAtRef.current = performance.now();
     store.startGeneration();
-    workerRef.current?.postMessage({
-      type: "generate",
-      requestId,
+    generation.generate({
       name: name.trim(),
       seed: seed.trim(),
       parameters: normalized,
@@ -250,8 +245,7 @@ export function CityPage() {
   }
 
   function cancel() {
-    const requestId = activeRequestRef.current;
-    if (requestId) workerRef.current?.postMessage({ type: "cancel", requestId });
+    generation.cancel();
   }
 
   return (

@@ -34,7 +34,7 @@
 
 ## Persistence and routes
 
-- **FUN-030:** Routes are `#/`, `#/city/:cityId`, `#/credits`, development-only `#/dev/assets`, and development-only `#/dev/animations`.
+- **FUN-030:** Routes are `#/`, `#/city/:cityId`, `#/credits`, the unlinked production showcase `#/experience`, development-only `#/dev/assets`, and development-only `#/dev/animations`.
 - **FUN-031:** Changes autosave after one second idle and refresh the thumbnail after ten seconds idle.
 - **FUN-032:** Import accepts at most 25 MB, copies colliding IDs, migrates older versions explicitly, and rejects future versions clearly.
 - **FUN-033:** Export produces a readable `.city.json` snapshot with generation provenance, without command history, runtime vehicles, reconstructed lane geometry, or diagnostic selection.
@@ -44,3 +44,4 @@
 - **FUN-046:** Generator `0.8.1` cities include deterministic park interiors (GEN-032) as ordinary entities: a civic plaza in habitable park manzanas and a grove in pocket remnants, with sub-cell jitter on occupying trees/planters and multiple garnish instances per cell. There is no dedicated park UI; M4 edits them like other decorations. Pedestrians and vehicles do not gain new orders or sit-points.
 - **FUN-047:** Generator `0.9.0` cities include deterministic suburban/urban yards (GEN-033) as ordinary entities: sidewalk-facing buildings, courtyard pocket greens or groves, lot dumpsters, and typical suburban yard props. There is no dedicated yard UI; M4 edits them like other decorations. Pedestrians still do not walk lots or courtyards.
 - **FUN-048:** Every runtime NPC uses procedural idle/walk/run/greet animation. Every visible NPC can be selected by viewport or stable ID and explicitly controlled; manual movement, Shift running, greeting, stopping, release and full-leg crossing runs remain inside core navigation/collision/traffic authority. Control uses a locked third-person follow camera (M3.8.1). Control is transient and never mutates `CityDocumentV1`.
+- **FUN-049:** `#/experience` generates Balanced 96×96 `green-crossroads` locally through the normal worker, reveals that real document through a native-scroll cinematic, and keeps it outside global application state until the accessible hero-NPC action adopts the exact document and enters its City route controlling the same stable NPC ID. Exit, failure, scrolling and animation never persist or hash experience state.

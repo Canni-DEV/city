@@ -17,6 +17,7 @@ Each brief is an execution contract. Complete only its scope, attach its require
 - [M3.7.3 — Urban blocks](M3_7_3_URBAN_BLOCKS.md)
 - [M3.8 — Procedural NPC animation and control](M3_8_PROCEDURAL_ANIMATION.md)
 - [M3.8.1 — Third-person NPC follow and locomotion recovery](M3_8_1_NPC_FOLLOW_LOCOMOTION.md)
+- [M3.9 — Cinematic entry experience](M3_9_CINEMATIC_EXPERIENCE.md)
 - [M4 — Editor](M4_EDITOR.md)
 - [M5 — Local library](M5_LOCAL_LIBRARY.md)
 - [M6 — Hardening and 1.0](M6_HARDENING.md)
