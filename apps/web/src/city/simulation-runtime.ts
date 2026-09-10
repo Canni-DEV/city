@@ -56,6 +56,14 @@ export function createSimulationRuntime(city: CityDocumentV1, drive: DriveNetwor
   };
 }
 export type SimulationRuntime = ReturnType<typeof createSimulationRuntime>;
+
+export function snapshotNpcPoses(runtime: SimulationRuntime): void {
+  for (const [id, pose] of runtime.world.poses) {
+    const previous = runtime.previous.get(id);
+    if (previous) Object.assign(previous, pose);
+    else runtime.previous.set(id, { ...pose });
+  }
+}
 function pruneNpcRuntime(runtime: SimulationRuntime): void {
   const live = new Set(runtime.world.ids);
   for (const collection of [
@@ -86,6 +94,11 @@ export function resizeSimulation(runtime: SimulationRuntime, agents: number, veh
       : [];
     const existing = new Map(runtime.vehicles.current.map((v) => [v.id, v]));
     runtime.vehicles.current = spawned.map((v) => existing.get(v.id) ?? v);
+    const live = new Set(runtime.vehicles.current.map((v) => v.id));
+    for (const id of runtime.vehicleDisplay.keys()) {
+      if (!live.has(id)) runtime.vehicleDisplay.delete(id);
+    }
+    runtime.previousVehicles = runtime.previousVehicles.filter((v) => live.has(v.id));
     runtime.vehicleCount = vehicles;
   }
 }

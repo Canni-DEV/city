@@ -74,14 +74,18 @@ export function buildPedestrianNetwork(document: CityDocumentV1): PedestrianNetw
       ],
       yaw: -(e.transform.rotation[1] * Math.PI) / 180,
     }));
-  const obstacleIndex = new Map<string, PedestrianObstacle[]>();
+  const obstacleIndex = new Map<
+    string,
+    { obstacle: PedestrianObstacle; cosine: number; sine: number }[]
+  >();
   for (const o of obstacles) {
+    const indexed = { obstacle: o, cosine: Math.cos(o.yaw), sine: Math.sin(o.yaw) };
     const r = Math.hypot(...o.half) + STATIC_RADIUS;
     for (let x = Math.floor(o.center[0] - r); x <= o.center[0] + r; x++)
       for (let z = Math.floor(o.center[1] - r); z <= o.center[1] + r; z++) {
         const k = key(x, z),
           list = obstacleIndex.get(k) ?? [];
-        list.push(o);
+        list.push(indexed);
         obstacleIndex.set(k, list);
       }
   }
@@ -103,11 +107,9 @@ export function buildPedestrianNetwork(document: CityDocumentV1): PedestrianNetw
           return false;
         if (!sidewalks.has(k) && !parks.has(k) && !(crossing && crossings.has(k))) return false;
       }
-    for (const o of obstacleIndex.get(cellKey(p)) ?? []) {
+    for (const { obstacle: o, cosine: c, sine: s } of obstacleIndex.get(cellKey(p)) ?? []) {
       const dx = p[0] - o.center[0],
-        dz = p[1] - o.center[1],
-        c = Math.cos(o.yaw),
-        s = Math.sin(o.yaw);
+        dz = p[1] - o.center[1];
       const x = Math.max(0, Math.abs(dx * c + dz * s) - o.half[0]);
       const z = Math.max(0, Math.abs(-dx * s + dz * c) - o.half[1]);
       if (x * x + z * z < STATIC_RADIUS ** 2) return false;

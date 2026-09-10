@@ -10,11 +10,7 @@ import {
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import { npcScenePose, npcSceneVelocity } from "./npc-visual";
-import { resizeSimulation, type SimulationRuntime } from "./simulation-runtime";
-
-function snapshotNpcPoses(runtime: SimulationRuntime): void {
-  runtime.previous = new Map([...runtime.world.poses].map(([id, pose]) => [id, { ...pose }]));
-}
+import { resizeSimulation, type SimulationRuntime, snapshotNpcPoses } from "./simulation-runtime";
 
 export function SimulationLayer({
   runtime,

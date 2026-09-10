@@ -15,6 +15,8 @@
 
 For local/manual fallback QA, add `?forceWebGL=1` before the hash route (for example, `/city/?forceWebGL=1#/dev/assets`).
 
+M3.8.1 runtime maintenance (REN-004/011, TST-013): instancing batches explicitly dispose their cloned materials on replacement/unmount while retaining catalog geometry and textures. Pedestrian diagnostic lines reuse a capacity buffer, release old GPU storage before growth, and use a draw range for active vertices. Animation keeps two independent reusable bone snapshots; shallow map copies must not alias mutable quaternions/positions. Simulation snapshots reuse isolated pose objects and removed vehicle IDs are pruned. Unit resource-lifetime checks establish bounded storage reuse, not browser heap stability or an AC-010 frame-rate measurement.
+
 ## Budgets
 
 - **AC-010:** 60 FPS at 1920×1080 for a representative 96×96 city on a modern integrated-GPU laptop, including the M3.6 budget of 8–16 skinned agents and the M3.6.2 budget of 8–16 instanced vehicles on Auto/high.

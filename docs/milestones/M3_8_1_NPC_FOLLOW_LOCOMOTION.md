@@ -22,6 +22,10 @@ Autonomous pedestrians keep wander, 1–3 second arrival waits (skipped on cross
 
 ## Verification and stop
 
+Runtime maintenance branch: `milestone/m3-8-1-runtime-memory`. REN-004/011 and TST-013 fixes cover owned material cleanup, reusable diagnostic GPU storage, independent reusable bone interpolation frames, isolated NPC snapshot reuse, and removed vehicle snapshot pruning. SIM-002/022 obstacle checks precompute static rotations without changing movement rules. The probable resource leak is unreleased cloned batch materials after replacement/unmount; per-frame diagnostic geometry and pose allocation also caused avoidable churn. Unit tests cover prolonged reuse and interpolation; browser heap/FPS confirmation is outside this patch's owner-requested unit-only validation. No M4 or generator change.
+
+Maintenance evidence: `pnpm check`, `pnpm typecheck`, `pnpm test`, `pnpm build`, and `git diff --check` pass. Additional focused unit tests pass for 100 batch material replacements (shared resources remain undisposed), population pruning, and reusable diagnostic buffers. Existing lint warnings and the large production-chunk warning remain. No browser integration run was needed for this patch; runtime memory/FPS measurements remain unverified.
+
 TST-013 covers third-person framing behind yaw, spring-back helpers, no OrbitControls on follow, city `maxZoom` 96, `useFrame` priority `<= 0`, 1-cell sidewalk opposing pass, four-NPC congestion recovery, destination-preserving yield repath, priority (ID and manual), and no 1.5 s repath during an admitted crossing.
 
 Run `pnpm check`, `pnpm typecheck`, `pnpm test`, `pnpm build`, and `git diff --check`. `pnpm test:batch` is not required.

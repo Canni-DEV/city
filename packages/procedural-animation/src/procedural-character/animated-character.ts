@@ -66,8 +66,8 @@ export interface CreateAnimatedCharacterOptions {
 class AnimatedCharacterImpl implements AnimatedCharacter {
   readonly object: Object3D;
   readonly animator: ProceduralAnimator;
-  private readonly previous = createFrame();
-  private readonly current = createFrame();
+  private previous = createFrame();
+  private current = createFrame();
   private disposed = false;
 
   constructor(
@@ -95,10 +95,10 @@ class AnimatedCharacterImpl implements AnimatedCharacter {
   fixedUpdate(dt: number, motion: MotionSample, intent: AnimationIntent = {}): void {
     if (this.disposed) return;
     restore(this.prepared, this.current);
-    this.previous.position.copy(this.current.position);
-    this.previous.rotation.copy(this.current.rotation);
-    this.previous.rotations = new Map(this.current.rotations);
-    this.previous.positions = new Map(this.current.positions);
+    // Rotate independent buffers: shallow Map copies alias mutable bone poses.
+    const reusable = this.previous;
+    this.previous = this.current;
+    this.current = reusable;
     this.animator.update(dt, motion, intent);
     capture(this.prepared, this.current);
     for (const mesh of this.prepared.meshes) mesh.skeleton.update();
