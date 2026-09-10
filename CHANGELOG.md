@@ -34,6 +34,8 @@ All notable changes use Semantic Versioning. The project remains in `0.x` until 
 
 ### Changed
 
+- M3.9: make floating narrative cards smaller and quieter, and move them toward the viewport edges to keep the city visible.
+
 - Runtime pedestrian animation no longer blends imported Idle/Run clips. Core remains authoritative for all motion/crossing/collision rules while the procedural package poses rigs and submits only bounded corrections. Selection/control/camera state stays outside `CityDocumentV1`; generator `0.9.0`, hashes, and exports are unchanged.
 - Generator `0.9.0`: `blockYards` stage after park interiors (GEN-033). Road/traffic/building RNG stays keyed with `0.6.7`; curb furniture stays on the `0.7.0` stream; park interiors stay on the `0.8.1` stream. GEN-010 skips suburban/urban leftover cells. Old `0.8.1` cities load without silent regeneration.
 - Generator `0.8.1`: `parkInterior` sub-cell jitter for occupying trees/planters and dart-throwing cluster garnish (GEN-032 hotfix). Road/traffic/building RNG stays keyed with `0.6.7`; curb furniture stays on the `0.7.0` stream. Old `0.8.0` cities load without silent regeneration.
